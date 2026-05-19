@@ -592,6 +592,13 @@
       </div>
       <div class="slbl">👥 플레이어 현황</div>
       <div class="wpgrid" id="wpgrid"></div>
+      <!-- 60초 준비 카운트다운 (방장 아닐 때만 표시) -->
+      <div id="ready-countdown" style="display:none;margin-bottom:10px;padding:10px 14px;background:#fff9e0;border-radius:12px;border:1.5px solid #f0c040;text-align:center">
+        <div style="font-size:12px;color:#7d6608;margin-bottom:6px">⏰ <strong id="ready-countdown-sec">60</strong>초 안에 준비하지 않으면 자동 퇴장돼요!</div>
+        <div style="background:#e5e7eb;border-radius:99px;height:6px;overflow:hidden">
+          <div id="ready-countdown-bar" style="height:100%;background:#f0c040;width:100%;transition:width 1s linear;border-radius:99px"></div>
+        </div>
+      </div>
       <div class="wbtns">
         <button class="lvbtn" onclick="leaveRoom()">← 나가기</button>
         <button class="rdybtn no" id="rdybtn" onclick="toggleReady()">준비 완료!</button>
@@ -755,23 +762,7 @@
 </div>
 
 
-<!-- ======= 방장 나가기 팝업 ======= -->
-<div class="modal" id="hostLeavePopup">
-  <div class="mcard" style="max-width:340px;text-align:center">
-    <div style="font-size:36px;margin-bottom:12px">👑</div>
-    <div style="font-size:18px;font-weight:900;color:var(--g1);margin-bottom:8px">방장 나가기</div>
-    <div style="font-size:13px;color:var(--gray5);margin-bottom:24px;line-height:1.7">방장이 나갈 때<br>방을 어떻게 할까요?</div>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <button class="btn btp" onclick="doTransferHost()" style="width:100%;padding:13px;font-size:14px">
-        👥 방장 넘겨주기<br><span style="font-size:11px;font-weight:400;opacity:.85">다음 멤버가 방장이 되고 방은 유지돼요</span>
-      </button>
-      <button class="btn btd" onclick="doDeleteRoom()" style="width:100%;padding:13px;font-size:14px">
-        🗑️ 방 삭제<br><span style="font-size:11px;font-weight:400;opacity:.85">전원 로비로 강제 이동돼요</span>
-      </button>
-      <button class="btn bts" onclick="closeM('hostLeavePopup')" style="width:100%;padding:11px;font-size:13px">취소</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- ======= ADMIN ======= -->
 <div class="scr" id="adm">
@@ -1964,6 +1955,9 @@ const ALL_CARDS = [
   {id:'s3', name:'산업 재해',       val:0,   type:'special', special:'draw2',   emoji:'💀', desc:'다음 사람 카드 2장 추가!'},
   {id:'s4', name:'탄소세 부과',     val:0,   type:'special', special:'tax',     emoji:'💸', desc:'탄소 수치 +5 (배출 증가)'},
   {id:'s5', name:'그린 뉴딜',       val:0,   type:'special', special:'deal',    emoji:'🌍', desc:'탄소 수치 -5 (흡수 증가)'},
+  {id:'s6', name:'탄소 역전',       val:0,   type:'special', special:'reverse', emoji:'🔃', desc:'진행 방향이 역전됩니다!'},
+  {id:'s7', name:'해수면 상승',     val:0,   type:'special', special:'flood',   emoji:'🌊', desc:'모든 플레이어 카드 1장씩 추가!'},
+  {id:'s8', name:'탄소 거래제',     val:0,   type:'special', special:'trade',   emoji:'🤝', desc:'원하는 플레이어와 카드 1장 교환!'},
 ];
 // 편의 참조
 const EMIT  = ALL_CARDS.filter(c=>c.type==='emit');
@@ -2846,22 +2840,48 @@ function renderWaiting(r) {
 // 대기실 60초 준비 안 하면 자동 퇴장
 // ============================================================
 let readyKickTimer = null;
+let readyCountInterval = null;
+
 function startReadyKickTimer() {
   clearReadyKickTimer();
   if (!user || !roomId) return;
+  // 방장은 카운트다운 없음
+  if (roomData?.hostUid === user.uid) return;
+
+  let sec = 60;
+  const countEl = document.getElementById('ready-countdown');
+  const secEl = document.getElementById('ready-countdown-sec');
+  const barEl = document.getElementById('ready-countdown-bar');
+  if (countEl) countEl.style.display = 'block';
+  if (secEl) secEl.textContent = sec;
+  if (barEl) { barEl.style.transition = 'none'; barEl.style.width = '100%'; }
+
+  readyCountInterval = setInterval(() => {
+    sec--;
+    if (secEl) secEl.textContent = Math.max(0, sec);
+    if (barEl) barEl.style.width = (sec / 60 * 100) + '%';
+    // 10초 남으면 빨간색으로 변경
+    if (sec <= 10 && barEl) barEl.style.background = '#e74c3c';
+    if (sec <= 0) clearReadyKickTimer();
+  }, 1000);
+
   readyKickTimer = setTimeout(async () => {
     if (!roomId || !user) return;
     try {
       const snap = await get(ref(db, 'rooms/'+roomId+'/players/'+user.uid));
       if (snap.exists() && !snap.val().ready) {
         notify('⏰ 60초 내에 준비하지 않아 자동 퇴장됩니다.', 'wrn');
-        await doLeaveRoom();
+        await leaveRoom();
       }
     } catch(e) {}
   }, 60000);
 }
+
 function clearReadyKickTimer() {
   if (readyKickTimer) { clearTimeout(readyKickTimer); readyKickTimer = null; }
+  if (readyCountInterval) { clearInterval(readyCountInterval); readyCountInterval = null; }
+  const countEl = document.getElementById('ready-countdown');
+  if (countEl) countEl.style.display = 'none';
 }
 
 window.toggleReady = async function() {
@@ -2922,47 +2942,24 @@ window.startGame = async function() {
 
 window.leaveRoom = async function() {
   if(!roomId||!user)return;
-  const s=await get(ref(db,`rooms/${roomId}`));
-  if(!s.exists()){stopRoomListener();stopChatListener();stopTimer();roomId=null;roomData=null;gotoLobby();return;}
-  const r=s.val(), uid=user.uid;
-  if(r.hostUid===uid){
-    openM('hostLeavePopup');
-  } else {
-    try{ await remove(ref(db,`rooms/${roomId}/players/${uid}`)); }catch(e){}
-    stopRoomListener();stopChatListener();stopTimer();roomId=null;roomData=null;gotoLobby();
-  }
-};
-
-window.doTransferHost = async function() {
-  closeM('hostLeavePopup');
-  if(!roomId||!user)return;
   try{
-    const s=await get(ref(db,`rooms/${roomId}`));
-    if(!s.exists()){gotoLobby();return;}
+    const s=await get(ref(db,'rooms/'+roomId));
+    if(!s.exists()){stopRoomListener();stopChatListener();stopTimer();roomId=null;roomData=null;gotoLobby();return;}
     const r=s.val(), uid=user.uid;
-    const others=Object.values(r.players||{}).filter(p=>p.uid!==uid);
-    if(!others.length){notify('넘겨줄 멤버가 없어요','wrn');return;}
-    const next=others[0];
-    await update(ref(db,`rooms/${roomId}`),{hostUid:next.uid,hostName:next.name});
-    await update(ref(db,`rooms/${roomId}/players/${next.uid}`),{isHost:true});
-    await update(ref(db,`rooms/${roomId}/players/${uid}`),{isHost:false});
-    const chatRef=push(ref(db,`chats/${roomId}`));
-    await set(chatRef,{uid:'system',name:'🔔 시스템',msg:`👑 ${next.name}님이 새 방장이 되었어요!`,ts:Date.now(),type:'system'});
-    await remove(ref(db,`rooms/${roomId}/players/${uid}`));
+    if(r.hostUid===uid){
+      // 방장 나가기 → 방 삭제
+      await remove(ref(db,'rooms/'+roomId));
+    } else {
+      // 일반 플레이어 나가기 → players에서 제거
+      await remove(ref(db,'rooms/'+roomId+'/players/'+uid));
+    }
   }catch(e){}
   stopRoomListener();stopChatListener();stopTimer();roomId=null;roomData=null;gotoLobby();
 };
 
-window.doDeleteRoom = async function() {
-  closeM('hostLeavePopup');
-  if(!roomId||!user)return;
-  try{
-    const chatRef=push(ref(db,`chats/${roomId}`));
-    await set(chatRef,{uid:'system',name:'🔔 시스템',msg:'🚪 방장이 방을 삭제했어요. 로비로 이동합니다.',ts:Date.now(),type:'system'});
-    await remove(ref(db,`rooms/${roomId}`));
-  }catch(e){}
-  stopRoomListener();stopChatListener();stopTimer();roomId=null;roomData=null;gotoLobby();
-};
+;
+
+;
 
 // ============================================================
 // GAME RENDER (NEW UNO)
@@ -2991,8 +2988,10 @@ function renderGame(r) {
   document.getElementById('msc').textContent = myScore;
 
   // 방향 표시
-  const dir = (r.direction || 1) === 1 ? '🔄 정방향' : '🔄 역방향';
-  document.getElementById('dir-ind').textContent = dir;
+  const dir = (r.direction || 1) === 1 ? '🔄 정방향' : '🔃 역방향';
+  const dirEl = document.getElementById('dir-ind');
+  dirEl.textContent = dir;
+  dirEl.style.background = (r.direction || 1) === 1 ? 'rgba(255,255,255,.18)' : 'rgba(255,100,100,.35)';
 
   // 덱 수 표시
   const deckArr = r.deck || [];
@@ -3248,6 +3247,7 @@ async function playCard(cid, r) {
   ups[`rooms/${roomId}/roundResults`] = rr;
   ups[`rooms/${roomId}/skipNext`] = newSkip;
   ups[`rooms/${roomId}/draw2Next`] = newDraw2;
+  ups[`rooms/${roomId}/direction`] = newDirection;
 
   // swap 특수카드: 왼쪽 플레이어와 카드 교환
   if (c.type === 'special' && c.special === 'swap') {
@@ -3282,10 +3282,54 @@ async function playCard(cid, r) {
     }
   }
 
+  // 🔃 역전 카드: direction 이미 newDirection에 반영됨
+  // 🌊 해수면 상승: 모든 플레이어 손패 +1장
+  if (c.type === 'special' && c.special === 'flood') {
+    let floodDeck = [...(roomData.deck || [])];
+    const allPlayers = roomData.playerOrder || Object.keys(roomData.players || {});
+    allPlayers.forEach(puid => {
+      const pHand = puid === uid ? [...nh] : [...(roomData.hands?.[puid] || [])];
+      if (!floodDeck.length) floodDeck = buildDeck();
+      pHand.push(floodDeck.shift());
+      ups[`rooms/${roomId}/hands/${puid}`] = pHand;
+    });
+    ups[`rooms/${roomId}/deck`] = floodDeck;
+    notify('🌊 해수면 상승! 모든 플레이어 카드 1장씩 추가!', 'wrn');
+  }
+
+  // 🤝 탄소 거래제: 다음 플레이어와 카드 1장씩 교환 (자동 처리)
+  if (c.type === 'special' && c.special === 'trade') {
+    const ord2 = roomData.playerOrder || Object.keys(roomData.players || {});
+    const myIdx2 = ord2.indexOf(uid);
+    const nextIdx2 = (myIdx2 + 1) % ord2.length;
+    const nextUid2 = ord2[nextIdx2];
+    if (nextUid2 && nextUid2 !== uid) {
+      const myHand2 = [...nh];
+      const nextHand2 = [...(roomData.hands?.[nextUid2] || [])];
+      if (myHand2.length > 0 && nextHand2.length > 0) {
+        const myCard = myHand2.splice(Math.floor(Math.random() * myHand2.length), 1)[0];
+        const theirCard = nextHand2.splice(Math.floor(Math.random() * nextHand2.length), 1)[0];
+        myHand2.push(theirCard);
+        nextHand2.push(myCard);
+        ups[`rooms/${roomId}/hands/${uid}`] = myHand2;
+        ups[`rooms/${roomId}/hands/${nextUid2}`] = nextHand2;
+        notify('🤝 ' + (roomData.players?.[nextUid2]?.name||'?') + '님과 카드 1장 교환!', 'inf');
+      }
+    }
+  }
+
   // 특수카드 val은 0이지만 tax/deal은 이미 위에서 처리됨
   // tax/deal이 아닌 특수카드 val 변화 재계산
-  if (c.type === 'special' && (c.special === 'skip' || c.special === 'draw2' || c.special === 'swap')) {
+  if (c.type === 'special' && (c.special === 'skip' || c.special === 'draw2' || c.special === 'swap' || c.special === 'reverse' || c.special === 'flood' || c.special === 'trade')) {
     ups[`rooms/${roomId}/centerCarbon`] = roomData.centerCarbon || 0; // 탄소 수치 변화 없음
+  }
+
+  // 빈 손패 보너스 +5점
+  if (nh.length === 0) {
+    const curScore = roomData.players?.[uid]?.score || 0;
+    ups[`rooms/${roomId}/players/${uid}/score`] = curScore + 5;
+    showAOV(true, '손패 소진! 🎴', '카드를 모두 소진했어요! +5점 보너스!');
+    notify('🎴 손패 소진 보너스! +5점!', '');
   }
 
   // 턴 진행
@@ -3633,10 +3677,16 @@ function showResult(r) {
 }
 
 window.closeResultPopup = async function() {
-  const popup=document.getElementById('result-popup');
-  if(popup) popup.style.display='none';
-  if(resultAutoTimer){ clearInterval(resultAutoTimer); resultAutoTimer=null; }
-  await doReturnToWaiting();
+  const popup = document.getElementById('result-popup');
+  if(popup) popup.style.display = 'none';
+  if(resultAutoTimer){ clearInterval(resultAutoTimer); resultAutoTimer = null; }
+  // 게임 종료 후 방 삭제 → 로비로 이동
+  try {
+    if(roomId) await remove(ref(db, 'rooms/'+roomId));
+  } catch(e) {}
+  stopRoomListener(); stopChatListener(); stopTimer();
+  roomId = null; roomData = null;
+  gotoLobby();
 };
 
 window.doLeaveAfterGame = async function() {
