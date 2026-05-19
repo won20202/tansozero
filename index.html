@@ -894,7 +894,7 @@ function esc(str) {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged, signOut }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getDatabase, ref, set, get, push, update, remove, onValue, off, serverTimestamp }
+import { getDatabase, ref, set, get, push, update, remove, onValue, off, serverTimestamp, onDisconnect }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // ============================================================
@@ -2495,6 +2495,8 @@ window.doLogin = async function() {
         handleAdminKickAll();
       }
     });
+    // 접속 시 presence 등록 (.info/connected 감지)
+    setupPresence(u.uid);
     if(tutorialSeen){gotoLobby();}else{tutorialSeen=true;tutStep=0;initTutProg();updateTNav();show('ts');}
   } catch(e) { notify('접속 실패: '+e.message,'err'); }
 };
@@ -2530,6 +2532,43 @@ async function handleAdminKickAll() {
 }
 
 // Firebase Anonymous Auth 활성화 여부만 체크 (페이지 새로고침 시 로그아웃)
+
+// ============================================================
+// PRESENCE — 접속/연결 끊김 자동 감지
+// ============================================================
+let presenceRef = null;
+let playerPresenceRef = null;
+
+function setupPresence(uid) {
+  const connectedRef = ref(db, '.info/connected');
+  onValue(connectedRef, async (snap) => {
+    if (!snap.val()) return;
+
+    // presence 등록 + 끊기면 제거
+    presenceRef = ref(db, 'presence/'+uid);
+    await set(presenceRef, { online: true, lastSeen: serverTimestamp() });
+    onDisconnect(presenceRef).remove();
+
+    // 방에 참여 중이면 연결 끊길 때 처리
+    if (roomId) {
+      // 본인 players 자동 제거
+      playerPresenceRef = ref(db, 'rooms/'+roomId+'/players/'+uid);
+      onDisconnect(playerPresenceRef).remove();
+      // 방장이면 방 전체 삭제
+      if (roomData?.hostUid === uid) {
+        onDisconnect(ref(db, 'rooms/'+roomId)).remove();
+      }
+    }
+  });
+}
+
+// 방 입장/생성 시 playerPresence 갱신
+function refreshPlayerPresence() {
+  if (!user || !roomId) return;
+  playerPresenceRef = ref(db, 'rooms/'+roomId+'/players/'+user.uid);
+  onDisconnect(playerPresenceRef).remove();
+}
+
 onAuthStateChanged(auth, async u => {
   if (!u) { user=null; pinfo=null; isAdmin=false; show('ls'); }
 });
@@ -2685,9 +2724,15 @@ window.loadRooms = function() {
 };
 function renderRooms(rooms) {
   const g=document.getElementById('rgrid');
-  let list=rooms;
-  if(curFilter==='waiting')list=rooms.filter(r=>r.status==='waiting');
-  if(curFilter==='playing')list=rooms.filter(r=>r.status==='playing');
+  const now = Date.now();
+  // 빈 방(플레이어 0명) 또는 2시간 이상 된 유령 방 필터링
+  let list = rooms.filter(r => {
+    const pl = r.players ? Object.keys(r.players).length : 0;
+    const age = r.createdAt ? (now - r.createdAt) : 0;
+    return pl > 0 && age < 7200000;
+  });
+  if(curFilter==='waiting')list=list.filter(r=>r.status==='waiting');
+  if(curFilter==='playing')list=list.filter(r=>r.status==='playing');
   if(!list.length){g.innerHTML='<div class="empty"><div class="emico">🌿</div>아직 방이 없어요. 방을 만들어보세요!</div>';return;}
   g.innerHTML='';
   list.forEach(room=>{
@@ -2724,7 +2769,9 @@ window.createRoom = async function() {
   const rref=push(ref(db,'rooms'));
   const uid=user.uid;
   await set(rref,{name,code,maxPlayers:maxP,rounds,timerSeconds:timer,status:'waiting',hostUid:uid,hostName:pinfo.name,currentRound:0,players:{[uid]:{uid,name:pinfo.name,email:user.email,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:true,color:COLORS[0]}},createdAt:serverTimestamp()});
-  closeM('crm'); roomId=rref.key; enterWaiting(rref.key);
+  // 방장 연결 끊기면 방 전체 자동 삭제
+  onDisconnect(rref).remove();
+  closeM('crm'); roomId=rref.key; refreshPlayerPresence(); enterWaiting(rref.key);
 };
 window.joinByCode = async function() {
   const code=document.getElementById('jci').value.trim();
@@ -2750,9 +2797,11 @@ async function doJoin(rid) {
   const s=await get(ref(db,`rooms/${rid}`)); if(!s.exists()){notify('방을 찾을 수 없어요','err');return;}
   const r=s.val(), pl=r.players||{}, cnt=Object.keys(pl).length;
   if(cnt>=r.maxPlayers){notify('방이 꽉 찼어요!','err');return;}
-  await set(ref(db,`rooms/${rid}/players/${uid}`),{uid,name:pinfo.name,email:user.email,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:false,color:COLORS[cnt%COLORS.length]});
+  await await set(ref(db,`rooms/${rid}/players/${uid}`),{uid,name:pinfo.name,email:user.email,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:false,color:COLORS[cnt%COLORS.length]});
+  // 연결 끊기면 자동으로 players에서 제거
+  onDisconnect(ref(db,`rooms/${rid}/players/${uid}`)).remove();
   snd('join');
-  roomId=rid; enterWaiting(rid);
+  roomId=rid; refreshPlayerPresence(); enterWaiting(rid);
 }
 
 // ============================================================
@@ -2767,14 +2816,19 @@ function stopChatListener() {
 function enterWaiting(rid) {
   stopRoomListener(); stopTimer();
   roomId=rid; roomRef=ref(db,`rooms/${rid}`);
+  // 방 진입 시 onDisconnect 재등록
+  if(user) setupPresence(user.uid);
   roomListener=onValue(roomRef, s=>{
     if(!s.exists()){notify('방이 삭제됐어요','wrn');gotoLobby();return;}
     roomData=s.val();
-    // 강퇴 감지: 대기실에서 내 플레이어 데이터가 삭제된 경우
-    if(user && roomData.status==='waiting' && !roomData.players?.[user.uid]) {
-      notify('🚫 방장에 의해 강퇴되었습니다.','err');
-      stopRoomListener(); stopChatListener(); stopTimer();
-      roomId=null; roomData=null; gotoLobby(); return;
+    // 강퇴 감지: kicked 플래그가 true인 경우만 강퇴 메시지 표시
+    if(user && roomData.status==='waiting') {
+      const myPlayerData = roomData.players?.[user.uid];
+      if(myPlayerData?.kicked) {
+        notify('🚫 방장에 의해 강퇴되었습니다.','err');
+        stopRoomListener(); stopChatListener(); stopTimer();
+        roomId=null; roomData=null; gotoLobby(); return;
+      }
     }
     // 관리자 방 폐쇄 감지
     if(roomData.closed){
@@ -2833,6 +2887,9 @@ function renderWaiting(r) {
     const mp=r.players[uid];
     rdybtn.className=`rdybtn ${mp?.ready?'yes':'no'}`;
     rdybtn.textContent=mp?.ready?'✅ 준비 완료!':'준비 완료!';
+    // 준비 안 된 경우 카운트다운 시작, 준비된 경우 카운트다운 제거
+    if (!mp?.ready) startReadyKickTimer(r.hostUid);
+    else clearReadyKickTimer();
   }
 }
 
@@ -2842,26 +2899,37 @@ function renderWaiting(r) {
 let readyKickTimer = null;
 let readyCountInterval = null;
 
-function startReadyKickTimer() {
+function startReadyKickTimer(hostUid) {
   clearReadyKickTimer();
   if (!user || !roomId) return;
   // 방장은 카운트다운 없음
-  if (roomData?.hostUid === user.uid) return;
+  if (hostUid && hostUid === user.uid) return;
 
   let sec = 60;
-  const countEl = document.getElementById('ready-countdown');
-  const secEl = document.getElementById('ready-countdown-sec');
-  const barEl = document.getElementById('ready-countdown-bar');
+  const countEl  = document.getElementById('ready-countdown');
+  const secEl    = document.getElementById('ready-countdown-sec');
+  const barEl    = document.getElementById('ready-countdown-bar');
+  const rdyBtn   = document.getElementById('rdybtn');
+
   if (countEl) countEl.style.display = 'block';
-  if (secEl) secEl.textContent = sec;
-  if (barEl) { barEl.style.transition = 'none'; barEl.style.width = '100%'; }
+  if (secEl)   secEl.textContent = sec;
+  if (barEl) {
+    barEl.style.transition = 'none';
+    barEl.style.width = '100%';
+    barEl.style.background = '#f0c040';
+    void barEl.offsetWidth;
+    barEl.style.transition = 'width 1s linear';
+  }
 
   readyCountInterval = setInterval(() => {
     sec--;
-    if (secEl) secEl.textContent = Math.max(0, sec);
-    if (barEl) barEl.style.width = (sec / 60 * 100) + '%';
-    // 10초 남으면 빨간색으로 변경
+    const s = Math.max(0, sec);
+    if (secEl) secEl.textContent = s;
+    if (barEl) barEl.style.width = (s / 60 * 100) + '%';
     if (sec <= 10 && barEl) barEl.style.background = '#e74c3c';
+    // 준비 버튼 텍스트에도 초 표시
+    if (rdyBtn && !rdyBtn.classList.contains('yes'))
+      rdyBtn.textContent = '준비 완료! (' + s + '초)';
     if (sec <= 0) clearReadyKickTimer();
   }, 1000);
 
@@ -2871,17 +2939,22 @@ function startReadyKickTimer() {
       const snap = await get(ref(db, 'rooms/'+roomId+'/players/'+user.uid));
       if (snap.exists() && !snap.val().ready) {
         notify('⏰ 60초 내에 준비하지 않아 자동 퇴장됩니다.', 'wrn');
-        await leaveRoom();
+        stopRoomListener(); stopChatListener(); stopTimer();
+        try { await remove(ref(db,'rooms/'+roomId+'/players/'+user.uid)); } catch(e){}
+        roomId = null; roomData = null; gotoLobby();
       }
     } catch(e) {}
   }, 60000);
 }
 
 function clearReadyKickTimer() {
-  if (readyKickTimer) { clearTimeout(readyKickTimer); readyKickTimer = null; }
-  if (readyCountInterval) { clearInterval(readyCountInterval); readyCountInterval = null; }
+  if (readyKickTimer)    { clearTimeout(readyKickTimer);   readyKickTimer = null; }
+  if (readyCountInterval){ clearInterval(readyCountInterval); readyCountInterval = null; }
   const countEl = document.getElementById('ready-countdown');
   if (countEl) countEl.style.display = 'none';
+  // 준비 버튼 텍스트 원복
+  const rdyBtn = document.getElementById('rdybtn');
+  if (rdyBtn && !rdyBtn.classList.contains('yes')) rdyBtn.textContent = '준비 완료!';
 }
 
 window.toggleReady = async function() {
@@ -2895,11 +2968,16 @@ window.toggleReady = async function() {
 }
 
 window.kickPlayerFromWaiting = async function(targetUid, targetName) {
-  if (!await customConfirm(targetName+'님을 강퇴할까요?')) return;
+  if (!confirm(targetName+'님을 강퇴할까요?')) return;
   try {
-    await remove(ref(db, 'rooms/'+roomId+'/players/'+targetUid));
+    // kicked 플래그 DB에 기록 → 해당 플레이어가 강퇴 메시지 감지
+    await update(ref(db, 'rooms/'+roomId+'/players/'+targetUid), {kicked: true});
+    // 잠시 후 삭제 (플레이어 측에서 감지할 시간 확보)
+    setTimeout(async () => {
+      try { await remove(ref(db, 'rooms/'+roomId+'/players/'+targetUid)); } catch(e){}
+    }, 800);
     notify('✅ '+targetName+'님을 강퇴했습니다.');
-  } catch(e) { notify('강퇴 실패: '+e.message,'err'); }
+  } catch(e) { notify('강퇴 실패: '+e.message, 'err'); }
 };
 ;
 window.startGame = async function() {
@@ -2937,11 +3015,14 @@ window.startGame = async function() {
     skipNext: false,
     draw2Next: false,
   });
+  // 게임 시작 후 setupPresence 재호출 (onDisconnect 갱신)
+  if(user) setupPresence(user.uid);
   snd('go');
 };
 
 window.leaveRoom = async function() {
   if(!roomId||!user)return;
+  clearReadyKickTimer();
   try{
     const s=await get(ref(db,'rooms/'+roomId));
     if(!s.exists()){stopRoomListener();stopChatListener();stopTimer();roomId=null;roomData=null;gotoLobby();return;}
@@ -2952,6 +3033,11 @@ window.leaveRoom = async function() {
     } else {
       // 일반 플레이어 나가기 → players에서 제거
       await remove(ref(db,'rooms/'+roomId+'/players/'+uid));
+      // 남은 플레이어 없으면 방 삭제
+      const afterSnap = await get(ref(db,'rooms/'+roomId+'/players'));
+      if(!afterSnap.exists() || Object.keys(afterSnap.val()||{}).length === 0){
+        await remove(ref(db,'rooms/'+roomId));
+      }
     }
   }catch(e){}
   stopRoomListener();stopChatListener();stopTimer();roomId=null;roomData=null;gotoLobby();
@@ -3711,7 +3797,7 @@ window.doReturnToWaiting = async function() {
       const mySnap=await get(ref(db,`rooms/${roomId}/players/${uid}`));
       if(mySnap.exists()) await update(ref(db,`rooms/${roomId}/players/${uid}`),{score:0,ready:false});
     }
-    show('ws'); startRoomListener(roomId); startReadyKickTimer();
+    show('ws'); startRoomListener(roomId);
   } catch(e){ stopRoomListener();stopChatListener();stopTimer();roomId=null;roomData=null;gotoLobby(); }
 };
 
