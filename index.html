@@ -3655,7 +3655,7 @@ window.openBcast = function() { document.getElementById('bcmsg').value=''; openM
 window.sendBcast = async function() {
   const msg=document.getElementById('bcmsg').value.trim(); if(!msg)return;
   await set(ref(db,'broadcast'),{msg,ts:serverTimestamp()});
-  closeM('bcm'); notify('공지 전송 완료');
+  closeM('bcm'); notify('공지 전송 완료');  
 };
 </script>
 
