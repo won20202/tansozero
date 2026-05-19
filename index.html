@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -1961,7 +1962,7 @@ const TIPS = [
 ];
 const COLORS = ['#2d9c55','#3bb8e8','#e67e22','#9b59b6','#e74c3c','#1abc9c'];
 let isAdmin = false;
-const MAX_ROOMS = 10;
+const MAX_ROOMS = 30;
 
 // ============================================================
 // STATE
@@ -3353,19 +3354,31 @@ function startChatListener(rid) {
     if(!s.exists())return;
     s.forEach(c=>{
       const d=c.val(), m=document.createElement('div');
-      m.className=`cmsg${d.isSystem?' sys':''}`;
+      if(d.isSystem) m.className='cmsg sys';
+      else if(d.isEmoji) m.className='cmsg emoji-msg';
+      else m.className='cmsg';
       // 시스템 메시지는 코드에서 생성(안전), 사용자 데이터는 반드시 esc()
-      m.innerHTML=d.isSystem?d.msg:`<span class="sndr">${esc(d.sender)}</span>: ${esc(d.msg)}`;
+      if(d.isSystem) m.innerHTML=d.msg;
+      else m.innerHTML=`<span class="sndr">${esc(d.sender)}</span> ${esc(d.msg)}`;
       el.appendChild(m);
     });
     el.scrollTop=el.scrollHeight;
   });
 }
-window.sendChat = function() {
-  if(!roomId||!user)return;
-  const inp=document.getElementById('cinput'), msg=inp.value.trim(); if(!msg)return;
-  push(ref(db,`rooms/${roomId}/chatMessages`),{sender:pinfo.name,msg,isSystem:false,ts:serverTimestamp()});
-  inp.value='';
+// 이모티콘 전송 (쿨타임 1.5초)
+let _lastEmojiTs = 0;
+window.sendEmoji = async function(emoji, label) {
+  if(!roomId||!user||!pinfo)return;
+  const now = Date.now();
+  if(now - _lastEmojiTs < 1500){ notify('잠깐! 너무 빨리 눌렀어요 😅','wrn'); return; }
+  _lastEmojiTs = now;
+  await push(ref(db,`rooms/${roomId}/chatMessages`),{
+    sender: pinfo.name,
+    msg: emoji + ' ' + label,
+    isSystem: false, isEmoji: true,
+    ts: serverTimestamp()
+  });
+  snd('card');
 };
 
 // ============================================================
