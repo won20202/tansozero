@@ -2496,7 +2496,7 @@ window.doLogin = async function() {
       }
     });
     // 접속 시 presence 등록 (.info/connected 감지)
-    setupPresence(u.uid);
+    setupPresence(user.uid);
     if(tutorialSeen){gotoLobby();}else{tutorialSeen=true;tutStep=0;initTutProg();updateTNav();show('ts');}
   } catch(e) { notify('접속 실패: '+e.message,'err'); }
 };
