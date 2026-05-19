@@ -1,0 +1,3650 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0" />
+  <!-- 크롤북 최적화: 드래그 비활성화, 텍스트 자동 확대 방지 -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <style>* { -webkit-tap-highlight-color: transparent; }</style>
+  <title>🌿 탄소중립 제로 게임 — won 선생님</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&family=Black+Han+Sans&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --g1:#0f4c27; --g2:#1a6b3a; --g3:#2d9c55; --g4:#4cca78; --g5:#a8edbc; --g6:#d6f5e3; --gbg:#f0faf4;
+      --sky:#3bb8e8; --skyp:#e0f5fd;
+      --red:#c0392b; --redp:#fdecea;
+      --blue:#1a6bba; --bluep:#e8f1fd;
+      --yel:#f0c040; --yelp:#fff9e0;
+      --gray0:#fafafa; --gray1:#f3f4f6; --gray2:#e5e7eb; --gray3:#d1d5db;
+      --gray5:#6b7280; --gray7:#374151; --gray9:#111827;
+      --sh1:0 1px 4px rgba(0,0,0,.08); --sh2:0 4px 16px rgba(0,0,0,.12); --sh3:0 8px 40px rgba(0,0,0,.18);
+      --r:14px; --rc:12px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;overflow:hidden} /* 크롤북: 페이지 전체 높이 고정, 더블 스크롤 방지 */
+    body{font-family:'Noto Sans KR',sans-serif;background:linear-gradient(135deg,#e5f5ed,#d4edf7 50%,#e5f5ed);height:100vh;color:var(--gray9);text-size-adjust:100%;-webkit-text-size-adjust:100%}
+
+    /* === BG === */
+    .bg{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+    .lf{position:absolute;opacity:.12;animation:lfloat linear infinite;font-size:24px}
+    @keyframes lfloat{0%{transform:translateY(-50px) rotate(0deg);opacity:0}10%{opacity:.12}90%{opacity:.08}100%{transform:translateY(105vh) rotate(400deg);opacity:0}}
+
+    /* === SCREENS === */
+    .scr{display:none;position:relative;z-index:1;height:100vh;overflow:hidden}
+    .scr.on{display:flex;flex-direction:column}
+
+    /* === BUTTONS === */
+    .btn{border:none;border-radius:10px;cursor:pointer;font-family:inherit;font-weight:700;transition:all .2s}
+    .btp{background:var(--g3);color:white;padding:11px 22px;font-size:14px}
+    .btp:hover{background:var(--g2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(45,156,85,.35)}
+    .bts{background:var(--gray2);color:var(--gray7);padding:11px 18px;font-size:14px}
+    .bts:hover{background:var(--gray3)}
+    .btd{background:var(--red);color:white;padding:7px 14px;font-size:12px}
+    .btd:hover{background:#a93226}
+    .btw{background:#e67e22;color:white;padding:7px 14px;font-size:12px}
+    .btw:hover{background:#ca6f1e}
+    .btsm{padding:6px 12px;font-size:12px;border-radius:8px}
+
+    /* === LOGIN === */
+    #ls{align-items:center;justify-content:center;padding:16px;overflow-y:auto}
+    .lcard{background:white;border-radius:20px;padding:32px 36px;max-width:420px;width:100%;box-shadow:var(--sh3);text-align:center;border-top:5px solid var(--g3)}
+    .llogo{width:80px;height:80px;margin:0 auto 18px}
+    .ltitle{font-family:'Black Han Sans',sans-serif;font-size:26px;color:var(--g1);line-height:1.3;margin-bottom:6px}
+    .lsub{font-size:13px;color:var(--gray5);margin-bottom:28px}
+    .lwon{display:inline-block;background:var(--g6);color:var(--g2);font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;margin-bottom:20px}
+    .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;background:white;border:2px solid var(--gray2);border-radius:11px;padding:13px 20px;font-size:14px;font-weight:600;color:var(--gray9);cursor:pointer;width:100%;transition:all .2s;margin-bottom:12px;font-family:inherit}
+    .gbtn:hover{border-color:var(--g3);background:var(--g6);transform:translateY(-1px)}
+    .linfo{font-size:11px;color:var(--gray5)}
+
+    /* === TUTORIAL === */
+    #ts{align-items:center;justify-content:center;padding:20px}
+    .twrap{background:white;border-radius:24px;padding:36px;max-width:640px;width:100%;box-shadow:var(--sh3)}
+    .thead2{text-align:center;margin-bottom:24px}
+    .thead2 h2{font-family:'Black Han Sans',sans-serif;font-size:22px;color:var(--g2);margin-bottom:4px}
+    .tcard{display:none;animation:slin .35s ease}
+    .tcard.on{display:block}
+    @keyframes slin{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
+    .tcbody{background:var(--gbg);border-radius:var(--r);padding:24px;margin-bottom:20px}
+    .tcnum{font-family:'Black Han Sans',sans-serif;font-size:36px;color:var(--g4);margin-bottom:8px}
+    .tctit{font-size:18px;font-weight:800;color:var(--g2);margin-bottom:8px}
+    .tcdesc{font-size:13px;color:var(--gray7);line-height:1.85}
+    .tprog{display:flex;gap:7px;justify-content:center;margin-bottom:18px}
+    .tpdot{width:9px;height:9px;border-radius:50%;background:var(--gray3);transition:background .3s}
+    .tpdot.on{background:var(--g3)}
+    .tbtns{display:flex;gap:10px}
+    .tskip{background:transparent;color:var(--gray5);padding:11px 16px;font-size:13px;text-decoration:underline;cursor:pointer;border:none;font-family:inherit}
+
+    /* === TOP BAR === */
+    .topbar{background:white;border-bottom:1px solid var(--gray2);padding:11px 22px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--sh1);flex-shrink:0}
+    .tbl{display:flex;align-items:center;gap:10px}
+    .tbr{display:flex;align-items:center;gap:10px}
+    .tbtitle{font-family:'Black Han Sans',sans-serif;font-size:17px;color:var(--g2)}
+    .wontag{background:linear-gradient(135deg,var(--g3),var(--sky));color:white;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px}
+    .uavt{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:white;background:var(--g3)}
+    .uname{font-size:12px;font-weight:700;color:var(--gray9)}
+    .uid{font-size:10px;color:var(--gray5)}
+
+    /* === LOBBY === */
+    #lobby{flex-direction:column}
+    .lcont{flex:1;padding:16px 24px;max-width:1080px;margin:0 auto;width:100%;overflow-y:auto}
+    .hero{background:linear-gradient(135deg,var(--g1) 0%,var(--g3) 65%,var(--sky) 100%);border-radius:20px;padding:28px;color:white;margin-bottom:24px;position:relative;overflow:hidden}
+    .hero::after{content:'🌿';position:absolute;right:16px;bottom:-8px;font-size:72px;opacity:.18}
+    .hero h1{font-family:'Black Han Sans',sans-serif;font-size:22px;margin-bottom:4px}
+    .hero p{font-size:13px;opacity:.9}
+    .hwon{display:inline-block;background:rgba(255,255,255,.22);padding:3px 11px;border-radius:20px;font-size:10px;margin-bottom:8px}
+    .slbl{font-size:12px;font-weight:700;color:var(--g2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;display:flex;align-items:center;gap:5px}
+    .lact{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+    .brcbtn{background:var(--g3);color:white;padding:11px 22px;font-size:14px;border-radius:12px;display:flex;align-items:center;gap:7px;border:none;cursor:pointer;font-family:inherit;font-weight:800;box-shadow:0 3px 12px rgba(45,156,85,.35);transition:all .2s}
+    .brcbtn:hover{background:var(--g2);transform:translateY(-1px)}
+    .rfbtn{background:white;color:var(--gray7);padding:11px 16px;font-size:13px;border-radius:12px;border:2px solid var(--gray2);cursor:pointer;font-family:inherit;font-weight:600;transition:all .2s}
+    .rfbtn:hover{border-color:var(--g3);color:var(--g3)}
+    .ftabs{display:flex;gap:7px;margin-bottom:14px}
+    .ftab{padding:6px 14px;border:2px solid var(--gray2);border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;background:white;color:var(--gray7);font-family:inherit;transition:all .2s}
+    .ftab.on{background:var(--g3);color:white;border-color:var(--g3)}
+    .rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:20px}
+    .rcard{background:white;border-radius:14px;padding:18px;box-shadow:var(--sh1);border:2px solid transparent;cursor:pointer;transition:all .25s;position:relative}
+    .rcard:hover{border-color:var(--g3);transform:translateY(-2px);box-shadow:var(--sh2)}
+    .rcard.wt{border-left:4px solid var(--g3)}
+    .rcard.pl{border-left:4px solid var(--yel)}
+    .rcard.fu{border-left:4px solid var(--red);opacity:.7;cursor:default}
+    .rcard.fu:hover{transform:none;border-color:transparent;border-left-color:var(--red)}
+    .rname{font-size:15px;font-weight:800;color:var(--gray9);margin-bottom:5px}
+    .rmeta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .sbdg{font-size:10px;font-weight:700;padding:2px 8px;border-radius:14px}
+    .sw{background:var(--g6);color:var(--g2)} .sp{background:var(--yelp);color:#856404} .sf{background:var(--redp);color:var(--red)} .sl{background:var(--gray1);color:var(--gray7)}
+    /* 커스텀 confirm 모달 */
+    #cfm-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:none;align-items:center;justify-content:center}
+    #cfm-modal.on{display:flex}
+    #cfm-box{background:#fff;border-radius:16px;padding:24px 20px 18px;max-width:320px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18);text-align:center}
+    #cfm-msg{font-size:14px;color:#1a1a2e;line-height:1.6;margin-bottom:18px;white-space:pre-line}
+    #cfm-btns{display:flex;gap:10px;justify-content:center}
+    #cfm-ok{background:#c0392b;color:#fff;border:none;border-radius:8px;padding:9px 22px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+    #cfm-cancel{background:#f0f0f0;color:#444;border:none;border-radius:8px;padding:9px 22px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+    #cfm-ok:hover{background:#a93226}#cfm-cancel:hover{background:#e0e0e0}
+    .adminlnk{background:rgba(0,0,0,.04);color:var(--gray5);font-size:10px;padding:5px 12px;border:1px solid var(--gray3);border-radius:20px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .2s;position:fixed;bottom:18px;right:18px;z-index:50}
+    .adminlnk:hover{border-color:var(--g3);color:var(--g3)}
+    /* 세션 기록 배지 */
+    .myrecord{display:flex;align-items:center;gap:4px;margin-bottom:4px;justify-content:flex-end}
+    .rec-item{font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px}
+    .rec-w{background:#d6f5e3;color:#1a6b3a}
+    .rec-l{background:#fdecea;color:#c0392b}
+    .rec-n{background:#e5e7eb;color:#374151}
+    .rec-sep{font-size:10px;color:var(--gray3)}
+
+    /* === FORM === */
+    .mback{display:none;position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:100;align-items:center;justify-content:center;padding:20px}
+    .mback.on{display:flex}
+    .modal{background:white;border-radius:22px;padding:32px;max-width:420px;width:100%;box-shadow:var(--sh3);animation:popin .28s ease}
+    @keyframes popin{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
+    .modal h3{font-family:'Black Han Sans',sans-serif;font-size:19px;color:var(--g2);margin-bottom:18px}
+    .fg{margin-bottom:14px}
+    .fl{font-size:12px;font-weight:700;color:var(--gray7);margin-bottom:5px;display:block}
+    .fi{width:100%;padding:10px 13px;border:2px solid var(--gray2);border-radius:9px;font-size:13px;font-family:inherit;transition:border-color .2s}
+    .fi:focus{outline:none;border-color:var(--g3)}
+    .fsel{width:100%;padding:10px 13px;border:2px solid var(--gray2);border-radius:9px;font-size:13px;font-family:inherit;background:white;cursor:pointer}
+    .fsel:focus{outline:none;border-color:var(--g3)}
+    .mbtns{display:flex;gap:9px;margin-top:18px}
+
+    /* === WAITING === */
+    #ws{flex-direction:column}
+    .wcont{flex:1;display:flex;align-items:center;justify-content:center;padding:20px}
+    .wcard{background:white;border-radius:24px;padding:36px;max-width:560px;width:100%;box-shadow:var(--sh3)}
+    .wheader{text-align:center;margin-bottom:24px}
+    .wheader h2{font-family:'Black Han Sans',sans-serif;font-size:20px;color:var(--g2);margin-bottom:4px}
+    .wcode{display:inline-block;background:var(--g6);color:var(--g2);font-family:'Black Han Sans',sans-serif;font-size:26px;padding:9px 22px;border-radius:12px;letter-spacing:.15em;margin:7px 0 14px;border:2px dashed var(--g3)}
+    .wpgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-bottom:22px}
+    .wpcard{background:var(--gray1);border-radius:11px;padding:12px 9px;text-align:center;border:2px solid transparent;transition:all .3s}
+    .wpcard.rdy{background:var(--g6);border-color:var(--g3)} .wpcard.hst{background:var(--yelp);border-color:var(--yel)}
+    .wpavt{width:40px;height:40px;border-radius:50%;margin:0 auto 7px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:white}
+    .wpname{font-size:11px;font-weight:700}
+    .wpbdg{font-size:9px;font-weight:700;padding:2px 7px;border-radius:9px;margin-top:3px;display:inline-block}
+    .bh{background:var(--yelp);color:#856404} .br{background:var(--g6);color:var(--g2)} .bw{background:var(--gray2);color:var(--gray7)}
+    .wbtns{display:flex;gap:10px}
+    .rdybtn{flex:1;padding:13px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s}
+    .rdybtn.no{background:var(--g6);color:var(--g2);border:2px solid var(--g3)}
+    .rdybtn.no:hover{background:var(--g3);color:white}
+    .rdybtn.yes{background:var(--g3);color:white}
+    .stbtn{flex:1;padding:13px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--g3),var(--sky));color:white;box-shadow:0 3px 12px rgba(45,156,85,.4);transition:all .2s}
+    .stbtn:hover{transform:translateY(-1px)} .stbtn:disabled{opacity:.5;cursor:default;transform:none}
+    .lvbtn{padding:13px 18px;border:2px solid var(--gray3);border-radius:12px;background:white;color:var(--gray7);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s}
+    .lvbtn:hover{border-color:var(--red);color:var(--red)}
+
+    /* === GAME === */
+    #gs{flex-direction:column}
+    .gtbar{background:linear-gradient(135deg,var(--g1),var(--g2));padding:10px 18px;display:flex;align-items:center;justify-content:space-between;color:white;flex-shrink:0}
+    .grname{font-family:'Black Han Sans',sans-serif;font-size:15px}
+    .gtwrap{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.18);border-radius:20px;padding:5px 14px}
+    .gtimer{font-family:'Black Han Sans',sans-serif;font-size:22px;color:white;min-width:32px;text-align:center}
+    .gtimer.urg{color:#ff6b6b;animation:pulse .5s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+    .gmain{flex:1;display:grid;grid-template-columns:190px 1fr 185px;overflow:hidden;min-height:0}
+    @media(max-width:960px){.gmain{grid-template-columns:170px 1fr 160px}}
+    @media(max-width:768px){.gmain{grid-template-columns:1fr}}
+    /* Players panel */
+    .ppanel{background:white;border-right:1px solid var(--gray2);display:flex;flex-direction:column;overflow:hidden}
+    .phd{padding:12px 14px;border-bottom:1px solid var(--gray2);font-size:12px;font-weight:700;color:var(--gray7);background:var(--gray1)}
+    .plist{flex:1;overflow-y:auto;padding:7px}
+    .prow{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:9px;margin-bottom:3px;transition:background .2s}
+    .prow.cur{background:var(--g6);border:2px solid var(--g3)}
+    .prow.me{background:#eaf3fd}
+    .pavt{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:white;flex-shrink:0}
+    .pinf{flex:1;min-width:0}
+    .pnm{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .psc{font-size:11px;font-weight:700;padding:2px 7px;border-radius:9px}
+    .scgr{background:var(--bluep);color:var(--blue)} .scrd{background:var(--redp);color:var(--red)} .scze{background:var(--g6);color:var(--g2)}
+    /* Board */
+    .gboard{background:var(--gbg);display:flex;flex-direction:column;overflow:hidden}
+    .gcenter{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 18px;gap:10px;overflow-y:auto;min-height:0}
+    .elbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gray5);margin-bottom:6px}
+    .ecrow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+    /* Cards */
+    .gcard{border-radius:var(--rc);width:110px;min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:10px 8px;cursor:pointer;transition:all .22s;position:relative;box-shadow:var(--sh1);user-select:none}
+    .gcard.em{background:linear-gradient(160deg,#e2e8f0,#c5d0dc);border:2.5px solid #8fa3b3}
+    .gcard.ab{background:linear-gradient(160deg,#dbeeff,#b4d8f7);border:2.5px solid var(--blue)}
+    .gcard.ab:hover{transform:translateY(-7px) scale(1.03);box-shadow:var(--sh2)}
+    .gcard.sel{transform:translateY(-13px) scale(1.05);box-shadow:0 8px 28px rgba(0,140,90,.42);border-color:var(--g3)}
+    .gcard.dis{opacity:.45;cursor:default}
+    .cico{width:72px;height:64px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:28px;background:rgba(255,255,255,.5)}
+    .cico-svg{padding:0;background:none;overflow:hidden;border-radius:9px;}
+    .cico-svg svg{width:72px;height:64px;border-radius:9px;display:block;}
+    .cnm{font-size:10.5px;font-weight:700;text-align:center;line-height:1.3;color:var(--gray9)}
+    .csc{font-family:'Black Han Sans',sans-serif;font-size:20px;font-weight:900}
+    .em .csc{color:var(--red)} .ab .csc{color:var(--blue)}
+    .ctbdg{position:absolute;top:5px;right:5px;font-size:8px;font-weight:800;padding:2px 5px;border-radius:7px;text-transform:uppercase}
+    .em .ctbdg{background:var(--red);color:white} .ab .ctbdg{background:var(--blue);color:white}
+    /* Totals row */
+    .totrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center}
+    .totbox{border-radius:12px;padding:9px 20px;font-family:'Black Han Sans',sans-serif;font-size:28px;min-width:88px;text-align:center}
+    .tpos{background:var(--bluep);color:var(--blue)} .tneg{background:var(--redp);color:var(--red)} .tzro{background:var(--g6);color:var(--g2);border:2.5px solid var(--g3);animation:glow 1.1s ease infinite alternate}
+    @keyframes glow{from{box-shadow:0 0 6px rgba(45,156,85,.3)}to{box-shadow:0 0 22px rgba(45,156,85,.7)}}
+    .vsym{font-family:'Black Han Sans',sans-serif;font-size:24px;color:var(--gray5)}
+    /* Selected area */
+    .selarea{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;min-height:44px;padding:9px;border-radius:11px;border:2px dashed var(--gray3);background:var(--gray1);transition:all .3s}
+    .selarea.hc{border-color:var(--g3);background:var(--g6)}
+    .schip{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;font-size:12px;font-weight:700}
+    .schip.em{background:var(--redp);color:var(--red)} .schip.ab{background:var(--bluep);color:var(--blue)}
+    .schip button{background:none;border:none;cursor:pointer;font-size:13px;padding:0;line-height:1}
+    /* Submit */
+    .subbtn{background:linear-gradient(135deg,var(--g3),var(--sky));color:white;border:none;border-radius:12px;padding:13px 28px;font-size:15px;font-weight:800;cursor:pointer;font-family:'Black Han Sans',sans-serif;box-shadow:0 4px 18px rgba(45,156,85,.42);transition:all .2s;letter-spacing:.02em}
+    .subbtn:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(45,156,85,.52)} .subbtn:disabled{opacity:.45;cursor:default;transform:none}
+    .hint{background:linear-gradient(135deg,var(--g6),var(--skyp));border-radius:11px;padding:12px 16px;font-size:12px;color:var(--gray7);max-width:380px;text-align:center;line-height:1.65}
+    .tindc{border-radius:11px;padding:9px 18px;font-size:13px;font-weight:700;text-align:center}
+    .tindc.my{background:var(--g6);color:var(--g2);border:2px solid var(--g3)}
+    .tindc.ot{background:var(--gray1);color:var(--gray5);border:2px solid var(--gray3)}
+    /* Hand area */
+    .hand{background:white;border-top:2px solid var(--gray2);padding:12px;flex-shrink:0}
+    .hlbl{font-size:11px;font-weight:700;color:var(--gray5);margin-bottom:8px}
+    .hcards{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+    .hcards::-webkit-scrollbar{height:4px} .hcards::-webkit-scrollbar-thumb{background:var(--gray3);border-radius:4px}
+    /* Right panel */
+    .ipanel{background:white;border-left:1px solid var(--gray2);display:flex;flex-direction:column;overflow:hidden}
+    .cmtr{padding:12px 14px;border-bottom:1px solid var(--gray2)}
+    .cmtit{font-size:11px;font-weight:700;color:var(--gray5);margin-bottom:6px}
+    .cbar{height:11px;border-radius:6px;background:var(--gray2);overflow:hidden;margin-bottom:3px}
+    .cbfill{height:100%;border-radius:6px;transition:width .5s,background .5s}
+    .cbfill.gr{background:linear-gradient(90deg,var(--g3),var(--g4))} .cbfill.rd{background:linear-gradient(90deg,#e74c3c,#ff6b6b)}
+    .cblbl{font-size:10px;color:var(--gray5)}
+    .rinfo{padding:12px 14px;border-bottom:1px solid var(--gray2)}
+    .rbdg{background:var(--g6);color:var(--g2);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;display:inline-block;margin-bottom:6px}
+    .chat{flex:1;display:flex;flex-direction:column;overflow:hidden}
+    .cmsgs{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:5px}
+    .cmsg{font-size:11px;line-height:1.55;padding:5px 9px;border-radius:7px;background:var(--gray1)}
+    .cmsg .sndr{font-weight:700;color:var(--g2)}
+    .cmsg.sys{background:var(--g6);color:var(--g2);font-style:italic}
+    .cinp{display:flex;gap:5px;padding:9px;border-top:1px solid var(--gray2)}
+    .cinput{flex:1;padding:6px 9px;border:2px solid var(--gray2);border-radius:7px;font-size:11px;font-family:inherit}
+    .cinput:focus{outline:none;border-color:var(--g3)}
+    .csendbtn{background:var(--g3);color:white;border:none;border-radius:7px;padding:6px 11px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700}
+    .rhist{padding:8px 14px;overflow-y:auto;max-height:160px}
+    .hitem{display:flex;align-items:center;gap:5px;padding:4px 0;border-bottom:1px solid var(--gray2);font-size:10px;color:var(--gray7)}
+    .hwn{color:var(--g2);font-weight:700}
+
+    /* === RESULT === */
+    #rs{align-items:center;justify-content:center;padding:20px}
+    .rcard2{background:white;border-radius:24px;padding:36px;max-width:540px;width:100%;box-shadow:var(--sh3);text-align:center}
+    .rwinner{display:flex;flex-direction:column;align-items:center;gap:6px;margin:14px 0 18px;padding:18px;background:linear-gradient(135deg,var(--yelp),#fff9e0);border-radius:16px;border:2px solid var(--yel)}
+    .rwinneravt{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--g3),var(--sky));color:white;font-family:'Black Han Sans',sans-serif;font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(45,156,85,.4)}
+    .rwinnernm{font-family:'Black Han Sans',sans-serif;font-size:18px;color:var(--g1)}
+    .rwinnersc{font-size:13px;color:var(--gray5);font-weight:700}
+    .rauto{background:var(--g6);border-radius:12px;padding:12px 16px;margin-top:14px}
+    .rautotxt{font-size:13px;color:var(--g2);font-weight:700;margin-bottom:8px}
+    .rautobardiv{height:6px;background:var(--gray2);border-radius:4px;overflow:hidden}
+    .rautobar{height:100%;background:linear-gradient(90deg,var(--g3),var(--sky));border-radius:4px;transition:width .9s linear;width:100%}
+    .rtit{font-family:'Black Han Sans',sans-serif;font-size:30px;color:var(--g2);margin-bottom:6px}
+    .rsub{font-size:13px;color:var(--gray5);margin-bottom:24px}
+    .rsboard{display:flex;flex-direction:column;gap:9px;margin-bottom:22px}
+    .rrow{display:flex;align-items:center;gap:11px;padding:11px 14px;border-radius:11px;background:var(--gray1)}
+    .rrow.r1{background:var(--yelp);border:2px solid var(--yel)} .rrow.r2{background:#f5f5f5;border:2px solid #aaa} .rrow.r3{background:#fff0e6;border:2px solid #cd7f32}
+    .rrk{font-family:'Black Han Sans',sans-serif;font-size:18px;min-width:30px} .rnm{flex:1;font-weight:700;font-size:13px;text-align:left} .rsc{font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--g2)}
+    .etip{background:var(--gbg);border-radius:12px;padding:14px 18px;font-size:12px;color:var(--gray7);margin-bottom:18px;border-left:3px solid var(--g3);text-align:left}
+
+    /* === ADMIN === */
+    #adm{flex-direction:column}
+    .atbar{background:linear-gradient(135deg,#1a3a5c,#2d6b9c);padding:11px 22px;display:flex;align-items:center;justify-content:space-between;color:white;flex-shrink:0}
+    .attit{font-family:'Black Han Sans',sans-serif;font-size:17px}
+    .anav{display:flex;gap:4px}
+    .anb{padding:7px 14px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:rgba(255,255,255,.15);color:white;transition:all .2s}
+    .anb:hover,.anb.on{background:rgba(255,255,255,.3)}
+    .acont{flex:1;padding:22px;overflow-y:auto;background:var(--gray1)}
+    .agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+    .arcrd{background:white;border-radius:14px;padding:18px;box-shadow:var(--sh1)}
+    .arhd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .arname{font-size:15px;font-weight:800;color:var(--gray9)}
+    .sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:22px}
+    .scard{background:white;border-radius:12px;padding:18px;box-shadow:var(--sh1);text-align:center}
+    .snum{font-family:'Black Han Sans',sans-serif;font-size:34px;color:var(--g3);margin-bottom:3px}
+    .slb{font-size:12px;color:var(--gray5)}
+    .atable{width:100%;border-collapse:collapse;background:white;border-radius:14px;overflow:hidden;box-shadow:var(--sh1)}
+    .atable th{background:var(--g3);color:white;padding:11px 14px;font-size:12px;font-weight:700;text-align:left}
+    .atable td{padding:10px 14px;font-size:12px;border-bottom:1px solid var(--gray2)}
+    .atable tr:last-child td{border-bottom:none}
+    .atable tr:hover td{background:var(--gray1)}
+    .atc{display:none} .atc.on{display:block}
+    .akbtn{background:var(--redp);color:var(--red);border:1px solid var(--red);border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;font-family:inherit;font-weight:700}
+    .akbtn:hover{background:var(--red);color:white}
+    .aplrow{display:flex;align-items:center;gap:7px;padding:7px 9px;background:var(--gray1);border-radius:7px;margin-bottom:5px}
+    .apln{flex:1;font-size:12px;font-weight:600} .apsc{font-size:11px;font-weight:700;color:var(--g2)}
+
+    /* === NOTIFICATIONS === */
+    .nc{position:fixed;top:66px;right:14px;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none}
+    .ntf{background:var(--g2);color:white;padding:11px 18px;border-radius:11px;font-size:13px;font-weight:600;box-shadow:var(--sh2);animation:nslide .35s ease,nfade .35s ease 2.65s forwards;max-width:280px}
+    .ntf.wrn{background:#e67e22} .ntf.err{background:var(--red)} .ntf.inf{background:var(--blue)}
+    @keyframes nslide{from{opacity:0;transform:translateX(36px)}to{opacity:1;transform:translateX(0)}}
+    @keyframes nfade{from{opacity:1}to{opacity:0}}
+
+    /* === ANSWER OVERLAY === */
+    .aov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:200;align-items:center;justify-content:center}
+    .aov.on{display:flex}
+    .aovb{background:white;border-radius:24px;padding:36px 44px;text-align:center;box-shadow:var(--sh3);animation:bnc .48s ease}
+    @keyframes bnc{0%{opacity:0;transform:scale(.5)}70%{transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
+    .aoem{font-size:60px;margin-bottom:10px}
+    .aotxt{font-family:'Black Han Sans',sans-serif;font-size:26px;color:var(--g2)}
+    .aosub{font-size:13px;color:var(--gray5);margin-top:6px}
+
+    /* === MISC === */
+    .spin{width:38px;height:38px;border:4px solid var(--gray2);border-top-color:var(--g3);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .empty{text-align:center;padding:40px;color:var(--gray5);font-size:13px;grid-column:1/-1}
+    .emico{font-size:44px;margin-bottom:10px}
+    .alrtbox{background:var(--yelp);border:2px solid #ffc107;border-radius:11px;padding:11px 14px;font-size:12px;color:#856404;margin-bottom:14px}
+    .codeinp{text-transform:uppercase;font-family:'Black Han Sans',sans-serif;letter-spacing:.1em;font-size:15px}
+
+    /* === CARBON GAUGE (NEW UNO) === */
+    .cgauge-wrap{background:linear-gradient(135deg,var(--g1),#1a3a1a);padding:10px 18px;flex-shrink:0;display:flex;align-items:center;gap:12px;border-bottom:2px solid rgba(255,255,255,.12)}
+    .cgauge-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.8);white-space:nowrap;min-width:80px}
+    .cgauge-bar{flex:1;height:18px;background:rgba(0,0,0,.3);border-radius:12px;overflow:visible;position:relative;border:1px solid rgba(255,255,255,.15)}
+    .cgauge-zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:rgba(255,255,255,.9);border-radius:3px;transform:translateX(-50%);z-index:2}
+    .cgauge-fill{position:absolute;top:0;height:100%;border-radius:12px;transition:all .5s cubic-bezier(.4,0,.2,1);z-index:1}
+    .cgauge-fill.pos{background:linear-gradient(90deg,#e74c3c,#ff6b6b);left:50%}
+    .cgauge-fill.neg{background:linear-gradient(90deg,#3bb8e8,#1a6bba);right:50%}
+    .cgauge-fill.zero{width:0!important;left:50%}
+    .cgauge-num{font-family:'Black Han Sans',sans-serif;font-size:22px;color:white;min-width:52px;text-align:center;transition:color .3s}
+    .cgauge-num.zero{color:var(--g4);animation:glow .8s ease infinite alternate}
+    .cgauge-num.pos{color:#ff8080}
+    .cgauge-num.neg{color:#7dd8f8}
+    .cgauge-hint{font-size:10px;color:rgba(255,255,255,.65);white-space:nowrap;display:none}
+    @media(min-width:900px){.cgauge-hint{display:block}}
+
+    /* === ZERO BUTTON (NEW UNO) === */
+    .zerobtn{background:linear-gradient(135deg,var(--g3),#1abc9c);color:white;border:none;border-radius:14px;padding:12px 28px;font-size:15px;font-weight:800;cursor:pointer;font-family:'Black Han Sans',sans-serif;box-shadow:0 4px 18px rgba(45,156,85,.42);transition:all .2s;letter-spacing:.04em;position:relative;overflow:hidden}
+    .zerobtn:hover:not(:disabled){transform:translateY(-2px) scale(1.04);box-shadow:0 8px 28px rgba(45,156,85,.6)}
+    .zerobtn:disabled{opacity:.35;cursor:not-allowed;filter:grayscale(.5)}
+    .zerobtn.flash{animation:zflash .4s ease 0s 3}
+    @keyframes zflash{0%,100%{transform:scale(1)}50%{transform:scale(1.12);box-shadow:0 0 28px rgba(45,156,85,.95)}}
+    .zerobtn.active{background:linear-gradient(135deg,#f39c12,#e67e22);animation:zpulse .7s ease infinite alternate;cursor:pointer}
+    @keyframes zpulse{from{box-shadow:0 4px 18px rgba(243,156,18,.5)}to{box-shadow:0 8px 36px rgba(243,156,18,.95);transform:scale(1.04)}}
+
+    /* === LEAVE GAME BUTTON === */
+    .gleavebtn{background:rgba(255,255,255,.15);color:white;border:1.5px solid rgba(255,255,255,.3);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s}
+    .gleavebtn:hover{background:rgba(231,76,60,.7);border-color:rgba(231,76,60,.8)}
+
+    /* === SPECIAL CARD STYLE === */
+    .gcard.sp{background:linear-gradient(160deg,#e8d5f5,#d4b3ed);border:2.5px solid #9b59b6}
+    .gcard.sp:hover{transform:translateY(-7px) scale(1.03);box-shadow:0 8px 24px rgba(155,89,182,.45)}
+    .sp .ctbdg{background:#9b59b6;color:white}
+    .sp .csc{color:#9b59b6;font-size:11px}
+    .sp-desc{font-size:9.5px;color:#7d3c98;text-align:center;line-height:1.3;margin-top:2px;font-weight:600}
+
+    /* === DRAW PILE === */
+    .draw-pile{background:linear-gradient(160deg,#e8f4fd,#bee3f8);border:2.5px dashed var(--blue);border-radius:var(--rc);width:90px;min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .22s;box-shadow:var(--sh1)}
+    .draw-pile:hover{transform:translateY(-5px) scale(1.03);box-shadow:var(--sh2);border-color:var(--g3)}
+    .draw-pile:disabled{opacity:.4;cursor:not-allowed}
+    .deck-count{font-family:'Black Han Sans',sans-serif;font-size:22px;color:var(--blue);margin-top:4px}
+
+    /* === LAST CARD AREA === */
+    .lastcard-wrap{display:flex;flex-direction:column;align-items:center;gap:6px}
+    .lastcard-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gray5)}
+
+    /* === DIRECTION INDICATOR === */
+    .dir-ind{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.18);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:white}
+
+  /* === EMOJI PANEL === */
+  .emoji-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+  .emj-btn{background:var(--gray1);border:1.5px solid var(--gray2);border-radius:8px;padding:6px 2px;font-size:18px;cursor:pointer;transition:all .15s;line-height:1;aspect-ratio:1}
+  .emj-btn:hover{background:var(--g6);border-color:var(--g3);transform:scale(1.15)}
+  .emj-btn:active{transform:scale(0.92)}
+  .cmsg.emoji-msg{background:var(--gray1);border-radius:8px;padding:5px 9px;font-size:11px;line-height:1.55}
+  .cmsg.emoji-msg .sndr{font-weight:700;color:var(--g2)}
+  .cmsg.sys{background:var(--g6);color:var(--g2);font-style:italic;font-size:10px}
+  </style>
+</head>
+<body>
+
+<div class="bg" id="bg"></div>
+<div class="nc" id="nc"></div>
+
+<!-- Answer Result Overlay -->
+<div class="aov" id="aov">
+  <div class="aovb">
+    <div class="aoem" id="aovem">🎉</div>
+    <div class="aotxt" id="aovtxt">탄소 제로!</div>
+    <div class="aosub" id="aovsub"></div>
+  </div>
+</div>
+
+<!-- ======= LOGIN ======= -->
+<div class="scr on" id="ls">
+  <div class="lcard">
+    <svg class="llogo" viewBox="0 0 80 80" fill="none">
+      <circle cx="40" cy="40" r="40" fill="#d6f5e3"/>
+      <rect x="37" y="26" width="6" height="30" rx="3" fill="#2d9c55"/>
+      <path d="M40 26C32 17 19 19 21 32c2 11 15 9 19 2 4 7 17 9 19-2 2-13-11-15-19-6z" fill="#2d9c55"/>
+      <path d="M40 32C34 25 25 25 27 34c2 7 11 6 13 2" fill="#4cca78"/>
+      <circle cx="58" cy="22" r="9" fill="#3bb8e8" opacity=".75"/>
+      <text x="53.5" y="27" font-size="11" fill="white" font-weight="900">0</text>
+    </svg>
+    <div class="lwon">✨ won 선생님의 탄소중립 수업</div>
+    <h1 class="ltitle">탄소중립 제로<br>🌿 카드 게임</h1>
+    <p class="lsub">탄소흡수카드와 탄소배출카드로<br>탄소중립을 직접 체험해봐요!</p>
+    <div class="fg" style="margin-bottom:12px;text-align:left">
+      <label class="fl">학번 5자리 (예: 10528)</label>
+      <input class="fi" id="inp_snum" placeholder="학번 5자리 입력" maxlength="5" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <div class="fg" style="margin-bottom:20px;text-align:left">
+      <label class="fl">이름</label>
+      <input class="fi" id="inp_sname" placeholder="이름 입력 (예: 홍길동)" maxlength="10" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="btn btp" style="width:100%;padding:13px;font-size:15px" onclick="doLogin()">게임 시작 🌿</button>
+    <div style="margin-top:16px;text-align:center">
+      <button onclick="openAdminLogin()" style="background:none;border:none;font-size:11px;color:var(--gray5);cursor:pointer;font-family:inherit;text-decoration:underline">관리자로 접속</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======= TUTORIAL ======= -->
+<div class="scr" id="ts">
+  <div class="twrap">
+    <div class="thead2">
+      <h2>🎮 게임 방법 알아보기</h2>
+      <p style="font-size:12px;color:var(--gray5)">중1 탄소중립 카드 게임 규칙이에요!</p>
+    </div>
+    <div class="tprog" id="tprog"></div>
+    <!-- 5 cards (새 UNO 룰) -->
+    <div class="tcard on" id="tc0">
+      <div class="tcbody"><div class="tcnum">01</div>
+        <div class="tctit">🌍 탄소중립 카드 게임이란?</div>
+        <div class="tcdesc">이 게임은 <strong>UNO 스타일</strong>의 탄소중립 카드 게임이에요!<br><br>
+        모두가 공유하는 <strong style="color:var(--g3)">공동 탄소 수치</strong>를 함께 조절해요.<br><br>
+        수치가 <strong style="color:var(--g3)">0</strong>이 되면 &quot;<strong>탄소제로!</strong>&quot;를 외치면 큰 점수를 얻어요!<br><br>
+        탄소 배출이 늘어날수록 탄소 수치가 올라가고, 흡수를 하면 내려가요!</div>
+      </div>
+    </div>
+    <div class="tcard" id="tc1">
+      <div class="tcbody"><div class="tcnum">02</div>
+        <div class="tctit">🃏 세 가지 카드</div>
+        <div class="tcdesc" style="margin-bottom:12px">세 종류 카드가 있어요!</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <div style="background:var(--redp);border:2px solid var(--red);border-radius:11px;padding:11px;width:115px;text-align:center">
+            <div style="font-size:22px;margin-bottom:4px">🏭</div>
+            <div style="font-size:11px;font-weight:700">탄소배출카드</div>
+            <div style="font-size:16px;font-weight:900;color:var(--red);margin-top:3px">-1 ~ -9</div>
+            <div style="font-size:9px;color:var(--red);font-weight:700;margin-top:3px">탄소 수치 올라감</div>
+          </div>
+          <div style="background:var(--bluep);border:2px solid var(--blue);border-radius:11px;padding:11px;width:115px;text-align:center">
+            <div style="font-size:22px;margin-bottom:4px">🌱</div>
+            <div style="font-size:11px;font-weight:700">탄소흡수카드</div>
+            <div style="font-size:16px;font-weight:900;color:var(--blue);margin-top:3px">+1 ~ +6</div>
+            <div style="font-size:9px;color:var(--blue);font-weight:700;margin-top:3px">탄소 수치 내려감</div>
+          </div>
+          <div style="background:#e8d5f5;border:2px solid #9b59b6;border-radius:11px;padding:11px;width:115px;text-align:center">
+            <div style="font-size:22px;margin-bottom:4px">✨</div>
+            <div style="font-size:11px;font-weight:700">특수카드</div>
+            <div style="font-size:16px;font-weight:900;color:#9b59b6;margin-top:3px">5종류</div>
+            <div style="font-size:9px;color:#7d3c98;font-weight:700;margin-top:3px">특별 효과!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tcard" id="tc2">
+      <div class="tcbody"><div class="tcnum">03</div>
+        <div class="tctit">🎯 게임 진행 방법</div>
+        <div class="tcdesc">
+          ① 시작 시 <strong>7장씩</strong> 카드를 받아요<br><br>
+          ② 순서대로 1장씩 카드를 내요 → <strong>공동 탄소 수치</strong> 변화<br><br>
+          ③ 수치가 <strong style="color:var(--g3)">0</strong>이 되면 → &quot;<strong>탄소제로!</strong>&quot; 버튼 클릭 → <strong style="color:var(--g3)">+10점</strong><br><br>
+          ④ 낼 카드가 없으면 덱에서 1장 뽑아요 (턴 넘어감)<br><br>
+          ⑤ 제한 시간 내에 안 내면 <strong style="color:var(--red)">-2점</strong>
+        </div>
+      </div>
+    </div>
+    <div class="tcard" id="tc3">
+      <div class="tcbody"><div class="tcnum">04</div>
+        <div class="tctit">✨ 특수카드 5종류</div>
+        <div class="tcdesc">
+          🔄 <strong>지구의 날</strong> — 왼쪽 플레이어와 카드 전체 교환!<br>
+          ⛔ <strong>태풍 경보</strong> — 다음 사람 턴 스킵!<br>
+          💀 <strong>산업 재해</strong> — 다음 사람 카드 2장 추가!<br>
+          💸 <strong>탄소세 부과</strong> — 탄소 수치 +5 (배출 증가)<br>
+          🌍 <strong>그린 뉴딜</strong> — 탄소 수치 -5 (흡수 증가)<br><br>
+          <span style="color:#9b59b6;font-weight:700">전략적으로 특수카드를 활용하세요!</span>
+        </div>
+      </div>
+    </div>
+    <div class="tcard" id="tc4">
+      <div class="tcbody"><div class="tcnum">05</div>
+        <div class="tctit">🏆 점수 및 팁</div>
+        <div class="tcdesc">
+          🌿 탄소제로 정확히 외치기: <strong style="color:var(--g3)">+10점</strong><br>
+          ❌ 탄소제로 잘못 외치기: <strong style="color:var(--red)">-3점</strong><br>
+          ⏰ 타임아웃: <strong style="color:var(--red)">-2점</strong><br>
+          👋 게임 도중 나가기: <strong style="color:var(--red)">자동패 (꼴등)</strong><br><br>
+          👑 <strong>방장</strong>이 방 이름과 코드 설정 후 <strong>모두 준비</strong> 시 게임 시작!<br><br>
+          <span style="color:var(--g3);font-weight:700">🌿 전략적으로 탄소제로를 노려보세요!</span>
+        </div>
+      </div>
+    </div>
+    </div>
+    <div class="tbtns" id="tbtns">
+      <button class="tskip" onclick="skipT()">게임 방법 알아요 →</button>
+      <button class="btn bts" id="tprev" onclick="tPrev()" style="display:none">◀ 이전</button>
+      <button class="btn btp" id="tnext" onclick="tNext()">다음 ▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======= LOBBY ======= -->
+<div class="scr" id="lobby">
+  <div class="topbar">
+    <div class="tbl">
+      <svg width="28" height="28" viewBox="0 0 80 80" fill="none"><circle cx="40" cy="40" r="40" fill="#d6f5e3"/><rect x="37" y="24" width="6" height="28" rx="3" fill="#2d9c55"/><path d="M40 24C32 15 19 17 21 30c2 11 15 9 19 2 4 7 17 9 19-2 2-13-11-15-19-6z" fill="#2d9c55"/></svg>
+      <span class="tbtitle">탄소중립 제로 게임</span>
+      <span class="wontag">won 선생님</span>
+    </div>
+    <div class="tbr">
+      <div class="myrecord" id="myrecord" style="display:none">
+        <span class="rec-item rec-w" id="rec-wins">0승</span>
+        <span class="rec-sep">·</span>
+        <span class="rec-item rec-l" id="rec-losses">0패</span>
+        <span class="rec-sep">·</span>
+        <span class="rec-item rec-n" id="rec-games">0게임</span>
+      </div>
+      <div style="text-align:right">
+        <div class="uname" id="topname">-</div>
+        <div class="uid" id="topid">-</div>
+      </div>
+      <div class="uavt" id="topavt">?</div>
+    </div>
+  </div>
+  <div class="lcont">
+    <div class="hero">
+      <div class="hwon">🌿 won 선생님이 만든 탄소중립 학습 게임</div>
+      <h1>탄소중립 제로 카드 게임</h1>
+      <p>우노 스타일! 카드를 내서 공동 탄소 수치를 0으로 만들어요!</p>
+    </div>
+    <div class="lact">
+      <button class="brcbtn" onclick="openCR()">＋ 방 만들기</button>
+      <button class="rfbtn" onclick="loadRooms()">↻ 새로고침</button>
+      <div style="flex:1"></div>
+      <div style="display:flex;gap:7px;align-items:center">
+        <input class="fi codeinp" id="jci" placeholder="입장코드" maxlength="6" style="width:120px" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"/>
+        <button class="btn btp btsm" onclick="joinByCode()">입장</button>
+      </div>
+    </div>
+    <div class="ftabs">
+      <button class="ftab on" onclick="filterR('all',this)">전체</button>
+      <button class="ftab" onclick="filterR('waiting',this)">입장 가능</button>
+      <button class="ftab" onclick="filterR('playing',this)">게임 중</button>
+    </div>
+    <div class="slbl">🚪 게임 방 목록</div>
+    <div class="rgrid" id="rgrid">
+      <div class="empty"><div class="spin"></div>방 목록 불러오는 중...</div>
+    </div>
+  </div>
+  <button class="adminlnk" onclick="gotoAdmin()">🔧 관리자 화면</button>
+</div>
+
+<!-- ======= WAITING ======= -->
+<div class="scr" id="ws">
+  <div class="topbar">
+    <div class="tbl"><span style="font-size:18px">🌿</span><span class="tbtitle" id="wRoomName">대기실</span></div>
+    <span class="wontag">won 선생님</span>
+  </div>
+  <div class="wcont">
+    <div class="wcard">
+      <div class="wheader">
+        <h2 id="wTitle">대기 중...</h2>
+        <p style="font-size:12px;color:var(--gray5);margin-bottom:6px">친구들이 입장하길 기다리고 있어요</p>
+        <div style="font-size:12px;color:var(--gray5)">입장 코드</div>
+        <div class="wcode" id="wCode">------</div>
+        <div class="alrtbox" id="walrt" style="display:none"></div>
+      </div>
+      <div class="slbl">👥 플레이어 현황</div>
+      <div class="wpgrid" id="wpgrid"></div>
+      <div class="wbtns">
+        <button class="lvbtn" onclick="leaveRoom()">← 나가기</button>
+        <button class="rdybtn no" id="rdybtn" onclick="toggleReady()">준비 완료!</button>
+        <button class="stbtn" id="stbtn" style="display:none" disabled onclick="startGame()">🎮 게임 시작!</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======= GAME ======= -->
+<div class="scr" id="gs">
+  <!-- 상단 바 -->
+  <div class="gtbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div>
+        <div class="grname" id="gRoomName">탄소중립 제로 게임</div>
+        <div style="font-size:10px;opacity:.7" id="gCode"></div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="dir-ind" id="dir-ind">🔄 정방향</div>
+      <div class="gtwrap">
+        <div style="text-align:center">
+          <div style="font-size:9px;opacity:.8">남은 시간</div>
+          <div class="gtimer" id="gtimer">30</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:12px;opacity:.9" id="gRound">라운드 1/10</div>
+      <button class="gleavebtn" onclick="confirmLeaveGame()">나가기</button>
+      <!-- BGM 컨트롤 -->
+      <div id="bgm-ctrl" style="display:flex;align-items:center;gap:6px">
+        <button id="bgm-btn" onclick="toggleBGM()" title="배경음악 켜기/끄기"
+          style="background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.3);color:white;border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer;font-family:inherit;transition:all .2s;line-height:1"
+          >🎵</button>
+        <input id="bgm-vol" type="range" min="0" max="100" value="30"
+          oninput="onBGMVol(this.value)"
+          style="width:56px;height:4px;accent-color:#fff;opacity:.75;cursor:pointer;vertical-align:middle"
+          title="볼륨">
+      </div>
+    </div>
+  </div>
+  <!-- 중앙 탄소 게이지 -->
+  <div class="cgauge-wrap">
+    <div class="cgauge-label" id="cgauge-label">🌍 공동 탄소 수치</div>
+    <div class="cgauge-bar">
+      <div class="cgauge-zero"></div>
+      <div class="cgauge-fill" id="cgauge-fill" style="width:50%;left:50%"></div>
+    </div>
+    <div class="cgauge-num" id="cgauge-num">0</div>
+    <div class="cgauge-hint" id="cgauge-hint">탄소 수치를 정확히 0으로 만들어 탄소제로를 외치세요!</div>
+  </div>
+  <div class="gmain">
+    <!-- Left: 점수판 -->
+    <div class="ppanel">
+      <div class="phd">🏆 점수판</div>
+      <div id="plist"></div>
+      <div class="phd" style="border-top:1px solid var(--gray2);margin-top:4px">📜 기록</div>
+      <div class="rhist" id="rhist"></div>
+    </div>
+    <!-- Center: 게임 보드 -->
+    <div class="gboard">
+      <div class="gcenter">
+        <!-- 차례 표시 -->
+        <div class="tindc ot" id="tindc">🌀 게임 시작 대기 중...</div>
+        <!-- 메인 게임 영역: 덱 + 마지막 카드 + 탄소제로 버튼 -->
+        <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:center">
+          <!-- 덱에서 카드 뽑기 -->
+          <div style="text-align:center">
+            <div class="elbl" style="margin-bottom:6px">📦 카드 더미</div>
+            <button class="draw-pile" id="drawpile" onclick="drawCardFromDeck()">
+              <div style="font-size:28px">🃏</div>
+              <div class="deck-count" id="deckcnt">?</div>
+              <div style="font-size:9px;color:var(--blue);font-weight:700;margin-top:2px">클릭해서 뽑기</div>
+            </button>
+          </div>
+          <!-- 마지막 낸 카드 -->
+          <div class="lastcard-wrap">
+            <div class="lastcard-lbl">📤 방금 낸 카드</div>
+            <div id="lastcard-area" style="min-width:110px;min-height:150px"></div>
+          </div>
+          <!-- 탄소제로 버튼 영역 -->
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+            <button class="zerobtn" id="zerobtn" onclick="callZero()" disabled>🌿 탄소제로!</button>
+            <div style="font-size:10px;color:var(--gray5);text-align:center">공동 탄소 수치가 0일 때만!<br><span style="color:var(--red);font-weight:700">잘못 누르면 -3점</span></div>
+          </div>
+        </div>
+        <div class="hint" id="hint">내 차례에 카드 1장을 내세요. 공동 탄소 수치가 정확히 0이 되면 탄소제로를 외치세요!</div>
+      </div>
+      <!-- 내 카드 -->
+      <div class="hand">
+        <div class="hlbl" id="hlbl">🃏 내 카드 (<span id="handcnt">0</span>장) — 클릭해서 내기</div>
+        <div class="hcards" id="hcards"></div>
+      </div>
+    </div>
+    <!-- Right: 이모티콘 반응 -->
+    <div class="ipanel">
+      <div class="rinfo">
+        <div class="rbdg" id="rbdg">라운드 1/10</div>
+        <div style="font-size:11px;color:var(--gray5);margin-top:4px">내 점수: <strong id="msc">0</strong>점</div>
+        <div style="font-size:10px;color:var(--gray5);margin-top:2px">손패: <span id="mhandcnt">7</span>장</div>
+      </div>
+      <!-- 플레이어 카드 수 표시 -->
+      <div class="phd" style="margin-top:4px">👥 플레이어 카드 수</div>
+      <div id="pcardcnt" style="padding:8px 10px;display:flex;flex-direction:column;gap:4px"></div>
+      <!-- 이모티콘 반응 메시지 목록 -->
+      <div class="cmsgs" id="cmsgs" style="flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:5px"></div>
+      <!-- 이모티콘 버튼 패널 -->
+      <div style="padding:8px;border-top:1px solid var(--gray2)">
+        <div style="font-size:10px;color:var(--gray5);margin-bottom:6px;font-weight:700">이모티콘을 눌러서 반응하세요!</div>
+        <div class="emoji-grid" id="emoji-grid">
+          <!-- 감정 -->
+          <button class="emj-btn" onclick="sendEmoji('😄','신나요!')">😄</button>
+          <button class="emj-btn" onclick="sendEmoji('😂','너무 웃겨요!')">😂</button>
+          <button class="emj-btn" onclick="sendEmoji('😢','속상해요')">😢</button>
+          <button class="emj-btn" onclick="sendEmoji('😡','화가 나요!')">😡</button>
+          <button class="emj-btn" onclick="sendEmoji('😱','깜짝 놀랐어요!')">😱</button>
+          <button class="emj-btn" onclick="sendEmoji('🥳','신난다!')">🥳</button>
+          <!-- 게임 반응 -->
+          <button class="emj-btn" onclick="sendEmoji('👏','잘했어요!')">👏</button>
+          <button class="emj-btn" onclick="sendEmoji('👍','좋아요!')">👍</button>
+          <button class="emj-btn" onclick="sendEmoji('👎','별로예요')">👎</button>
+          <button class="emj-btn" onclick="sendEmoji('🔥','뜨겁다!')">🔥</button>
+          <button class="emj-btn" onclick="sendEmoji('💀','죽겠다!')">💀</button>
+          <button class="emj-btn" onclick="sendEmoji('🌿','탄소제로!')">🌿</button>
+          <!-- 재촉/소통 -->
+          <button class="emj-btn" onclick="sendEmoji('⏰','빨리 해요~')">⏰</button>
+          <button class="emj-btn" onclick="sendEmoji('🙏','제발요!')">🙏</button>
+          <button class="emj-btn" onclick="sendEmoji('😤','어이없어!')">😤</button>
+          <button class="emj-btn" onclick="sendEmoji('🤔','고민 중...')">🤔</button>
+          <button class="emj-btn" onclick="sendEmoji('👀','보고 있어요')">👀</button>
+          <button class="emj-btn" onclick="sendEmoji('🫡','알겠어요!')">🫡</button>
+          <!-- 탄소 테마 -->
+          <button class="emj-btn" onclick="sendEmoji('🌍','지구를 지켜요!')">🌍</button>
+          <button class="emj-btn" onclick="sendEmoji('♻️','재활용!')">♻️</button>
+          <button class="emj-btn" onclick="sendEmoji('✈️','비행기야!')">✈️</button>
+          <button class="emj-btn" onclick="sendEmoji('🚗','자동차!')">🚗</button>
+          <button class="emj-btn" onclick="sendEmoji('🌱','나무 심기!')">🌱</button>
+          <button class="emj-btn" onclick="sendEmoji('⚡','에너지!')">⚡</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+중립을 위해 노력한 모두 수고했어요!</div>
+    <div class="rwinner" id="rwinner" style="display:none">
+      <div class="rwinneravt" id="rwinneravt">?</div>
+      <div class="rwinnernm" id="rwinnernm">우승자</div>
+      <div class="rwinnersc" id="rwinnersc">0점</div>
+    </div>
+    <div class="rsboard" id="rsboard"></div>
+    <div class="etip" id="etip">🌿 <strong>오늘의 팁:</strong> 가까운 거리는 걸어서 이동해요!</div>
+    <div class="rauto" id="rauto">
+      <div class="rautotxt">🏠 <span id="rautonum">5</span>초 후 자동으로 로비 이동...</div>
+      <div class="rautobardiv"><div class="rautobar" id="rautobar"></div></div>
+    </div>
+    <button class="btn bts" onclick="doLeaveAfterGame()" style="width:100%;margin-top:10px">지금 바로 로비로</button>
+  </div>
+</div>
+
+<!-- ======= ADMIN ======= -->
+<div class="scr" id="adm">
+  <div class="atbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <svg width="26" height="26" viewBox="0 0 80 80" fill="none"><circle cx="40" cy="40" r="40" fill="rgba(255,255,255,.2)"/><rect x="37" y="22" width="6" height="28" rx="3" fill="white"/><path d="M40 22C32 13 19 15 21 28c2 11 15 9 19 2 4 7 17 9 19-2 2-13-11-15-19-6z" fill="white"/></svg>
+      <span class="attit">🔧 관리자 대시보드</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="anav">
+        <button class="anb on" onclick="admTab('ov',this)">개요</button>
+        <button class="anb" onclick="admTab('st',this)">학생 현황</button>
+        <button class="anb" onclick="admTab('rm',this)">방 관리</button>
+        <button class="anb" onclick="admTab('cfg',this)">⚙️ 설정</button>
+      </div>
+      <button class="btn bts btsm" onclick="gotoLobby()">← 학생 화면</button>
+    </div>
+  </div>
+  <div class="acont">
+    <!-- Overview -->
+    <div class="atc on" id="at-ov">
+      <div class="sgrid">
+        <div class="scard"><div class="snum" id="stotal">0</div><div class="slb">접속 학생 수</div></div>
+        <div class="scard"><div class="snum" id="srooms">0</div><div class="slb">활성 방 수</div></div>
+        <div class="scard"><div class="snum" id="splaying">0</div><div class="slb">게임 진행 중</div></div>
+        <div class="scard"><div class="snum" id="swaiting">0</div><div class="slb">대기 중인 방</div></div>
+      </div>
+      <div class="slbl" style="margin-bottom:10px">⚡ 빠른 관리</div>
+      <div style="display:flex;gap:9px;margin-bottom:22px;flex-wrap:wrap">
+        <button class="btn btd btsm" onclick="clearAllRooms()">🚫 모든 방 초기화</button>
+        <button class="btn btw btsm" onclick="openBcast()">📢 전체 공지</button>
+        <button class="btn btp btsm" onclick="refreshAdm()">↻ 새로고침</button>
+        <button class="btn btsm" style="background:#c0392b;color:#fff;border-color:#c0392b" onclick="kickAllStudents()">🚪 전체 학생 퇴장</button>
+      </div>
+      <div class="slbl" style="margin-bottom:12px">📊 방별 현황</div>
+      <div class="agrid" id="admRooms"></div>
+    </div>
+    <!-- Students -->
+    <div class="atc" id="at-st">
+      <div style="margin-bottom:14px;display:flex;gap:9px;align-items:center">
+        <input class="fi" id="stsch" placeholder="이름 또는 학번 검색..." style="max-width:280px" oninput="filterSt()"/>
+        <span style="font-size:12px;color:var(--gray5)" id="stcnt">총 0명</span>
+      </div>
+      <table class="atable" id="sttbl">
+        <thead><tr><th>학번</th><th>이름</th><th>학년/반/번</th><th>현재 방</th><th>점수</th><th>관리</th></tr></thead>
+        <tbody id="sttbody"></tbody>
+      </table>
+    </div>
+    <!-- Rooms -->
+    <div class="atc" id="at-rm">
+      <div class="agrid" id="admRoomsDetail"></div>
+    </div>
+    <!-- Settings -->
+    <div class="atc" id="at-cfg">
+      <div style="max-width:400px">
+        <div class="slbl" style="margin-bottom:16px">🔑 관리자 비밀번호 변경</div>
+        <div class="fg"><label class="fl">현재 비밀번호</label><input class="fi" id="cfg_oldpw" type="password" placeholder="현재 비밀번호"/></div>
+        <div class="fg"><label class="fl">새 비밀번호</label><input class="fi" id="cfg_newpw" type="password" placeholder="새 비밀번호"/></div>
+        <div class="fg"><label class="fl">새 비밀번호 확인</label><input class="fi" id="cfg_newpw2" type="password" placeholder="새 비밀번호 다시 입력"/></div>
+        <button class="btn btp" onclick="changeAdminPw()">비밀번호 변경</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======= CUSTOM CONFIRM MODAL ======= -->
+<div id="cfm-modal">
+  <div id="cfm-box">
+    <div id="cfm-msg"></div>
+    <div id="cfm-btns">
+      <button id="cfm-cancel">취소</button>
+      <button id="cfm-ok">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======= ADMIN LOGIN MODAL ======= -->
+<div class="mback" id="admlm">
+  <div class="modal">
+    <h3>🔒 관리자 접속</h3>
+    <div class="fg"><label class="fl">비밀번호</label><input class="fi" id="adml_pw" type="password" placeholder="관리자 비밀번호" onkeydown="if(event.key==='Enter')doAdminLogin()"/></div>
+    <div class="mbtns"><button class="btn bts" onclick="closeM('admlm')">취소</button><button class="btn btp" onclick="doAdminLogin()">접속</button></div>
+  </div>
+</div>
+
+<!-- ======= MODALS ======= -->
+<!-- Create room -->
+<div class="mback" id="crm">
+  <div class="modal">
+    <h3>🚪 새 방 만들기</h3>
+    <div class="fg"><label class="fl">방 이름</label><input class="fi" id="rname" placeholder="예) 지구를 지켜라 팀" maxlength="20"/></div>
+    <div class="fg"><label class="fl">입장 코드 (4~6자리 영문/숫자)</label><input class="fi codeinp" id="rcode" placeholder="예) ECO123" maxlength="6" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"/></div>
+    <div class="fg"><label class="fl">최대 인원</label><select class="fsel" id="rmaxp"><option value="4">4명 (추천)</option><option value="5" selected>5명 (추천)</option><option value="6">6명</option></select></div>
+    <div class="fg"><label class="fl">라운드 수</label><select class="fsel" id="rrnds"><option value="5">5라운드 (빠른)</option><option value="10" selected>10라운드 (기본)</option><option value="15">15라운드 (긴)</option></select></div>
+    <div class="fg"><label class="fl">턴당 제한시간</label><select class="fsel" id="rtmr"><option value="20">20초 (빠름)</option><option value="30" selected>30초 (기본)</option><option value="45">45초 (여유)</option><option value="60">60초 (충분)</option></select></div>
+    <div class="mbtns"><button class="btn bts" onclick="closeM('crm')">취소</button><button class="btn btp" onclick="createRoom()">방 만들기</button></div>
+  </div>
+</div>
+<!-- Join room -->
+<div class="mback" id="jrm">
+  <div class="modal">
+    <h3>🔑 방 입장</h3>
+    <p style="font-size:12px;color:var(--gray5);margin-bottom:14px" id="jrmName">방 이름</p>
+    <div class="fg"><label class="fl">입장 코드</label><input class="fi codeinp" id="jcode" placeholder="코드 입력" maxlength="6" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"/></div>
+    <div class="mbtns"><button class="btn bts" onclick="closeM('jrm')">취소</button><button class="btn btp" onclick="confirmJoin()">입장하기</button></div>
+  </div>
+</div>
+<!-- Broadcast -->
+<div class="mback" id="bcm">
+  <div class="modal">
+    <h3>📢 전체 공지</h3>
+    <div class="fg"><label class="fl">공지 메시지</label><textarea class="fi" id="bcmsg" rows="3" placeholder="모든 학생에게 전달할 메시지" style="resize:none"></textarea></div>
+    <div class="mbtns"><button class="btn bts" onclick="closeM('bcm')">취소</button><button class="btn btp" onclick="sendBcast()">전송</button></div>
+  </div>
+</div>
+
+<!-- ======= FIREBASE + GAME LOGIC ======= -->
+<script type="module">
+// XSS 연너는 코드 삽입막이: 사용자 입력값을 innerHTML에 넣기 전에 이스케이프
+function esc(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged, signOut }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, set, get, push, update, remove, onValue, off, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ============================================================
+// ⚠️  FIREBASE 설정 — FIREBASE_SETUP.md 참고해서 교체하세요!
+// ============================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyDOATx9zHj4grM7ndJFLpI3j4vXpxSoyyE",
+  authDomain: "tansozero-ocean.firebaseapp.com", // GitHub Pages에서도 이 값 그대로 사용
+  databaseURL: "https://tansozero-ocean-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "tansozero-ocean",
+  storageBucket: "tansozero-ocean.firebasestorage.app",
+  messagingSenderId: "55615597831",
+  appId: "1:55615597831:web:450ba5deb3f945311f29a2"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+// ============================================================
+// ============================================================
+// 커스텀 CONFIRM (iframe에서 window.confirm이 차단되므로 대체)
+// ============================================================
+function showConfirm(msg, okLabel='확인', okColor='#c0392b') {
+  return new Promise(resolve => {
+    const modal = document.getElementById('cfm-modal');
+    const msgEl = document.getElementById('cfm-msg');
+    const okBtn = document.getElementById('cfm-ok');
+    const cancelBtn = document.getElementById('cfm-cancel');
+    msgEl.textContent = msg;
+    okBtn.textContent = okLabel;
+    okBtn.style.background = okColor;
+    modal.classList.add('on');
+    const cleanup = (result) => {
+      modal.classList.remove('on');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      resolve(result);
+    };
+    const onOk = () => cleanup(true);
+    const onCancel = () => cleanup(false);
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+  });
+}
+
+// ADMIN PASSWORD (Firebase DB에 저장, 기본값 2026)
+// ============================================================
+let myAdminToken = null; // 로그인 시 발급받은 세션 토큰
+let adminPwListener = null;
+
+async function getAdminPw() {
+  const s = await get(ref(db,'adminConfig/password'));
+  if (!s.exists()) {
+    try { await set(ref(db,'adminConfig/password'), '2026'); } catch(e) {}
+    return '2026';
+  }
+  return s.val();
+}
+async function setAdminPw(pw) {
+  // 새 비밀번호 저장 + 새 세션 토큰 발급 (기존 관리자 세션 전원 강제 로그아웃)
+  const newToken = Date.now().toString(36) + Math.random().toString(36).slice(2);
+  await set(ref(db,'adminConfig'), { password: pw, sessionToken: newToken });
+}
+
+// 관리자 로그인 후 세션 유효성 실시간 감시
+function startAdminSessionWatcher(token) {
+  // 토큰이 null이면 감시 불필요 (DB에 sessionToken 미설정 상태)
+  if (!token) return;
+  if (adminPwListener) { off(ref(db,'adminConfig/sessionToken'), 'value', adminPwListener); adminPwListener = null; }
+  let firstCall = true; // 첫 onValue 콜백은 현재 값 확인용이므로 스킵
+  adminPwListener = onValue(ref(db,'adminConfig/sessionToken'), s => {
+    if (firstCall) { firstCall = false; return; } // 구독 직후 첫 콜백 무시
+    const current = s.val();
+    // 이후 변경 감지: 토큰이 바뀌면 세션 만료
+    if (current && current !== token) {
+      if (adminPwListener) { off(ref(db,'adminConfig/sessionToken'), 'value', adminPwListener); adminPwListener = null; }
+      isAdmin = false; myAdminToken = null;
+      notify('🔒 비밀번호가 변경되어 관리자 세션이 종료됩니다.', 'wrn');
+      setTimeout(() => { show('ls'); }, 1800);
+    }
+  });
+}
+
+// ============================================================
+// CARD SVG ILLUSTRATIONS
+// ============================================================
+
+const CARD_SVGS = {
+
+  // ─── 탄소배출카드 (e1–e18) ────────────────────────────────────────────────
+
+  // e1: 비닐봉지 배출 (-1)
+  e1: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="e1bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0d8e0"/>
+      <stop offset="100%" stop-color="#e8ecf0"/>
+    </linearGradient>
+  </defs>
+  <!-- 배경 -->
+  <rect width="80" height="100" fill="url(#e1bg)"/>
+  <!-- 공장 실루엣 -->
+  <rect x="8" y="72" width="14" height="28" fill="#9aa5b0"/>
+  <rect x="26" y="65" width="12" height="35" fill="#8a9aa8"/>
+  <rect x="50" y="70" width="14" height="30" fill="#9aa5b0"/>
+  <!-- 굴뚝 -->
+  <rect x="13" y="60" width="4" height="15" fill="#8a9aa8"/>
+  <rect x="30" y="52" width="4" height="16" fill="#7a8a98"/>
+  <rect x="55" y="58" width="4" height="14" fill="#8a9aa8"/>
+  <!-- 연기 -->
+  <ellipse cx="15" cy="54" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="18" cy="48" rx="3.5" ry="3" fill="#c8d0d8" opacity="0.55"/>
+  <ellipse cx="21" cy="43" rx="3" ry="2.5" fill="#d0d8e0" opacity="0.4"/>
+  <ellipse cx="32" cy="46" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="35" cy="40" rx="3.5" ry="3" fill="#c8d0d8" opacity="0.55"/>
+  <ellipse cx="57" cy="52" rx="3.5" ry="3" fill="#c0c8d0" opacity="0.65"/>
+  <ellipse cx="60" cy="46" rx="3" ry="2.5" fill="#c8d0d8" opacity="0.5"/>
+  <!-- 비닐봉지 중앙 -->
+  <path d="M34 22 Q40 16 46 22 L49 42 Q49 47 40 48 Q31 47 31 42 Z" fill="#b0bec5" stroke="#78909c" stroke-width="1.2"/>
+  <path d="M36 22 Q37 18 40 17 Q43 18 44 22" fill="none" stroke="#78909c" stroke-width="1.2"/>
+  <line x1="40" y1="17" x2="40" y2="13" stroke="#78909c" stroke-width="1.2"/>
+  <path d="M34 32 Q40 35 46 32" fill="none" stroke="#78909c" stroke-width="0.9" opacity="0.5"/>
+</svg>`,
+
+  // e2: 일회용컵 배출 (-1)
+  e2: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="e2bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0d8e0"/>
+      <stop offset="100%" stop-color="#e8ecf0"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#e2bg)"/>
+  <!-- 공장 실루엣 -->
+  <rect x="5" y="74" width="12" height="26" fill="#9aa5b0"/>
+  <rect x="22" y="68" width="10" height="32" fill="#8a9aa8"/>
+  <rect x="52" y="72" width="13" height="28" fill="#9aa5b0"/>
+  <rect x="9" y="62" width="4" height="14" fill="#8a9aa8"/>
+  <rect x="26" y="54" width="3.5" height="16" fill="#7a8a98"/>
+  <rect x="56" y="60" width="4" height="14" fill="#8a9aa8"/>
+  <!-- 연기 -->
+  <ellipse cx="11" cy="56" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="14" cy="50" rx="3.5" ry="3" fill="#c8d0d8" opacity="0.5"/>
+  <ellipse cx="28" cy="47" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="31" cy="41" rx="3.5" ry="2.5" fill="#c8d0d8" opacity="0.5"/>
+  <ellipse cx="58" cy="53" rx="3.5" ry="3" fill="#c0c8d0" opacity="0.65"/>
+  <!-- 커피컵 -->
+  <path d="M30 20 L32 45 L48 45 L50 20 Z" fill="#e0e0e0" stroke="#90a4ae" stroke-width="1.2"/>
+  <rect x="29" y="19" width="22" height="4" rx="1" fill="#b0bec5"/>
+  <path d="M48 30 Q54 30 54 35 Q54 40 48 40" fill="none" stroke="#90a4ae" stroke-width="1.5"/>
+  <!-- 뚜껑 음료 구멍 -->
+  <rect x="37" y="20" width="6" height="1.5" rx="0.8" fill="#78909c"/>
+  <!-- 스팀 -->
+  <path d="M36 16 Q37 12 36 8" fill="none" stroke="#a0b0bc" stroke-width="1" stroke-linecap="round"/>
+  <path d="M40 15 Q41 11 40 7" fill="none" stroke="#a0b0bc" stroke-width="1" stroke-linecap="round"/>
+  <path d="M44 16 Q45 12 44 8" fill="none" stroke="#a0b0bc" stroke-width="1" stroke-linecap="round"/>
+</svg>`,
+
+  // e3: 유튜브 시청 (-1)
+  e3: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="e3bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0d8e0"/>
+      <stop offset="100%" stop-color="#e8ecf0"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#e3bg)"/>
+  <!-- 공장 실루엣 -->
+  <rect x="6" y="73" width="13" height="27" fill="#9aa5b0"/>
+  <rect x="24" y="67" width="11" height="33" fill="#8a9aa8"/>
+  <rect x="51" y="71" width="14" height="29" fill="#9aa5b0"/>
+  <rect x="10" y="61" width="4" height="14" fill="#8a9aa8"/>
+  <rect x="28" y="53" width="3.5" height="16" fill="#7a8a98"/>
+  <rect x="55" y="59" width="4" height="14" fill="#8a9aa8"/>
+  <!-- 연기 -->
+  <ellipse cx="12" cy="55" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="30" cy="46" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="57" cy="52" rx="3.5" ry="3" fill="#c0c8d0" opacity="0.65"/>
+  <!-- 모니터 -->
+  <rect x="20" y="15" width="40" height="28" rx="3" fill="#455a64" stroke="#78909c" stroke-width="1"/>
+  <rect x="22" y="17" width="36" height="24" rx="2" fill="#1a2632"/>
+  <!-- 재생버튼 -->
+  <rect x="26" y="19" width="28" height="20" rx="2" fill="#c62828" opacity="0.9"/>
+  <polygon points="35,23 35,35 47,29" fill="white"/>
+  <!-- 모니터 받침 -->
+  <rect x="36" y="43" width="8" height="4" fill="#607d8b"/>
+  <rect x="30" y="46" width="20" height="2.5" rx="1" fill="#546e7a"/>
+</svg>`,
+
+  // e4: 전화통화 (-1)
+  e4: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="e4bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0d8e0"/>
+      <stop offset="100%" stop-color="#e8ecf0"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#e4bg)"/>
+  <!-- 공장 실루엣 -->
+  <rect x="5" y="74" width="12" height="26" fill="#9aa5b0"/>
+  <rect x="22" y="68" width="10" height="32" fill="#8a9aa8"/>
+  <rect x="54" y="72" width="13" height="28" fill="#9aa5b0"/>
+  <rect x="9" y="62" width="4" height="14" fill="#8a9aa8"/>
+  <rect x="26" y="54" width="3.5" height="16" fill="#7a8a98"/>
+  <rect x="58" y="60" width="4" height="14" fill="#8a9aa8"/>
+  <!-- 연기 -->
+  <ellipse cx="11" cy="56" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="28" cy="47" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="60" cy="53" rx="3.5" ry="3" fill="#c0c8d0" opacity="0.65"/>
+  <!-- 스마트폰 -->
+  <rect x="28" y="12" width="24" height="40" rx="4" fill="#37474f" stroke="#607d8b" stroke-width="1.2"/>
+  <rect x="30" y="16" width="20" height="28" rx="1.5" fill="#1e2d38"/>
+  <!-- 화면 -->
+  <rect x="31" y="17" width="18" height="26" rx="1" fill="#263238"/>
+  <!-- 통화 아이콘 -->
+  <path d="M35 26 Q34 30 36 33 Q38 35 40 35 Q42 35 44 33 Q46 30 45 26 L43 25 Q42 27 40 27 Q38 27 37 25 Z" fill="#4caf50" opacity="0.9"/>
+  <!-- 홈버튼 -->
+  <circle cx="40" cy="49" r="2" fill="#455a64"/>
+  <!-- 카메라 -->
+  <circle cx="40" cy="14" r="1.2" fill="#455a64"/>
+</svg>`,
+
+  // e5: 샤워하기 (-2)
+  e5: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="e5bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0d8e0"/>
+      <stop offset="100%" stop-color="#e8ecf0"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#e5bg)"/>
+  <!-- 공장 실루엣 -->
+  <rect x="5" y="74" width="13" height="26" fill="#9aa5b0"/>
+  <rect x="23" y="67" width="11" height="33" fill="#8a9aa8"/>
+  <rect x="52" y="72" width="14" height="28" fill="#9aa5b0"/>
+  <rect x="9" y="62" width="4" height="14" fill="#8a9aa8"/>
+  <rect x="27" y="53" width="3.5" height="16" fill="#7a8a98"/>
+  <rect x="56" y="59" width="4" height="14" fill="#8a9aa8"/>
+  <!-- 연기 -->
+  <ellipse cx="11" cy="55" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="29" cy="46" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="32" cy="40" rx="3" ry="2.5" fill="#c8d0d8" opacity="0.5"/>
+  <ellipse cx="58" cy="52" rx="3.5" ry="3" fill="#c0c8d0" opacity="0.65"/>
+  <!-- 샤워기 파이프 -->
+  <line x1="42" y1="10" x2="42" y2="28" stroke="#90a4ae" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M42 10 Q42 8 38 8 Q34 8 34 12" fill="none" stroke="#90a4ae" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- 샤워헤드 -->
+  <ellipse cx="42" cy="30" rx="8" ry="4" fill="#78909c"/>
+  <ellipse cx="42" cy="30" rx="7" ry="3" fill="#90a4ae"/>
+  <!-- 물방울 -->
+  <circle cx="36" cy="37" r="1" fill="#64b5f6" opacity="0.8"/>
+  <circle cx="39" cy="40" r="1" fill="#64b5f6" opacity="0.8"/>
+  <circle cx="42" cy="38" r="1" fill="#64b5f6" opacity="0.8"/>
+  <circle cx="45" cy="41" r="1" fill="#64b5f6" opacity="0.8"/>
+  <circle cx="48" cy="37" r="1" fill="#64b5f6" opacity="0.8"/>
+  <circle cx="37" cy="45" r="1" fill="#64b5f6" opacity="0.6"/>
+  <circle cx="41" cy="47" r="1" fill="#64b5f6" opacity="0.6"/>
+  <circle cx="46" cy="45" r="1" fill="#64b5f6" opacity="0.6"/>
+</svg>`,
+
+  // e6: 화장지 생산 (-2)
+  e6: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="e6bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0d8e0"/>
+      <stop offset="100%" stop-color="#e8ecf0"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#e6bg)"/>
+  <!-- 공장 실루엣 -->
+  <rect x="5" y="73" width="13" height="27" fill="#9aa5b0"/>
+  <rect x="23" y="67" width="11" height="33" fill="#8a9aa8"/>
+  <rect x="53" y="72" width="13" height="28" fill="#9aa5b0"/>
+  <rect x="9" y="61" width="4" height="14" fill="#8a9aa8"/>
+  <rect x="27" y="53" width="3.5" height="16" fill="#7a8a98"/>
+  <rect x="57" y="59" width="4" height="14" fill="#8a9aa8"/>
+  <!-- 연기 -->
+  <ellipse cx="11" cy="55" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="29" cy="46" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="59" cy="52" rx="3.5" ry="3" fill="#c0c8d0" opacity="0.65"/>
+  <!-- 두루마리 휴지 -->
+  <ellipse cx="40" cy="32" rx="14" ry="15" fill="#eceff1" stroke="#b0bec5" stroke-width="1.2"/>
+  <ellipse cx="40" cy="32" rx="5" ry="5.5" fill="#cfd8dc"/>
+  <!-- 중심 구멍 -->
+  <ellipse cx="40" cy="32" rx="3.5" ry="4" fill="#b0bec5"/>
+  <!-- 페이퍼 결 라인 -->
+  <line x1="26" y1="28" x2="54" y2="28" stroke="#cfd8dc" stroke-width="0.8" opacity="0.6"/>
+  <line x1="26" y1="32" x2="54" y2="32" stroke="#cfd8dc" stroke-width="0.8" opacity="0.6"/>
+  <line x1="26" y1="36" x2="54" y2="36" stroke="#cfd8dc" stroke-width="0.8" opacity="0.6"/>
+  <!-- 끝부분 -->
+  <path d="M54 31 L60 29 L60 35 L54 33 Z" fill="#eceff1" stroke="#b0bec5" stroke-width="0.8"/>
+</svg>`,
+
+  // e7: 오렌지주스 생산 (-3)
+  e7: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="e7bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0d8e0"/>
+      <stop offset="100%" stop-color="#e8ecf0"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#e7bg)"/>
+  <!-- 공장 실루엣 -->
+  <rect x="5" y="73" width="13" height="27" fill="#9aa5b0"/>
+  <rect x="23" y="67" width="11" height="33" fill="#8a9aa8"/>
+  <rect x="53" y="71" width="14" height="29" fill="#9aa5b0"/>
+  <rect x="9" y="61" width="4" height="14" fill="#8a9aa8"/>
+  <rect x="27" y="53" width="3.5" height="16" fill="#7a8a98"/>
+  <rect x="57" y="58" width="4" height="15" fill="#8a9aa8"/>
+  <!-- 연기 -->
+  <ellipse cx="11" cy="55" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="29" cy="46" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="59" cy="51" rx="3.5" ry="3" fill="#c0c8d0" opacity="0.65"/>
+  <!-- 오렌지 -->
+  <circle cx="40" cy="31" r="16" fill="#fb8c00"/>
+  <circle cx="40" cy="31" r="14" fill="#ffa726"/>
+  <!-- 오렌지 패턴 -->
+  <path d="M40 17 Q44 22 40 31 Q36 22 40 17" fill="#fb8c00" opacity="0.4"/>
+  <path d="M40 17 Q50 24 40 31 Q38 20 40 17" fill="#fb8c00" opacity="0.3"/>
+  <path d="M40 17 Q30 24 40 31 Q42 20 40 17" fill="#fb8c00" opacity="0.3"/>
+  <!-- 꼭지 -->
+  <path d="M38 15 Q40 10 42 15" fill="none" stroke="#2e7d32" stroke-width="1.5" stroke-linecap="round"/>
+  <ellipse cx="40" cy="15" rx="2" ry="1" fill="#388e3c"/>
+</svg>`,
+
+  // e8: 커피 소비 (-3)
+  e8: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="e8bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0d8e0"/>
+      <stop offset="100%" stop-color="#e8ecf0"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#e8bg)"/>
+  <!-- 공장 실루엣 -->
+  <rect x="5" y="73" width="13" height="27" fill="#9aa5b0"/>
+  <rect x="23" y="67" width="11" height="33" fill="#8a9aa8"/>
+  <rect x="53" y="72" width="14" height="28" fill="#9aa5b0"/>
+  <rect x="9" y="61" width="4" height="14" fill="#8a9aa8"/>
+  <rect x="27" y="53" width="3.5" height="16" fill="#7a8a98"/>
+  <rect x="57" y="59" width="4" height="14" fill="#8a9aa8"/>
+  <!-- 연기 -->
+  <ellipse cx="11" cy="55" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="29" cy="46" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="59" cy="52" rx="3.5" ry="3" fill="#c0c8d0" opacity="0.65"/>
+  <!-- 커피잔 -->
+  <path d="M27 27 L30 50 L50 50 L53 27 Z" fill="#5d4037" stroke="#4e342e" stroke-width="1"/>
+  <rect x="26" y="25" width="28" height="4" rx="1" fill="#4e342e"/>
+  <!-- 커피 색 -->
+  <path d="M28 30 L30 49 L50 49 L52 30 Z" fill="#6d4c41"/>
+  <!-- 손잡이 -->
+  <path d="M50 34 Q58 34 58 40 Q58 46 50 46" fill="none" stroke="#4e342e" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- 받침접시 -->
+  <ellipse cx="40" cy="52" rx="16" ry="2.5" fill="#78909c" opacity="0.5"/>
+  <!-- 스팀 -->
+  <path d="M35 21 Q36 17 35 13" fill="none" stroke="#90a4ae" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M40 20 Q41 16 40 12" fill="none" stroke="#90a4ae" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M45 21 Q46 17 45 13" fill="none" stroke="#90a4ae" stroke-width="1.2" stroke-linecap="round"/>
+</svg>`,
+
+  // e9: 후라이드 치킨 소비 (-4)
+  e9: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="e9bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0d8e0"/>
+      <stop offset="100%" stop-color="#e8ecf0"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#e9bg)"/>
+  <!-- 공장 실루엣 -->
+  <rect x="5" y="73" width="13" height="27" fill="#9aa5b0"/>
+  <rect x="23" y="67" width="11" height="33" fill="#8a9aa8"/>
+  <rect x="52" y="72" width="14" height="28" fill="#9aa5b0"/>
+  <rect x="9" y="61" width="4" height="14" fill="#8a9aa8"/>
+  <rect x="27" y="53" width="3.5" height="16" fill="#7a8a98"/>
+  <rect x="56" y="59" width="4" height="14" fill="#8a9aa8"/>
+  <!-- 연기 -->
+  <ellipse cx="11" cy="55" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="29" cy="46" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="58" cy="52" rx="3.5" ry="3" fill="#c0c8d0" opacity="0.65"/>
+  <!-- 치킨 다리 -->
+  <!-- 뼈 -->
+  <line x1="42" y1="48" x2="42" y2="28" stroke="#efebe9" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="42" cy="28" r="3.5" fill="#efebe9"/>
+  <circle cx="42" cy="50" r="4" fill="#efebe9"/>
+  <!-- 치킨살 -->
+  <ellipse cx="40" cy="36" rx="11" ry="9" fill="#bf8040" transform="rotate(-15, 40, 36)"/>
+  <ellipse cx="40" cy="36" rx="9" ry="7" fill="#d4962a" transform="rotate(-15, 40, 36)"/>
+  <!-- 바삭한 질감 -->
+  <circle cx="35" cy="33" r="1.5" fill="#a0622a" opacity="0.5"/>
+  <circle cx="43" cy="30" r="1.2" fill="#a0622a" opacity="0.5"/>
+  <circle cx="38" cy="40" r="1" fill="#a0622a" opacity="0.4"/>
+  <circle cx="45" cy="37" r="1.5" fill="#a0622a" opacity="0.4"/>
+  <!-- 접시 -->
+  <ellipse cx="40" cy="52" rx="17" ry="3" fill="#cfd8dc" opacity="0.6"/>
+</svg>`,
+
+  // e10: 의류 생산 (-5)
+  e10: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="e10bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0d8e0"/>
+      <stop offset="100%" stop-color="#e8ecf0"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#e10bg)"/>
+  <!-- 공장 실루엣 -->
+  <rect x="5" y="73" width="14" height="27" fill="#9aa5b0"/>
+  <rect x="24" y="66" width="12" height="34" fill="#8a9aa8"/>
+  <rect x="52" y="72" width="14" height="28" fill="#9aa5b0"/>
+  <rect x="9" y="60" width="4.5" height="15" fill="#8a9aa8"/>
+  <rect x="29" y="52" width="4" height="16" fill="#7a8a98"/>
+  <rect x="56" y="59" width="4" height="14" fill="#8a9aa8"/>
+  <!-- 연기 -->
+  <ellipse cx="11" cy="54" rx="4.5" ry="3.5" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="14" cy="47" rx="4" ry="3" fill="#c8d0d8" opacity="0.5"/>
+  <ellipse cx="31" cy="45" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="58" cy="52" rx="3.5" ry="3" fill="#c0c8d0" opacity="0.65"/>
+  <!-- 티셔츠 -->
+  <path d="M28 18 L20 26 L27 29 L27 48 L53 48 L53 29 L60 26 L52 18 Q48 22 40 22 Q32 22 28 18 Z" fill="#78909c" stroke="#546e7a" stroke-width="1"/>
+  <!-- 칼라 -->
+  <path d="M34 18 Q37 24 40 22 Q43 24 46 18" fill="#607d8b"/>
+  <!-- 소매 세부 -->
+  <line x1="27" y1="29" x2="27" y2="48" stroke="#546e7a" stroke-width="0.5" opacity="0.4"/>
+  <line x1="53" y1="29" x2="53" y2="48" stroke="#546e7a" stroke-width="0.5" opacity="0.4"/>
+</svg>`,
+
+  // e11: 소고기 생산 (-6)
+  e11: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="e11bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0d8e0"/>
+      <stop offset="100%" stop-color="#e8ecf0"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#e11bg)"/>
+  <!-- 공장 실루엣 -->
+  <rect x="5" y="73" width="14" height="27" fill="#9aa5b0"/>
+  <rect x="24" y="66" width="12" height="34" fill="#8a9aa8"/>
+  <rect x="52" y="72" width="14" height="28" fill="#9aa5b0"/>
+  <rect x="9" y="60" width="4.5" height="15" fill="#8a9aa8"/>
+  <rect x="29" y="52" width="4" height="16" fill="#7a8a98"/>
+  <rect x="56" y="59" width="4" height="14" fill="#8a9aa8"/>
+  <!-- 연기 -->
+  <ellipse cx="11" cy="53" rx="4.5" ry="3.5" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="31" cy="45" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="34" cy="39" rx="3" ry="2.5" fill="#c8d0d8" opacity="0.5"/>
+  <ellipse cx="58" cy="52" rx="3.5" ry="3" fill="#c0c8d0" opacity="0.65"/>
+  <!-- 소 몸통 -->
+  <ellipse cx="40" cy="36" rx="18" ry="12" fill="#eceff1" stroke="#b0bec5" stroke-width="1"/>
+  <!-- 머리 -->
+  <ellipse cx="55" cy="28" rx="9" ry="8" fill="#eceff1" stroke="#b0bec5" stroke-width="1"/>
+  <!-- 뿔 -->
+  <path d="M50 21 Q49 16 52 17" stroke="#8d6e63" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M57 20 Q58 15 61 16" stroke="#8d6e63" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <!-- 눈 -->
+  <circle cx="58" cy="27" r="1.5" fill="#455a64"/>
+  <!-- 코 -->
+  <ellipse cx="61" cy="32" rx="3.5" ry="2.5" fill="#f8bbd0"/>
+  <circle cx="60" cy="32" r="0.8" fill="#c48b9f"/>
+  <circle cx="62" cy="32" r="0.8" fill="#c48b9f"/>
+  <!-- 다리 -->
+  <rect x="25" y="46" width="5" height="10" rx="2" fill="#dde3e8"/>
+  <rect x="32" y="46" width="5" height="10" rx="2" fill="#dde3e8"/>
+  <rect x="42" y="46" width="5" height="10" rx="2" fill="#dde3e8"/>
+  <rect x="49" y="46" width="5" height="10" rx="2" fill="#dde3e8"/>
+  <!-- 꼬리 -->
+  <path d="M22 34 Q16 30 18 36" fill="none" stroke="#b0bec5" stroke-width="1.5" stroke-linecap="round"/>
+</svg>`,
+
+  // e12: 컴퓨터 사용 (-7)
+  e12: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="e12bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0d8e0"/>
+      <stop offset="100%" stop-color="#e8ecf0"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#e12bg)"/>
+  <!-- 공장 실루엣 -->
+  <rect x="5" y="74" width="13" height="26" fill="#9aa5b0"/>
+  <rect x="23" y="67" width="11" height="33" fill="#8a9aa8"/>
+  <rect x="53" y="72" width="13" height="28" fill="#9aa5b0"/>
+  <rect x="9" y="62" width="4" height="14" fill="#8a9aa8"/>
+  <rect x="27" y="54" width="3.5" height="15" fill="#7a8a98"/>
+  <rect x="57" y="60" width="4" height="14" fill="#8a9aa8"/>
+  <!-- 연기 -->
+  <ellipse cx="11" cy="56" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="29" cy="47" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="59" cy="53" rx="3.5" ry="3" fill="#c0c8d0" opacity="0.65"/>
+  <!-- 노트북 화면 -->
+  <rect x="18" y="14" width="44" height="30" rx="2.5" fill="#37474f" stroke="#546e7a" stroke-width="1"/>
+  <rect x="20" y="16" width="40" height="26" rx="1.5" fill="#1a2632"/>
+  <!-- 화면 내용 -->
+  <rect x="22" y="18" width="20" height="2" rx="1" fill="#4fc3f7" opacity="0.7"/>
+  <rect x="22" y="22" width="14" height="1.5" rx="0.7" fill="#b0bec5" opacity="0.5"/>
+  <rect x="22" y="26" width="18" height="1.5" rx="0.7" fill="#b0bec5" opacity="0.5"/>
+  <rect x="22" y="30" width="12" height="1.5" rx="0.7" fill="#b0bec5" opacity="0.5"/>
+  <rect x="22" y="34" width="16" height="1.5" rx="0.7" fill="#b0bec5" opacity="0.4"/>
+  <!-- 차트 -->
+  <rect x="44" y="22" width="4" height="16" rx="1" fill="#4fc3f7" opacity="0.6"/>
+  <rect x="50" y="28" width="4" height="10" rx="1" fill="#81d4fa" opacity="0.6"/>
+  <rect x="56" y="25" width="4" height="13" rx="1" fill="#4fc3f7" opacity="0.5"/>
+  <!-- 노트북 하단 -->
+  <rect x="16" y="44" width="48" height="5" rx="1.5" fill="#455a64" stroke="#546e7a" stroke-width="0.8"/>
+  <!-- 힌지 -->
+  <rect x="34" y="49" width="12" height="2" rx="1" fill="#37474f"/>
+  <!-- 키보드 -->
+  <rect x="20" y="50" width="40" height="8" rx="1" fill="#546e7a" opacity="0.6"/>
+</svg>`,
+
+  // e13: 기차 이용 (-7)
+  e13: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="e13bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0d8e0"/>
+      <stop offset="100%" stop-color="#e8ecf0"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#e13bg)"/>
+  <!-- 공장 실루엣 -->
+  <rect x="5" y="74" width="12" height="26" fill="#9aa5b0"/>
+  <rect x="22" y="68" width="10" height="32" fill="#8a9aa8"/>
+  <rect x="54" y="73" width="13" height="27" fill="#9aa5b0"/>
+  <rect x="9" y="62" width="4" height="14" fill="#8a9aa8"/>
+  <rect x="26" y="54" width="3.5" height="16" fill="#7a8a98"/>
+  <rect x="58" y="61" width="4" height="14" fill="#8a9aa8"/>
+  <!-- 연기 -->
+  <ellipse cx="11" cy="56" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="28" cy="47" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="60" cy="54" rx="3.5" ry="3" fill="#c0c8d0" opacity="0.65"/>
+  <!-- 기차 몸통 -->
+  <rect x="12" y="26" width="56" height="28" rx="4" fill="#546e7a" stroke="#37474f" stroke-width="1"/>
+  <!-- 기차 창문들 -->
+  <rect x="16" y="31" width="8" height="8" rx="1.5" fill="#90a4ae"/>
+  <rect x="28" y="31" width="8" height="8" rx="1.5" fill="#b0bec5"/>
+  <rect x="40" y="31" width="8" height="8" rx="1.5" fill="#90a4ae"/>
+  <rect x="52" y="31" width="8" height="8" rx="1.5" fill="#b0bec5"/>
+  <!-- 기차 앞부분 강조 -->
+  <rect x="60" y="26" width="8" height="28" rx="2" fill="#455a64"/>
+  <rect x="61" y="33" width="6" height="6" rx="1" fill="#80cbc4" opacity="0.8"/>
+  <!-- 도어 -->
+  <rect x="34" y="30" width="12" height="18" rx="1" fill="#455a64" stroke="#37474f" stroke-width="0.7"/>
+  <circle cx="40" cy="40" r="1.2" fill="#90a4ae"/>
+  <!-- 바퀴 -->
+  <circle cx="24" cy="55" r="5" fill="#263238" stroke="#37474f" stroke-width="1"/>
+  <circle cx="24" cy="55" r="2.5" fill="#455a64"/>
+  <circle cx="56" cy="55" r="5" fill="#263238" stroke="#37474f" stroke-width="1"/>
+  <circle cx="56" cy="55" r="2.5" fill="#455a64"/>
+  <!-- 레일 -->
+  <line x1="5" y1="60" x2="75" y2="60" stroke="#78909c" stroke-width="2"/>
+</svg>`,
+
+  // e14: 형광등 사용 (-8)
+  e14: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="e14bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0d8e0"/>
+      <stop offset="100%" stop-color="#e8ecf0"/>
+    </linearGradient>
+    <radialGradient id="e14glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fffde7" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#fffde7" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#e14bg)"/>
+  <!-- 공장 실루엣 -->
+  <rect x="5" y="74" width="13" height="26" fill="#9aa5b0"/>
+  <rect x="23" y="68" width="11" height="32" fill="#8a9aa8"/>
+  <rect x="52" y="73" width="14" height="27" fill="#9aa5b0"/>
+  <rect x="9" y="62" width="4" height="14" fill="#8a9aa8"/>
+  <rect x="27" y="54" width="3.5" height="16" fill="#7a8a98"/>
+  <rect x="56" y="61" width="4" height="14" fill="#8a9aa8"/>
+  <!-- 연기 -->
+  <ellipse cx="11" cy="56" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="29" cy="47" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="58" cy="54" rx="3.5" ry="3" fill="#c0c8d0" opacity="0.65"/>
+  <!-- 빛 효과 -->
+  <ellipse cx="40" cy="35" rx="22" ry="14" fill="url(#e14glow)"/>
+  <!-- 형광등 -->
+  <rect x="16" y="22" width="48" height="7" rx="3.5" fill="#e8f5e9" stroke="#aed581" stroke-width="1.2"/>
+  <rect x="16" y="22" width="48" height="7" rx="3.5" fill="#f9fbe7" opacity="0.7"/>
+  <!-- 연결부 -->
+  <rect x="14" y="22" width="5" height="7" rx="1" fill="#90a4ae"/>
+  <rect x="61" y="22" width="5" height="7" rx="1" fill="#90a4ae"/>
+  <!-- 고정 줄 -->
+  <line x1="30" y1="12" x2="30" y2="22" stroke="#78909c" stroke-width="1.2"/>
+  <line x1="50" y1="12" x2="50" y2="22" stroke="#78909c" stroke-width="1.2"/>
+  <rect x="26" y="10" width="8" height="3" rx="1" fill="#607d8b"/>
+  <rect x="46" y="10" width="8" height="3" rx="1" fill="#607d8b"/>
+  <!-- 빛 광선 -->
+  <line x1="20" y1="30" x2="14" y2="42" stroke="#f9fbe7" stroke-width="1" opacity="0.5"/>
+  <line x1="30" y1="30" x2="24" y2="46" stroke="#f9fbe7" stroke-width="1" opacity="0.4"/>
+  <line x1="40" y1="30" x2="40" y2="48" stroke="#f9fbe7" stroke-width="1.2" opacity="0.5"/>
+  <line x1="50" y1="30" x2="56" y2="46" stroke="#f9fbe7" stroke-width="1" opacity="0.4"/>
+  <line x1="60" y1="30" x2="66" y2="42" stroke="#f9fbe7" stroke-width="1" opacity="0.5"/>
+</svg>`,
+
+  // e15: 비행기 이용 (-9)
+  e15: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="e15bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0d8e0"/>
+      <stop offset="100%" stop-color="#e8ecf0"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#e15bg)"/>
+  <!-- 공장 실루엣 -->
+  <rect x="5" y="74" width="13" height="26" fill="#9aa5b0"/>
+  <rect x="23" y="68" width="11" height="32" fill="#8a9aa8"/>
+  <rect x="52" y="73" width="14" height="27" fill="#9aa5b0"/>
+  <rect x="9" y="62" width="4" height="14" fill="#8a9aa8"/>
+  <rect x="27" y="54" width="3.5" height="16" fill="#7a8a98"/>
+  <rect x="56" y="61" width="4" height="14" fill="#8a9aa8"/>
+  <!-- 연기/비행운 -->
+  <path d="M10 28 Q20 26 30 28 Q40 30 50 28 Q60 26 70 28" fill="none" stroke="#eceff1" stroke-width="2" opacity="0.6"/>
+  <!-- 비행기 동체 -->
+  <path d="M15 38 Q30 30 55 36 Q65 38 68 40 Q65 42 55 44 Q30 50 15 42 Z" fill="#eceff1" stroke="#b0bec5" stroke-width="1"/>
+  <!-- 주날개 -->
+  <path d="M38 36 Q44 24 52 26 L50 38 Z" fill="#cfd8dc" stroke="#b0bec5" stroke-width="0.8"/>
+  <path d="M38 44 Q44 56 52 54 L50 42 Z" fill="#cfd8dc" stroke="#b0bec5" stroke-width="0.8"/>
+  <!-- 꼬리날개 -->
+  <path d="M18 38 Q15 30 20 30 L22 38 Z" fill="#cfd8dc"/>
+  <path d="M18 42 Q15 50 20 50 L22 42 Z" fill="#cfd8dc"/>
+  <!-- 수직꼬리 -->
+  <path d="M18 40 Q16 33 21 32 L22 40 Z" fill="#b0bec5"/>
+  <!-- 엔진 -->
+  <ellipse cx="45" cy="33" rx="5" ry="2.5" fill="#90a4ae"/>
+  <ellipse cx="45" cy="47" rx="5" ry="2.5" fill="#90a4ae"/>
+  <!-- 창문 -->
+  <circle cx="42" cy="38.5" r="1.2" fill="#87ceeb" opacity="0.8"/>
+  <circle cx="47" cy="38.5" r="1.2" fill="#87ceeb" opacity="0.8"/>
+  <circle cx="52" cy="38.5" r="1.2" fill="#87ceeb" opacity="0.8"/>
+  <circle cx="57" cy="39" r="1.2" fill="#87ceeb" opacity="0.8"/>
+</svg>`,
+
+  // e16: 휘발유 자동차 사용 (-10)
+  e16: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="e16bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0d8e0"/>
+      <stop offset="100%" stop-color="#e8ecf0"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#e16bg)"/>
+  <!-- 공장 실루엣 -->
+  <rect x="5" y="74" width="13" height="26" fill="#9aa5b0"/>
+  <rect x="24" y="67" width="11" height="33" fill="#8a9aa8"/>
+  <rect x="53" y="73" width="13" height="27" fill="#9aa5b0"/>
+  <rect x="9" y="62" width="4" height="14" fill="#8a9aa8"/>
+  <rect x="28" y="54" width="3.5" height="15" fill="#7a8a98"/>
+  <rect x="57" y="61" width="4" height="14" fill="#8a9aa8"/>
+  <!-- 연기 -->
+  <ellipse cx="11" cy="55" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="30" cy="47" rx="4" ry="3" fill="#c0c8d0" opacity="0.7"/>
+  <ellipse cx="59" cy="54" rx="3.5" ry="3" fill="#c0c8d0" opacity="0.65"/>
+  <!-- 배기가스 -->
+  <ellipse cx="9" cy="48" rx="3" ry="2.5" fill="#c0c8d0" opacity="0.6"/>
+  <ellipse cx="7" cy="43" rx="2.5" ry="2" fill="#c8d0d8" opacity="0.45"/>
+  <!-- 자동차 차체 -->
+  <rect x="10" y="38" width="60" height="18" rx="3" fill="#78909c" stroke="#546e7a" stroke-width="1"/>
+  <!-- 지붕 -->
+  <path d="M22 38 Q28 26 52 26 Q58 26 62 38 Z" fill="#607d8b" stroke="#546e7a" stroke-width="1"/>
+  <!-- 앞유리 -->
+  <path d="M47 38 Q50 28 60 30 L62 38 Z" fill="#90caf9" opacity="0.6"/>
+  <!-- 뒷유리 -->
+  <path d="M22 38 Q24 28 34 27 L38 38 Z" fill="#90caf9" opacity="0.6"/>
+  <!-- 사이드 창 -->
+  <rect x="39" y="29" width="8" height="9" rx="1" fill="#90caf9" opacity="0.6"/>
+  <!-- 헤드라이트 -->
+  <rect x="64" y="40" width="4" height="5" rx="1" fill="#fff9c4"/>
+  <!-- 테일라이트 -->
+  <rect x="12" y="40" width="3" height="5" rx="1" fill="#ef9a9a"/>
+  <!-- 바퀴 -->
+  <circle cx="25" cy="57" r="7" fill="#263238" stroke="#37474f" stroke-width="1"/>
+  <circle cx="25" cy="57" r="3.5" fill="#455a64"/>
+  <circle cx="55" cy="57" r="7" fill="#263238" stroke="#37474f" stroke-width="1"/>
+  <circle cx="55" cy="57" r="3.5" fill="#455a64"/>
+  <!-- 배기관 -->
+  <rect x="8" y="50" width="6" height="2.5" rx="1" fill="#607d8b"/>
+</svg>`,
+
+  // e17: 자가용 이용 (-13)
+  e17: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="e17bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8d0da"/>
+      <stop offset="100%" stop-color="#e0e8f0"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#e17bg)"/>
+  <!-- 공장 실루엣 -->
+  <rect x="5" y="74" width="14" height="26" fill="#8a9aa8"/>
+  <rect x="24" y="66" width="12" height="34" fill="#7a8a98"/>
+  <rect x="52" y="72" width="14" height="28" fill="#8a9aa8"/>
+  <rect x="9" y="60" width="4.5" height="16" fill="#7a8a98"/>
+  <rect x="28" y="52" width="4" height="16" fill="#6a7a88"/>
+  <rect x="56" y="59" width="4.5" height="15" fill="#7a8a98"/>
+  <!-- 연기 (더 많이) -->
+  <ellipse cx="11" cy="53" rx="5" ry="3.5" fill="#b8c4cc" opacity="0.8"/>
+  <ellipse cx="14" cy="46" rx="4.5" ry="3.5" fill="#c0ccd4" opacity="0.65"/>
+  <ellipse cx="17" cy="40" rx="4" ry="3" fill="#c8d4dc" opacity="0.5"/>
+  <ellipse cx="30" cy="45" rx="5" ry="3.5" fill="#b8c4cc" opacity="0.8"/>
+  <ellipse cx="33" cy="38" rx="4" ry="3" fill="#c0ccd4" opacity="0.6"/>
+  <ellipse cx="58" cy="52" rx="4" ry="3.5" fill="#b8c4cc" opacity="0.75"/>
+  <!-- SUV 차체 (더 크고 높음) -->
+  <rect x="8" y="34" width="64" height="24" rx="3" fill="#546e7a" stroke="#37474f" stroke-width="1.2"/>
+  <!-- 지붕 (박스형 SUV) -->
+  <rect x="16" y="20" width="50" height="16" rx="2" fill="#455a64" stroke="#37474f" stroke-width="1"/>
+  <!-- 앞유리 -->
+  <path d="M56 36 Q62 22 66 24 L66 36 Z" fill="#90caf9" opacity="0.55"/>
+  <!-- 뒷유리 -->
+  <path d="M16 36 Q16 22 20 22 L24 36 Z" fill="#90caf9" opacity="0.55"/>
+  <!-- 사이드 창 (2개) -->
+  <rect x="26" y="22" width="12" height="13" rx="1.5" fill="#90caf9" opacity="0.55"/>
+  <rect x="41" y="22" width="12" height="13" rx="1.5" fill="#90caf9" opacity="0.55"/>
+  <!-- 범퍼 그릴 -->
+  <rect x="62" y="42" width="8" height="10" rx="1" fill="#37474f"/>
+  <line x1="63" y1="44" x2="69" y2="44" stroke="#546e7a" stroke-width="0.8"/>
+  <line x1="63" y1="47" x2="69" y2="47" stroke="#546e7a" stroke-width="0.8"/>
+  <line x1="63" y1="50" x2="69" y2="50" stroke="#546e7a" stroke-width="0.8"/>
+  <!-- 헤드라이트 -->
+  <rect x="64" y="38" width="5" height="4" rx="1" fill="#fff9c4"/>
+  <!-- 테일라이트 -->
+  <rect x="11" y="38" width="4" height="6" rx="1" fill="#ef9a9a"/>
+  <!-- 루프랙 -->
+  <rect x="18" y="19" width="46" height="2" rx="1" fill="#37474f"/>
+  <!-- 큰 바퀴 -->
+  <circle cx="24" cy="59" r="9" fill="#263238" stroke="#37474f" stroke-width="1.2"/>
+  <circle cx="24" cy="59" r="4.5" fill="#455a64"/>
+  <circle cx="56" cy="59" r="9" fill="#263238" stroke="#37474f" stroke-width="1.2"/>
+  <circle cx="56" cy="59" r="4.5" fill="#455a64"/>
+  <!-- 배기관 -->
+  <rect x="7" y="52" width="7" height="3" rx="1.5" fill="#546e7a"/>
+</svg>`,
+
+  // e18: 나무 소각 (-15)
+  e18: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="e18bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b0b8c0"/>
+      <stop offset="100%" stop-color="#d8dce0"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#e18bg)"/>
+  <!-- 공장 실루엣 (더 어두운) -->
+  <rect x="5" y="73" width="14" height="27" fill="#78909c"/>
+  <rect x="24" y="66" width="12" height="34" fill="#6a7a88"/>
+  <rect x="52" y="71" width="14" height="29" fill="#78909c"/>
+  <rect x="9" y="60" width="4.5" height="15" fill="#6a7a88"/>
+  <rect x="28" y="50" width="4" height="18" fill="#5a6a78"/>
+  <rect x="56" y="58" width="4.5" height="15" fill="#6a7a88"/>
+  <!-- 짙은 연기 -->
+  <ellipse cx="11" cy="52" rx="6" ry="4" fill="#8a9298" opacity="0.85"/>
+  <ellipse cx="15" cy="44" rx="5.5" ry="4" fill="#9aa2a8" opacity="0.75"/>
+  <ellipse cx="19" cy="37" rx="5" ry="3.5" fill="#a0a8b0" opacity="0.6"/>
+  <ellipse cx="30" cy="43" rx="6" ry="4" fill="#8a9298" opacity="0.85"/>
+  <ellipse cx="34" cy="35" rx="5.5" ry="4" fill="#9aa2a8" opacity="0.7"/>
+  <ellipse cx="38" cy="28" rx="5" ry="3.5" fill="#a0a8b0" opacity="0.55"/>
+  <ellipse cx="58" cy="51" rx="5" ry="4" fill="#8a9298" opacity="0.8"/>
+  <ellipse cx="62" cy="43" rx="4.5" ry="3.5" fill="#9aa2a8" opacity="0.65"/>
+  <!-- 나무 그루터기 -->
+  <rect x="32" y="50" width="16" height="10" rx="2" fill="#5d4037"/>
+  <ellipse cx="40" cy="50" rx="8" ry="3" fill="#6d4c41"/>
+  <!-- 나무줄기 -->
+  <rect x="37" y="30" width="6" height="22" fill="#5d4037"/>
+  <!-- 불꽃 -->
+  <path d="M30 52 Q32 40 40 34 Q48 40 50 52 Q46 44 40 46 Q34 44 30 52 Z" fill="#ff7043" opacity="0.9"/>
+  <path d="M33 52 Q35 43 40 38 Q45 43 47 52 Q44 46 40 48 Q36 46 33 52 Z" fill="#ffa726" opacity="0.85"/>
+  <path d="M36 52 Q37 46 40 43 Q43 46 44 52 Q42 48 40 50 Q38 48 36 52 Z" fill="#ffee58" opacity="0.8"/>
+  <!-- 불씨 -->
+  <circle cx="34" cy="36" r="1.2" fill="#ff8f00" opacity="0.7"/>
+  <circle cx="44" cy="33" r="1" fill="#ff8f00" opacity="0.7"/>
+  <circle cx="38" cy="30" r="0.8" fill="#ffca28" opacity="0.6"/>
+</svg>`,
+
+  // ─── 탄소흡수카드 (a1–a6) ────────────────────────────────────────────────
+
+  // a1: 자연보호 (+1)
+  a1: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="a1sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b3e5fc"/>
+      <stop offset="60%" stop-color="#e1f5fe"/>
+      <stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#a1sky)"/>
+  <!-- 초록 언덕 -->
+  <ellipse cx="40" cy="95" rx="55" ry="30" fill="#66bb6a"/>
+  <ellipse cx="15" cy="88" rx="30" ry="20" fill="#81c784"/>
+  <!-- 나무 줄기 -->
+  <rect x="37" y="42" width="6" height="28" fill="#5d4037"/>
+  <!-- 나무 수관 (3단) -->
+  <polygon points="40,12 22,42 58,42" fill="#2e7d32"/>
+  <polygon points="40,22 25,48 55,48" fill="#388e3c"/>
+  <polygon points="40,32 27,54 53,54" fill="#43a047"/>
+  <!-- 작은 나무 오른쪽 -->
+  <rect x="57" y="62" width="4" height="14" fill="#5d4037"/>
+  <polygon points="59,48 51,65 67,65" fill="#388e3c"/>
+  <!-- 작은 나무 왼쪽 -->
+  <rect x="17" y="65" width="3.5" height="12" fill="#5d4037"/>
+  <polygon points="18.8,54 13,67 25,67" fill="#43a047"/>
+  <!-- 태양 -->
+  <circle cx="65" cy="15" r="7" fill="#fff176"/>
+  <line x1="65" y1="5" x2="65" y2="2" stroke="#fff176" stroke-width="1.5"/>
+  <line x1="65" y1="25" x2="65" y2="28" stroke="#fff176" stroke-width="1.5"/>
+  <line x1="55" y1="15" x2="52" y2="15" stroke="#fff176" stroke-width="1.5"/>
+  <line x1="75" y1="15" x2="78" y2="15" stroke="#fff176" stroke-width="1.5"/>
+  <line x1="58" y1="8" x2="56" y2="6" stroke="#fff176" stroke-width="1.2"/>
+  <line x1="72" y1="22" x2="74" y2="24" stroke="#fff176" stroke-width="1.2"/>
+  <line x1="72" y1="8" x2="74" y2="6" stroke="#fff176" stroke-width="1.2"/>
+  <line x1="58" y1="22" x2="56" y2="24" stroke="#fff176" stroke-width="1.2"/>
+</svg>`,
+
+  // a2: 자원 재활용 (+2)
+  a2: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="a2sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b3e5fc"/>
+      <stop offset="60%" stop-color="#e1f5fe"/>
+      <stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#a2sky)"/>
+  <!-- 초록 언덕 -->
+  <ellipse cx="40" cy="95" rx="55" ry="28" fill="#66bb6a"/>
+  <!-- 구름 -->
+  <ellipse cx="18" cy="16" rx="9" ry="5" fill="white" opacity="0.8"/>
+  <ellipse cx="25" cy="14" rx="7" ry="5" fill="white" opacity="0.8"/>
+  <ellipse cx="12" cy="14" rx="6" ry="4" fill="white" opacity="0.8"/>
+  <!-- 재활용 화살표 (삼각형 3개 돌아가는 모양) -->
+  <!-- 화살표 1 (상단) -->
+  <path d="M40 16 L52 36 L36 36 Z" fill="#43a047" opacity="0.9"/>
+  <polygon points="36,36 46,36 41,44" fill="#43a047" opacity="0.9"/>
+  <!-- 화살표 2 (우하단) -->
+  <path d="M52 36 L36 62 L28 48 Z" fill="#388e3c" opacity="0.9"/>
+  <polygon points="28,48 36,62 20,62" fill="#388e3c" opacity="0.9"/>
+  <!-- 화살표 3 (좌하단) -->
+  <path d="M28 62 L52 62 L52 48 Z" fill="#2e7d32" opacity="0.9"/>
+  <polygon points="52,48 52,36 60,48" fill="#2e7d32" opacity="0.9"/>
+  <!-- 중심 원 -->
+  <circle cx="40" cy="44" r="8" fill="#e1f5fe"/>
+  <circle cx="40" cy="44" r="5" fill="#81d4fa"/>
+  <!-- 재활용 심볼 화살표 실제 그리기 -->
+  <path d="M40 20 A20 20 0 0 1 60 40" fill="none" stroke="#2e7d32" stroke-width="4" stroke-linecap="round" marker-end="url(#ah)"/>
+  <path d="M60 40 A20 20 0 0 1 30 58" fill="none" stroke="#388e3c" stroke-width="4" stroke-linecap="round"/>
+  <path d="M30 58 A20 20 0 0 1 40 20" fill="none" stroke="#43a047" stroke-width="4" stroke-linecap="round"/>
+  <!-- 화살표 방향 표시 -->
+  <polygon points="40,14 36,22 44,22" fill="#2e7d32"/>
+  <polygon points="64,43 57,38 55,46" fill="#388e3c"/>
+  <polygon points="27,62 29,54 35,60" fill="#43a047"/>
+</svg>`,
+
+  // a3: 저탄소 소비 (+3)
+  a3: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="a3sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b3e5fc"/>
+      <stop offset="60%" stop-color="#e1f5fe"/>
+      <stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#a3sky)"/>
+  <!-- 초록 언덕 -->
+  <ellipse cx="40" cy="95" rx="55" ry="28" fill="#66bb6a"/>
+  <!-- 구름 -->
+  <ellipse cx="62" cy="14" rx="10" ry="5.5" fill="white" opacity="0.8"/>
+  <ellipse cx="70" cy="12" rx="7" ry="5" fill="white" opacity="0.8"/>
+  <ellipse cx="55" cy="12" rx="6" ry="4" fill="white" opacity="0.8"/>
+  <!-- 장바구니 본체 -->
+  <path d="M20 40 L24 62 L56 62 L60 40 Z" fill="#66bb6a" stroke="#388e3c" stroke-width="1.5"/>
+  <!-- 바구니 격자 -->
+  <line x1="30" y1="40" x2="28" y2="62" stroke="#388e3c" stroke-width="0.8" opacity="0.5"/>
+  <line x1="40" y1="40" x2="40" y2="62" stroke="#388e3c" stroke-width="0.8" opacity="0.5"/>
+  <line x1="50" y1="40" x2="52" y2="62" stroke="#388e3c" stroke-width="0.8" opacity="0.5"/>
+  <line x1="20" y1="48" x2="60" y2="48" stroke="#388e3c" stroke-width="0.8" opacity="0.5"/>
+  <line x1="21" y1="55" x2="59" y2="55" stroke="#388e3c" stroke-width="0.8" opacity="0.5"/>
+  <!-- 손잡이 -->
+  <path d="M28 40 Q28 24 40 24 Q52 24 52 40" fill="none" stroke="#2e7d32" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- 바구니 안 채소 -->
+  <circle cx="30" cy="37" r="4.5" fill="#ef5350" opacity="0.8"/>
+  <path d="M29 33 Q30 29 31 33" fill="none" stroke="#2e7d32" stroke-width="1.2"/>
+  <circle cx="40" cy="36" r="5" fill="#ff7043" opacity="0.8"/>
+  <path d="M39 32 Q40 28 41 32" fill="none" stroke="#2e7d32" stroke-width="1.2"/>
+  <ellipse cx="51" cy="37" rx="4" ry="5" fill="#81c784" opacity="0.9"/>
+  <path d="M50 33 Q51 30 52 33" fill="none" stroke="#2e7d32" stroke-width="1"/>
+</svg>`,
+
+  // a4: 에너지 절약 (+5)
+  a4: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="a4sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b3e5fc"/>
+      <stop offset="60%" stop-color="#e1f5fe"/>
+      <stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+    <radialGradient id="a4glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff9c4" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#fff9c4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#a4sky)"/>
+  <!-- 초록 언덕 -->
+  <ellipse cx="40" cy="95" rx="55" ry="28" fill="#66bb6a"/>
+  <!-- 빛 효과 -->
+  <ellipse cx="40" cy="36" rx="24" ry="18" fill="url(#a4glow)"/>
+  <!-- 전구 유리 -->
+  <path d="M40 14 Q56 14 56 32 Q56 44 48 50 L48 58 L32 58 L32 50 Q24 44 24 32 Q24 14 40 14 Z" fill="#fff9c4" stroke="#f9a825" stroke-width="1.5"/>
+  <!-- 전구 나사부분 -->
+  <rect x="32" y="56" width="16" height="3" rx="1" fill="#f9a825"/>
+  <rect x="32" y="60" width="16" height="3" rx="1" fill="#f0c040"/>
+  <rect x="33" y="64" width="14" height="3" rx="1" fill="#f9a825"/>
+  <!-- 번개 (에너지) -->
+  <path d="M43 22 L36 36 L41 36 L37 50 L48 32 L42 32 Z" fill="#ffa000"/>
+  <!-- 빛 광선 -->
+  <line x1="40" y1="10" x2="40" y2="6" stroke="#fff176" stroke-width="1.5" opacity="0.7"/>
+  <line x1="52" y1="14" x2="55" y2="11" stroke="#fff176" stroke-width="1.5" opacity="0.7"/>
+  <line x1="28" y1="14" x2="25" y2="11" stroke="#fff176" stroke-width="1.5" opacity="0.7"/>
+  <line x1="58" y1="26" x2="62" y2="24" stroke="#fff176" stroke-width="1.5" opacity="0.6"/>
+  <line x1="22" y1="26" x2="18" y2="24" stroke="#fff176" stroke-width="1.5" opacity="0.6"/>
+</svg>`,
+
+  // a5: 친환경 에너지 사용 (+7)
+  a5: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="a5sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b3e5fc"/>
+      <stop offset="55%" stop-color="#e1f5fe"/>
+      <stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#a5sky)"/>
+  <!-- 초록 언덕 -->
+  <ellipse cx="40" cy="95" rx="55" ry="28" fill="#66bb6a"/>
+  <!-- 태양 -->
+  <circle cx="18" cy="18" r="8" fill="#fff176"/>
+  <line x1="18" y1="7" x2="18" y2="4" stroke="#fff176" stroke-width="1.5"/>
+  <line x1="18" y1="29" x2="18" y2="32" stroke="#fff176" stroke-width="1.5"/>
+  <line x1="7" y1="18" x2="4" y2="18" stroke="#fff176" stroke-width="1.5"/>
+  <line x1="29" y1="18" x2="32" y2="18" stroke="#fff176" stroke-width="1.5"/>
+  <line x1="10" y1="10" x2="8" y2="8" stroke="#fff176" stroke-width="1.2"/>
+  <line x1="26" y1="26" x2="28" y2="28" stroke="#fff176" stroke-width="1.2"/>
+  <line x1="26" y1="10" x2="28" y2="8" stroke="#fff176" stroke-width="1.2"/>
+  <line x1="10" y1="26" x2="8" y2="28" stroke="#fff176" stroke-width="1.2"/>
+  <!-- 태양광 패널 -->
+  <rect x="30" y="55" width="34" height="22" rx="2" fill="#1565c0" stroke="#0d47a1" stroke-width="1"/>
+  <!-- 패널 격자 -->
+  <line x1="41" y1="55" x2="41" y2="77" stroke="#1976d2" stroke-width="0.8"/>
+  <line x1="52" y1="55" x2="52" y2="77" stroke="#1976d2" stroke-width="0.8"/>
+  <line x1="30" y1="62" x2="64" y2="62" stroke="#1976d2" stroke-width="0.8"/>
+  <line x1="30" y1="69" x2="64" y2="69" stroke="#1976d2" stroke-width="0.8"/>
+  <!-- 반사광 -->
+  <rect x="31" y="56" width="10" height="5" rx="1" fill="#42a5f5" opacity="0.4"/>
+  <rect x="42" y="56" width="9" height="5" rx="1" fill="#42a5f5" opacity="0.3"/>
+  <!-- 패널 지지대 -->
+  <line x1="38" y1="77" x2="34" y2="87" stroke="#78909c" stroke-width="1.5"/>
+  <line x1="56" y1="77" x2="60" y2="87" stroke="#78909c" stroke-width="1.5"/>
+  <!-- 풍력 발전기 -->
+  <line x1="14" y1="88" x2="14" y2="42" stroke="#90a4ae" stroke-width="2"/>
+  <!-- 날개 3개 -->
+  <path d="M14 50 Q8 42 10 38 Q14 44 14 50" fill="#e1f5fe" stroke="#90a4ae" stroke-width="0.8"/>
+  <path d="M14 50 Q22 44 26 46 Q20 50 14 50" fill="#e1f5fe" stroke="#90a4ae" stroke-width="0.8"/>
+  <path d="M14 50 Q12 60 8 62 Q10 54 14 50" fill="#e1f5fe" stroke="#90a4ae" stroke-width="0.8"/>
+  <circle cx="14" cy="50" r="2" fill="#78909c"/>
+</svg>`,
+
+  // a6: 친환경 이동 (+10)
+  a6: `<svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="a6sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b3e5fc"/>
+      <stop offset="60%" stop-color="#e1f5fe"/>
+      <stop offset="100%" stop-color="#a5d6a7"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="100" fill="url(#a6sky)"/>
+  <!-- 초록 언덕 -->
+  <ellipse cx="40" cy="95" rx="55" ry="28" fill="#66bb6a"/>
+  <!-- 나무 배경 -->
+  <rect x="64" y="58" width="4" height="16" fill="#5d4037"/>
+  <polygon points="66,44 58,60 74,60" fill="#43a047"/>
+  <!-- 구름 -->
+  <ellipse cx="18" cy="16" rx="9" ry="5" fill="white" opacity="0.85"/>
+  <ellipse cx="25" cy="14" rx="7" ry="5" fill="white" opacity="0.85"/>
+  <ellipse cx="12" cy="14" rx="6" ry="4" fill="white" opacity="0.85"/>
+  <!-- 자전거 프레임 -->
+  <!-- 뒷바퀴 -->
+  <circle cx="22" cy="60" r="13" fill="none" stroke="#2e7d32" stroke-width="2.5"/>
+  <circle cx="22" cy="60" r="10" fill="none" stroke="#43a047" stroke-width="1"/>
+  <circle cx="22" cy="60" r="2.5" fill="#2e7d32"/>
+  <!-- 스포크 -->
+  <line x1="22" y1="47" x2="22" y2="73" stroke="#66bb6a" stroke-width="1"/>
+  <line x1="9" y1="60" x2="35" y2="60" stroke="#66bb6a" stroke-width="1"/>
+  <line x1="13" y1="51" x2="31" y2="69" stroke="#66bb6a" stroke-width="1"/>
+  <line x1="31" y1="51" x2="13" y2="69" stroke="#66bb6a" stroke-width="1"/>
+  <!-- 앞바퀴 -->
+  <circle cx="58" cy="60" r="13" fill="none" stroke="#2e7d32" stroke-width="2.5"/>
+  <circle cx="58" cy="60" r="10" fill="none" stroke="#43a047" stroke-width="1"/>
+  <circle cx="58" cy="60" r="2.5" fill="#2e7d32"/>
+  <!-- 앞바퀴 스포크 -->
+  <line x1="58" y1="47" x2="58" y2="73" stroke="#66bb6a" stroke-width="1"/>
+  <line x1="45" y1="60" x2="71" y2="60" stroke="#66bb6a" stroke-width="1"/>
+  <line x1="49" y1="51" x2="67" y2="69" stroke="#66bb6a" stroke-width="1"/>
+  <line x1="67" y1="51" x2="49" y2="69" stroke="#66bb6a" stroke-width="1"/>
+  <!-- 체인 -->
+  <line x1="22" y1="60" x2="38" y2="56" stroke="#ffa726" stroke-width="1.5"/>
+  <!-- 페달 중심 -->
+  <circle cx="38" cy="56" r="3.5" fill="#f57f17" stroke="#e65100" stroke-width="0.8"/>
+  <!-- 페달 암 -->
+  <line x1="38" y1="56" x2="33" y2="62" stroke="#f57f17" stroke-width="2" stroke-linecap="round"/>
+  <line x1="38" y1="56" x2="43" y2="50" stroke="#f57f17" stroke-width="2" stroke-linecap="round"/>
+  <rect x="29" y="61" width="7" height="2" rx="1" fill="#e65100"/>
+  <rect x="42" y="49" width="7" height="2" rx="1" fill="#e65100"/>
+  <!-- 시트 포스트 -->
+  <line x1="38" y1="56" x2="34" y2="40" stroke="#2e7d32" stroke-width="2.2"/>
+  <!-- 안장 -->
+  <rect x="29" y="37" width="12" height="4" rx="2" fill="#1b5e20"/>
+  <!-- 핸들바 포스트 -->
+  <line x1="38" y1="56" x2="52" y2="42" stroke="#2e7d32" stroke-width="2.2"/>
+  <line x1="58" y1="47" x2="52" y2="42" stroke="#2e7d32" stroke-width="2.2"/>
+  <!-- 핸들바 -->
+  <line x1="48" y1="42" x2="56" y2="42" stroke="#1b5e20" stroke-width="3" stroke-linecap="round"/>
+</svg>`,
+
+};
+
+// ============================================================
+// CARD DATA — UNO 스타일 (배출 + 흡수 + 특수)
+// ============================================================
+// 카드 타입: 'emit'(배출), 'absorb'(흡수), 'special'(특수)
+const ALL_CARDS = [
+  // 배출 카드 (탄소 수치 증가)
+  {id:'e1', name:'비닐봉지 사용',   val:-1,  type:'emit',    emoji:'🛍️'},
+  {id:'e2', name:'일회용컵 사용',   val:-1,  type:'emit',    emoji:'☕'},
+  {id:'e3', name:'유튜브 시청',     val:-2,  type:'emit',    emoji:'📺'},
+  {id:'e4', name:'샤워하기',        val:-2,  type:'emit',    emoji:'🚿'},
+  {id:'e5', name:'화장지 사용',     val:-2,  type:'emit',    emoji:'🧻'},
+  {id:'e6', name:'커피 소비',       val:-3,  type:'emit',    emoji:'☕'},
+  {id:'e7', name:'치킨 배달',       val:-4,  type:'emit',    emoji:'🍗'},
+  {id:'e8', name:'의류 구매',       val:-5,  type:'emit',    emoji:'👕'},
+  {id:'e9', name:'소고기 섭취',     val:-6,  type:'emit',    emoji:'🐄'},
+  {id:'e10',name:'자동차 이용',     val:-7,  type:'emit',    emoji:'🚗'},
+  {id:'e11',name:'비행기 탑승',     val:-9,  type:'emit',    emoji:'✈️'},
+  {id:'e12',name:'나무 소각',       val:-5,  type:'emit',    emoji:'🔥'},
+  // 흡수 카드 (탄소 수치 감소)
+  {id:'a1', name:'나무 심기',       val:1,   type:'absorb',  emoji:'🌱'},
+  {id:'a2', name:'자원 재활용',     val:2,   type:'absorb',  emoji:'♻️'},
+  {id:'a3', name:'저탄소 소비',     val:3,   type:'absorb',  emoji:'🛒'},
+  {id:'a4', name:'에너지 절약',     val:4,   type:'absorb',  emoji:'⚡'},
+  {id:'a5', name:'태양광 에너지',   val:5,   type:'absorb',  emoji:'🌞'},
+  {id:'a6', name:'자전거 타기',     val:6,   type:'absorb',  emoji:'🚲'},
+  {id:'a7', name:'대중교통 이용',   val:3,   type:'absorb',  emoji:'🚌'},
+  {id:'a8', name:'채식 식단',       val:4,   type:'absorb',  emoji:'🥗'},
+  // 특수 카드
+  {id:'s1', name:'지구의 날',       val:0,   type:'special', special:'swap',    emoji:'🔄', desc:'옆 플레이어와 카드 교환!'},
+  {id:'s2', name:'태풍 경보',       val:0,   type:'special', special:'skip',    emoji:'⛔', desc:'다음 사람 턴 스킵!'},
+  {id:'s3', name:'산업 재해',       val:0,   type:'special', special:'draw2',   emoji:'💀', desc:'다음 사람 카드 2장 추가!'},
+  {id:'s4', name:'탄소세 부과',     val:0,   type:'special', special:'tax',     emoji:'💸', desc:'탄소 수치 +5 (배출 증가)'},
+  {id:'s5', name:'그린 뉴딜',       val:0,   type:'special', special:'deal',    emoji:'🌍', desc:'탄소 수치 -5 (흡수 증가)'},
+];
+// 편의 참조
+const EMIT  = ALL_CARDS.filter(c=>c.type==='emit');
+const ABS   = ALL_CARDS.filter(c=>c.type==='absorb');
+const SPECIAL = ALL_CARDS.filter(c=>c.type==='special');
+const TIPS = [
+  '가까운 거리는 걸어서 이동하거나 대중교통 및 공유 자전거를 이용해요!',
+  '오염물질을 배출하지 않는 친환경 에너지를 사용해요!',
+  '일회용품을 줄이고, 재활용품을 올바르게 분리배출 해요!',
+  '가전제품의 대기 전력을 차단하고, 효율이 높은 가전제품을 사용해요!',
+  '음식물 쓰레기를 줄이고, 저탄소 제품을 구매해요!',
+  '나무를 심고 가꿔요! 산림을 보호하고, 산불을 예방해요!',
+  '고기 섭취를 줄이면 탄소 배출을 크게 줄일 수 있어요!',
+  '현대차는 2040년까지 전 차량을 전기차로 전환 목표 중이에요!',
+  '재생에너지(태양광, 풍력 등)로 생산한 전기를 사용해요!',
+  '비닐봉지 대신 장바구니를 사용하면 탄소를 줄일 수 있어요!'
+];
+const COLORS = ['#2d9c55','#3bb8e8','#e67e22','#9b59b6','#e74c3c','#1abc9c'];
+let isAdmin = false;
+const MAX_ROOMS = 10;
+
+// ============================================================
+// STATE
+// ============================================================
+let user = null, pinfo = null, roomId = null, roomData = null;
+let timerInt = null, timerSec = 30;
+let roomRef = null, roomListener = null, chatRef = null, chatListener = null;
+let chatStarted = false;
+let curFilter = 'all', roomsRef = null, roomsListener = null;
+const TSTEPS = 5; // 튜토리얼 카드 수 (tc0~tc4)
+let tutStep = 0, tutorialSeen = false;
+// 세션 게임 기록 (사이트 닫을 때까지 유지)
+let myRecord = { games: 0, wins: 0, losses: 0 };
+function updateRecord(isWin) {
+  myRecord.games++;
+  if(isWin) myRecord.wins++; else myRecord.losses++;
+}
+function renderRecord() {
+  const el = document.getElementById('myrecord'); if(!el) return;
+  if(myRecord.games === 0){ el.style.display='none'; return; }
+  el.style.display='flex';
+  document.getElementById('rec-wins').textContent = myRecord.wins+'승';
+  document.getElementById('rec-losses').textContent = myRecord.losses+'패';
+  document.getElementById('rec-games').textContent = myRecord.games+'게임';
+}
+
+// 카드 덱 생성: 배출×2 + 흡수×3 + 특수×1 비율로 섞기
+function buildDeck() {
+  let deck = [];
+  EMIT.forEach(c => { deck.push(c.id); deck.push(c.id); });          // 배출 2장씩
+  ABS.forEach(c  => { deck.push(c.id); deck.push(c.id); deck.push(c.id); }); // 흡수 3장씩
+  SPECIAL.forEach(c => { deck.push(c.id); deck.push(c.id); });       // 특수 2장씩
+  return deck.sort(()=>Math.random()-.5);
+}
+function dealHand(deck, n=7) {
+  // deck 배열에서 앞에서 n장 뽑아 반환 [hand, remainDeck]
+  return [deck.slice(0,n), deck.slice(n)];
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function show(id) {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+}
+function notify(msg, type='') {
+  const c = document.getElementById('nc');
+  const n = document.createElement('div');
+  n.className = `ntf ${type}`;
+  n.textContent = msg;
+  c.appendChild(n);
+  setTimeout(() => n.remove(), 3100);
+}
+function openM(id) { document.getElementById(id).classList.add('on'); }
+window.closeM = id => document.getElementById(id).classList.remove('on');
+
+function parseInfo(snum, sname) {
+  // 학번 형식: 앞 2자리(연도) + 뒤 5자리(실제 학번)
+  // 예) 2610528 → 뒤 5자리 10528 → 1학년 5반 28번
+  // 입력이 5자리면 그대로 사용, 7자리면 뒤 5자리만 사용
+  const real = snum.replace(/\D/g, ''); // 5자리만 입력받음
+  const m = real.match(/^(\d{1})(\d{1,2})(\d{2})$/)  // 1+1+2 = 1학년 5반 28번
+         || real.match(/^(\d{1})(\d{2})(\d{2})$/)    // 1+2+2 = 1학년 10반 28번
+         || null;
+  let grade='?', cls='?', num='?';
+  if (m) {
+    grade = String(parseInt(m[1]));
+    cls   = String(parseInt(m[2]));
+    num   = String(parseInt(m[3]));
+  }
+  return { grade, class: cls, num, name: sname || '학생', email: snum+'@student' };
+}
+
+// dealHand(n=6) 구버전 제거 — 신버전 dealHand(deck, n=7) 사용
+// genEmissions 구버전 제거 — 신 UNO 에서 미사용
+// ============================================================
+// SOUND ENGINE — Web Audio API 효과음
+// ============================================================
+let _actx = null;
+function getACtx() {
+  if (!_actx) _actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_actx.state === 'suspended') _actx.resume();
+  return _actx;
+}
+function snd(t) {
+  try {
+    const ctx = getACtx();
+    const now = ctx.currentTime;
+    if (t === 'card') {
+      // 카드 선택: 경쾌한 클릭 + 짧은 상승음
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(600, now);
+      o.frequency.exponentialRampToValueAtTime(900, now + .06);
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(.35, now + .01);
+      g.gain.exponentialRampToValueAtTime(.001, now + .14);
+      o.start(now); o.stop(now + .15);
+      // 짧은 두 번째 tone
+      const o2 = ctx.createOscillator(), g2 = ctx.createGain();
+      o2.connect(g2); g2.connect(ctx.destination);
+      o2.type = 'triangle';
+      o2.frequency.setValueAtTime(1200, now + .05);
+      g2.gain.setValueAtTime(0, now + .05);
+      g2.gain.linearRampToValueAtTime(.15, now + .06);
+      g2.gain.exponentialRampToValueAtTime(.001, now + .18);
+      o2.start(now + .05); o2.stop(now + .19);
+    } else if (t === 'ok') {
+      // 정답: 팡파레 3음계 상승 + 반짝이 효과
+      const freqs = [523, 659, 784, 1047]; // C-E-G-C
+      freqs.forEach((f, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass'; filter.frequency.value = 3000;
+        o.connect(filter); filter.connect(g); g.connect(ctx.destination);
+        o.type = 'sine';
+        o.frequency.setValueAtTime(f, now + i * .11);
+        g.gain.setValueAtTime(0, now + i * .11);
+        g.gain.linearRampToValueAtTime(.4, now + i * .11 + .02);
+        g.gain.exponentialRampToValueAtTime(.001, now + i * .11 + .22);
+        o.start(now + i * .11); o.stop(now + i * .11 + .23);
+      });
+      // 반짝이는 하이 퍼커션
+      const noise = ctx.createOscillator(), ng = ctx.createGain();
+      noise.connect(ng); ng.connect(ctx.destination);
+      noise.type = 'triangle';
+      noise.frequency.setValueAtTime(3000, now + .3);
+      noise.frequency.exponentialRampToValueAtTime(5000, now + .5);
+      ng.gain.setValueAtTime(.18, now + .3);
+      ng.gain.exponentialRampToValueAtTime(.001, now + .55);
+      noise.start(now + .3); noise.stop(now + .56);
+    } else if (t === 'ng') {
+      // 오답: 불쾌한 하강 buzz
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      const dist = ctx.createWaveShaper();
+      const curve = new Float32Array(256);
+      for (let i = 0; i < 256; i++) curve[i] = ((i / 128) - 1) * 8;
+      dist.curve = curve;
+      o.connect(dist); dist.connect(g); g.connect(ctx.destination);
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(320, now);
+      o.frequency.exponentialRampToValueAtTime(80, now + .35);
+      g.gain.setValueAtTime(.3, now);
+      g.gain.exponentialRampToValueAtTime(.001, now + .38);
+      o.start(now); o.stop(now + .4);
+      // 두 번째 buzz
+      const o2 = ctx.createOscillator(), g2 = ctx.createGain();
+      o2.connect(g2); g2.connect(ctx.destination);
+      o2.type = 'square';
+      o2.frequency.setValueAtTime(180, now + .05);
+      o2.frequency.exponentialRampToValueAtTime(60, now + .3);
+      g2.gain.setValueAtTime(.2, now + .05);
+      g2.gain.exponentialRampToValueAtTime(.001, now + .35);
+      o2.start(now + .05); o2.stop(now + .36);
+    } else if (t === 'tick') {
+      // 타이머 틱: 날카로운 클릭
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'square';
+      o.frequency.setValueAtTime(1000, now);
+      g.gain.setValueAtTime(.12, now);
+      g.gain.exponentialRampToValueAtTime(.001, now + .06);
+      o.start(now); o.stop(now + .07);
+    } else if (t === 'urgentTick') {
+      // 긴박한 틱 (10초 이하)
+      [0, .08].forEach(dt => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = 'square';
+        o.frequency.setValueAtTime(1400, now + dt);
+        g.gain.setValueAtTime(.18, now + dt);
+        g.gain.exponentialRampToValueAtTime(.001, now + dt + .06);
+        o.start(now + dt); o.stop(now + dt + .07);
+      });
+    } else if (t === 'go') {
+      // 게임 시작: 웅장한 팡파레
+      const melody = [
+        {f:262, t:0, dur:.12}, {f:330, t:.12, dur:.12},
+        {f:392, t:.24, dur:.12}, {f:523, t:.36, dur:.22},
+        {f:659, t:.56, dur:.22}, {f:784, t:.76, dur:.35}
+      ];
+      melody.forEach(({f, t: dt, dur}) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(f, now + dt);
+        g.gain.setValueAtTime(0, now + dt);
+        g.gain.linearRampToValueAtTime(.4, now + dt + .02);
+        g.gain.exponentialRampToValueAtTime(.001, now + dt + dur);
+        o.start(now + dt); o.stop(now + dt + dur + .01);
+      });
+    } else if (t === 'ready') {
+      // 준비 완료: 톡 소리
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(440, now);
+      o.frequency.setValueAtTime(880, now + .05);
+      g.gain.setValueAtTime(.25, now);
+      g.gain.exponentialRampToValueAtTime(.001, now + .2);
+      o.start(now); o.stop(now + .21);
+    } else if (t === 'join') {
+      // 플레이어 입장
+      [392, 523].forEach((f, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = 'sine';
+        o.frequency.setValueAtTime(f, now + i * .1);
+        g.gain.setValueAtTime(.2, now + i * .1);
+        g.gain.exponentialRampToValueAtTime(.001, now + i * .1 + .18);
+        o.start(now + i * .1); o.stop(now + i * .1 + .19);
+      });
+    } else if (t === 'timeout') {
+      // 시간 초과: 하강음
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(440, now);
+      o.frequency.exponentialRampToValueAtTime(220, now + .4);
+      g.gain.setValueAtTime(.3, now);
+      g.gain.exponentialRampToValueAtTime(.001, now + .45);
+      o.start(now); o.stop(now + .46);
+    }
+  } catch(e) {}
+}
+function initBg() {
+  const bg=document.getElementById('bg'), syms=['🍃','🌿','🍀','🌱'];
+  for(let i=0;i<16;i++){
+    const l=document.createElement('div');
+    l.className='lf'; l.textContent=syms[i%4];
+    l.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;font-size:${16+Math.random()*18}px;animation-duration:${8+Math.random()*12}s;animation-delay:${-Math.random()*14}s`;
+    bg.appendChild(l);
+  }
+}
+initBg();
+
+// ============================================================
+// BGM ENGINE — 보사노바 재즈 배경음악 (Web Audio API 절차적 생성)
+// ============================================================
+const BGM = (() => {
+  let ctx = null, masterGain = null, isPlaying = false;
+  let scheduleTimer = null;
+  let nextBeatTime = 0, beatCount = 0;
+  const BPM = 108;  // 보사노바 특유의 살짝 빠른 템포
+  const BEAT = 60 / BPM;
+  const BAR  = BEAT * 4;
+
+  // ── 음계 정의 (G장조 보사노바) ──────────────────────────────
+  // Gmaj7 → Cmaj7 → Am7 → D7 (전형적인 보사노바 코드 진행)
+  const CHORDS = [
+    { root: 196.00, notes: [196.00, 246.94, 293.66, 369.99] }, // Gmaj7
+    { root: 130.81, notes: [130.81, 164.81, 196.00, 246.94] }, // Cmaj7
+    { root: 110.00, notes: [110.00, 138.59, 164.81, 207.65] }, // Am7
+    { root: 146.83, notes: [146.83, 185.00, 220.00, 277.18] }, // D7
+  ];
+  // 멜로디 패턴 (G장조 스케일 선율, 4마디)
+  const MELODY = [
+    [392,0],[440,0.5],[392,1],[370,1.5],[392,2],[330,2.5],[293,3],[330,3.5],
+    [370,4],[392,4.5],[440,5],[392,5.5],[370,6],[440,6.5],[493,7],[440,7.5],
+    [392,8],[0,8.5],[370,9],[330,9.5],[293,10],[246,10.5],[293,11],[330,11.5],
+    [370,12],[392,12.5],[440,13],[370,13.5],[392,14],[0,14.5],[392,15],[0,15.5],
+  ];
+
+  function getCtx() {
+    if (!ctx) {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      masterGain = ctx.createGain();
+      masterGain.connect(ctx.destination);
+    }
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+
+  // ── 악기 생성 헬퍼 ──────────────────────────────────────────
+  function makeOsc(type, freq, startT, dur, vol, detune) {
+    detune = detune || 0;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(masterGain);
+    o.type = type;
+    o.frequency.value = freq;
+    if (detune) o.detune.value = detune;
+    g.gain.setValueAtTime(0, startT);
+    g.gain.linearRampToValueAtTime(vol, startT + 0.01);
+    g.gain.setValueAtTime(vol, startT + dur - 0.04);
+    g.gain.linearRampToValueAtTime(0, startT + dur);
+    o.start(startT);
+    o.stop(startT + dur + 0.01);
+  }
+
+  // ── 퍼커션 (보사노바 특유의 클라베 리듬) ───────────────────
+  function playPercussion(barStart) {
+    // 클라베 패턴: 3-2 clave (보사노바의 핵심 리듬)
+    const claveBeats = [0, 0.75, 1.5, 2.5, 3.0];
+    claveBeats.forEach(function(b) {
+      const t = barStart + b * BEAT;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      const filt = ctx.createBiquadFilter();
+      filt.type = 'bandpass'; filt.frequency.value = 1800; filt.Q.value = 8;
+      o.connect(filt); filt.connect(g); g.connect(masterGain);
+      o.type = 'square';
+      o.frequency.value = 400;
+      g.gain.setValueAtTime(0.055, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+      o.start(t); o.stop(t + 0.06);
+    });
+    // 하이햇
+    for (let i = 0; i < 8; i++) {
+      const t = barStart + i * BEAT * 0.5;
+      const isAccent = (i % 2 === 1);
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      const filt = ctx.createBiquadFilter();
+      filt.type = 'highpass'; filt.frequency.value = 6000;
+      o.connect(filt); filt.connect(g); g.connect(masterGain);
+      o.type = 'sawtooth';
+      o.frequency.value = 8000 + Math.random() * 1000;
+      const vol = isAccent ? 0.028 : 0.013;
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + (isAccent ? 0.08 : 0.04));
+      o.start(t); o.stop(t + 0.09);
+    }
+  }
+
+  // ── 베이스 기타 ─────────────────────────────────────────────
+  function playBass(barStart, chordIdx) {
+    const ch = CHORDS[chordIdx % CHORDS.length];
+    const root = ch.root;
+    const pattern = [
+      { beat: 0,   note: root,        dur: BEAT * 0.9 },
+      { beat: 1,   note: root * 1.5,  dur: BEAT * 0.4 },
+      { beat: 1.5, note: root,        dur: BEAT * 0.4 },
+      { beat: 2,   note: root,        dur: BEAT * 0.9 },
+      { beat: 3,   note: root * 0.75, dur: BEAT * 0.4 },
+      { beat: 3.5, note: root,        dur: BEAT * 0.4 },
+    ];
+    pattern.forEach(function(p) {
+      const t = barStart + p.beat * BEAT;
+      makeOsc('triangle', p.note, t, p.dur, 0.20, -5);
+      makeOsc('sine',     p.note * 2, t, p.dur * 0.5, 0.055);
+    });
+  }
+
+  // ── 기타 보이싱 (보사노바 comping) ──────────────────────────
+  function playGuitar(barStart, chordIdx) {
+    const ch = CHORDS[chordIdx % CHORDS.length];
+    const comp = [0, 0.75, 1.5, 2.0, 2.75, 3.5];
+    comp.forEach(function(b, i) {
+      const t = barStart + b * BEAT;
+      const dur = BEAT * (i % 2 === 0 ? 0.55 : 0.35);
+      ch.notes.forEach(function(freq, ni) {
+        const strum = ni * 0.012;
+        makeOsc('sawtooth', freq * 2, t + strum, dur, 0.038, ni * 3);
+        makeOsc('sine',     freq * 2, t + strum, dur, 0.022, -ni * 2);
+      });
+    });
+  }
+
+  // ── 멜로디 (비브라폰 느낌) ───────────────────────────────────
+  function playMelody(barStart, barIdx) {
+    const barOffset = (barIdx % 4) * 4; // 4비트/마디
+    MELODY.forEach(function(item) {
+      const freq = item[0], beat = item[1];
+      if (beat >= barOffset && beat < barOffset + 4) {
+        if (freq === 0) return;
+        const t = barStart + (beat - barOffset) * BEAT;
+        const dur = BEAT * 0.38;
+        makeOsc('sine',     freq,     t, dur, 0.11);
+        makeOsc('triangle', freq,     t, dur * 0.7, 0.045);
+        makeOsc('sine',     freq * 2, t, dur * 0.4, 0.035);
+      }
+    });
+  }
+
+  // ── 스케줄러 ─────────────────────────────────────────────────
+  const LOOKAHEAD = 0.12;
+  const SCHEDULE_INTERVAL = 80;
+
+  function scheduleBar() {
+    if (!isPlaying) return;
+    const c = getCtx();
+    while (nextBeatTime < c.currentTime + LOOKAHEAD) {
+      const barStart = nextBeatTime;
+      const chordIdx = beatCount % CHORDS.length;
+      const melodyBar = beatCount % 4;
+      playPercussion(barStart);
+      playBass(barStart, chordIdx);
+      playGuitar(barStart, chordIdx);
+      playMelody(barStart, melodyBar);
+      nextBeatTime += BAR;
+      beatCount++;
+    }
+    scheduleTimer = setTimeout(scheduleBar, SCHEDULE_INTERVAL);
+  }
+
+  // ── 공개 API ─────────────────────────────────────────────────
+  return {
+    start: function(vol) {
+      vol = (vol === undefined) ? 0.30 : vol;
+      if (isPlaying) return;
+      getCtx();
+      masterGain.gain.setValueAtTime(0, ctx.currentTime);
+      masterGain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 1.8);
+      isPlaying = true;
+      beatCount = 0;
+      nextBeatTime = ctx.currentTime + 0.1;
+      scheduleBar();
+    },
+    stop: function() {
+      if (!isPlaying) return;
+      isPlaying = false;
+      clearTimeout(scheduleTimer);
+      if (masterGain && ctx) {
+        masterGain.gain.setValueAtTime(masterGain.gain.value, ctx.currentTime);
+        masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.8);
+      }
+    },
+    setVolume: function(v) {
+      if (masterGain && ctx) {
+        masterGain.gain.setValueAtTime(masterGain.gain.value, ctx.currentTime);
+        masterGain.gain.linearRampToValueAtTime(v, ctx.currentTime + 0.3);
+      }
+    },
+    get playing() { return isPlaying; },
+  };
+})();
+
+// ============================================================
+// TUTORIAL
+// ============================================================
+function initTutProg() {
+  const p=document.getElementById('tprog'); p.innerHTML='';
+  for(let i=0;i<TSTEPS;i++){const d=document.createElement('div');d.className='tpdot'+(i===tutStep?' on':'');p.appendChild(d);}
+}
+window.tNext = function() {
+  if(tutStep<TSTEPS-1){document.getElementById(`tc${tutStep}`).classList.remove('on');tutStep++;document.getElementById(`tc${tutStep}`).classList.add('on');initTutProg();updateTNav();}
+  else skipT();
+};
+window.tPrev = function() {
+  if(tutStep>0){document.getElementById(`tc${tutStep}`).classList.remove('on');tutStep--;document.getElementById(`tc${tutStep}`).classList.add('on');initTutProg();updateTNav();}
+};
+function updateTNav(){
+  document.getElementById('tprev').style.display=tutStep>0?'':'none';
+  document.getElementById('tnext').textContent=tutStep===TSTEPS-1?'게임 시작! 🎮':'다음 ▶';
+}
+window.skipT = function() { gotoLobby(); };
+
+// ============================================================
+// AUTH
+// ============================================================
+window.openAdminLogin = function() {
+  document.getElementById('adml_pw').value = '';
+  document.getElementById('admlm').classList.add('on');
+};
+window.doAdminLogin = async function() {
+  const pw = document.getElementById('adml_pw').value.trim();
+  const correct = await getAdminPw();
+  if (pw !== correct) { notify('비밀번호가 틀렸습니다','err'); return; }
+  closeM('admlm');
+  if (!user) {
+    const cred = await signInAnonymously(auth);
+    user = cred.user;
+  }
+  pinfo = { grade:'0', class:'0', num:'0', name:'관리자', email:'admin' };
+  isAdmin = true;
+  // 세션 토큰 수령 및 감시 시작
+  const ts = await get(ref(db,'adminConfig/sessionToken'));
+  myAdminToken = ts.val() || null;
+  startAdminSessionWatcher(myAdminToken);
+  show('adm'); refreshAdm();
+};
+window.changeAdminPw = async function() {
+  const oldpw = document.getElementById('cfg_oldpw').value.trim();
+  const newpw = document.getElementById('cfg_newpw').value.trim();
+  const newpw2 = document.getElementById('cfg_newpw2').value.trim();
+  const correct = await getAdminPw();
+  if (oldpw !== correct) { notify('현재 비밀번호가 틀렸습니다','err'); return; }
+  if (!newpw) { notify('새 비밀번호를 입력하세요','err'); return; }
+  if (newpw !== newpw2) { notify('새 비밀번호가 일치하지 않습니다','err'); return; }
+  await setAdminPw(newpw);
+  // 변경 후 새 토큰으로 본인 세션 갱신 (지금 기기는 유지, 다른 기기는 로그아웃)
+  const ts = await get(ref(db,'adminConfig/sessionToken'));
+  myAdminToken = ts.val();
+  startAdminSessionWatcher(myAdminToken);
+  notify('비밀번호가 변경되었습니다 ✅ (다른 기기의 관리자 세션은 자동 종료됩니다)','ok');
+  document.getElementById('cfg_oldpw').value='';
+  document.getElementById('cfg_newpw').value='';
+  document.getElementById('cfg_newpw2').value='';
+};
+window.doLogin = async function() {
+  const snum = document.getElementById('inp_snum').value.trim();
+  const sname = document.getElementById('inp_sname').value.trim();
+  if (!snum) { notify('학번을 입력하세요','err'); return; }
+  if (!sname) { notify('이름을 입력하세요','err'); return; }
+  if (!/^\d{5}$/.test(snum)) { notify('학번 5자리를 정확히 입력하세요 (예: 10528)','err'); return; }
+  try {
+    const cred = await signInAnonymously(auth);
+    user = cred.user;
+    pinfo = parseInfo(snum, sname);
+    isAdmin = false;
+    await set(ref(db,`presence/${user.uid}`),{uid:user.uid,email:pinfo.email,name:pinfo.name,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,online:true,ts:serverTimestamp()});
+    onValue(ref(db,'broadcast'),(s)=>{if(s.exists()&&s.val()?.msg)notify('📢 공지: '+s.val().msg,'inf');});
+    // 관리자 전체 퇴장 명령 리스너
+    let lastAdminCmdTs = 0;
+    onValue(ref(db,'adminCmd'),(s)=>{
+      if(!s.exists())return;
+      const cmd = s.val();
+      if(cmd?.type==='kickAll' && cmd?.ts > lastAdminCmdTs){
+        lastAdminCmdTs = cmd.ts;
+        handleAdminKickAll();
+      }
+    });
+    if(tutorialSeen){gotoLobby();}else{tutorialSeen=true;tutStep=0;initTutProg();updateTNav();show('ts');}
+  } catch(e) { notify('접속 실패: '+e.message,'err'); }
+};
+
+// 관리자 전체 퇴장 명령 처리
+async function handleAdminKickAll() {
+  const isInGame = document.getElementById('gs')?.classList.contains('on');
+  const isInWaiting = document.getElementById('ws')?.classList.contains('on');
+  if ((isInGame || isInWaiting) && roomId && user) {
+    stopTimer();
+    if (isInGame) {
+      // 관리자 강제퇴장 — 감점 없이 시스템 메시지만
+      try {
+        await push(ref(db,`rooms/${roomId}/chatMessages`),{
+          sender:'시스템', msg:`🚪 ${esc(pinfo?.name||'?')}님이 관리자에 의해 퇴장됐어요`,
+          isSystem:true, ts:serverTimestamp()
+        });
+      } catch(e){}
+    }
+    try {
+      const s = await get(ref(db,`rooms/${roomId}`));
+      if(s.exists()){
+        const r = s.val();
+        if(r.hostUid===user.uid) await remove(ref(db,`rooms/${roomId}`));
+        else await remove(ref(db,`rooms/${roomId}/players/${user.uid}`));
+      }
+    } catch(e){}
+    stopRoomListener(); stopChatListener();
+    roomId=null; roomData=null; isPlayingCard=false;
+  }
+  notify('🚪 관리자가 퇴장시켰어요.','wrn');
+  setTimeout(()=>gotoLobby(), 1200);
+}
+
+// Firebase Anonymous Auth 활성화 여부만 체크 (페이지 새로고침 시 로그아웃)
+onAuthStateChanged(auth, async u => {
+  if (!u) { user=null; pinfo=null; isAdmin=false; show('ls'); }
+});
+
+// ============================================================
+// LOBBY
+// ============================================================
+// 게임 중 나가기 — 자동패 처리
+window.confirmLeaveGame = async function() {
+  if (!await showConfirm('게임 도중 나가면\n자동패(꼴등) 처리됩니다.\n정말 나가겠어요?', '나가기')) return;
+  stopTimer();
+  // 자동패 = 꼴등 (방 내 최저점수 - 1점) + playerOrder에서 제거 + 필요시 턴 넘기기
+  if (roomId && user) {
+    try {
+      const s = await get(ref(db, `rooms/${roomId}`));
+      if (s.exists()) {
+        const r = s.val();
+        const uid = user.uid;
+        const isHost = r.hostUid === uid;
+
+        if (isHost) {
+          // 방장이 나가면 방 전체 삭제
+          await remove(ref(db, `rooms/${roomId}`));
+        } else {
+          // ① 꼴등 점수 계산
+          const players = r.players || {};
+          const scores = Object.values(players).map(p => p.score || 0);
+          const lastPlaceScore = (scores.length > 0 ? Math.min(...scores) : 0) - 1;
+
+          // ② playerOrder에서 나간 사람 제거
+          const oldOrd = r.playerOrder || Object.keys(players);
+          const newOrd = oldOrd.filter(id => id !== uid);
+
+          // ③ 내 턴이면 다음 사람으로 넘기기
+          const wasMyTurn = r.currentTurnUid === uid;
+          let newIndex = r.currentPlayerIndex || 0;
+          let newTurnUid = r.currentTurnUid;
+          if (wasMyTurn && newOrd.length > 0) {
+            newIndex = newIndex % newOrd.length;
+            newTurnUid = newOrd[newIndex];
+          } else if (newOrd.length > 0) {
+            // 인덱스 재조정 (제거된 사람이 앞에 있으면 인덱스 당김)
+            const oldIdx = oldOrd.indexOf(uid);
+            if (oldIdx <= newIndex) newIndex = Math.max(0, newIndex - 1);
+            newIndex = newIndex % newOrd.length;
+            newTurnUid = newOrd[newIndex] || newTurnUid;
+          }
+
+          // ④ 한번에 업데이트
+          const updates = {};
+          updates[`rooms/${roomId}/players/${uid}/score`] = lastPlaceScore;
+          updates[`rooms/${roomId}/playerOrder`] = newOrd;
+          updates[`rooms/${roomId}/currentPlayerIndex`] = newIndex;
+          updates[`rooms/${roomId}/currentTurnUid`] = newTurnUid;
+          if (wasMyTurn) updates[`rooms/${roomId}/timerStart`] = Date.now();
+          await update(ref(db), updates);
+
+          // ⑤ 플레이어 제거
+          await remove(ref(db, `rooms/${roomId}/players/${uid}`));
+
+          await push(ref(db, `rooms/${roomId}/chatMessages`), {
+            sender: '시스템',
+            msg: `👋 ${esc(pinfo?.name || '?')}님이 게임을 나갔어요 (꼴등 처리${wasMyTurn ? ' · 턴 자동 넘김' : ''})`,
+            isSystem: true, ts: serverTimestamp()
+          });
+        }
+      }
+    } catch(e) { console.error('leaveGame error:', e); }
+  }
+  stopRoomListener(); stopChatListener(); stopTimer();
+  roomId = null; roomData = null; isPlayingCard = false;
+  gotoLobby();
+};
+
+window.gotoLobby = function() {
+  if(!user){show('ls');return;}
+  if(resultAutoTimer){ clearInterval(resultAutoTimer); resultAutoTimer=null; }
+  BGM.stop();
+  stopRoomListener(); chatStarted=false;
+  if(isAdmin){
+    // 관리자는 로비로 이동하되 투명하게 관리자 표시
+    document.getElementById('topname').textContent='관리자 모드';
+    document.getElementById('topid').textContent='admin';
+    document.getElementById('topavt').textContent='관';
+    show('lobby'); loadRooms();
+    return;
+  }
+  const p=pinfo;
+  document.getElementById('topname').textContent=`${p.grade}학년 ${p.class}반 ${p.num}번 ${p.name}`;
+  document.getElementById('topid').textContent=user.email;
+  document.getElementById('topavt').textContent=p.name.charAt(0);
+  renderRecord();
+  show('lobby'); loadRooms();
+};
+window.filterR = function(f,btn) {
+  curFilter=f; document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('on')); btn.classList.add('on'); loadRooms();
+};
+window.loadRooms = function() {
+  document.getElementById('rgrid').innerHTML='<div class="empty"><div class="spin"></div>불러오는 중...</div>';
+  if(roomsListener){off(ref(db,'rooms'),'value',roomsListener);roomsListener=null;}
+  roomsListener=onValue(ref(db,'rooms'),s=>{
+    const rooms=[];
+    if(s.exists())s.forEach(c=>rooms.push({id:c.key,...c.val()}));
+    renderRooms(rooms);
+  });
+};
+function renderRooms(rooms) {
+  const g=document.getElementById('rgrid');
+  let list=rooms;
+  if(curFilter==='waiting')list=rooms.filter(r=>r.status==='waiting');
+  if(curFilter==='playing')list=rooms.filter(r=>r.status==='playing');
+  if(!list.length){g.innerHTML='<div class="empty"><div class="emico">🌿</div>아직 방이 없어요. 방을 만들어보세요!</div>';return;}
+  g.innerHTML='';
+  list.forEach(room=>{
+    const pl=room.players?Object.keys(room.players).length:0, mx=room.maxPlayers||5;
+    const full=pl>=mx, playing=room.status==='playing';
+    const cls=playing?'pl':full?'fu':'wt';
+    const stcls=playing?'sp':full?'sf':'sw';
+    const sttxt=playing?'게임 중':full?'꽉 찼어요':'입장 가능';
+    const plcls=pl/mx<.5?'sw':pl/mx<1?'sp':'sf';
+    const d=document.createElement('div');
+    d.className=`rcard ${cls}`;
+    d.innerHTML=`<div class="rname">${esc(room.name||'이름 없는 방')}</div>
+      <div class="rmeta">
+        <span class="sbdg ${stcls}">${sttxt}</span>
+        <span class="sbdg ${plcls}">${pl}/${mx}명</span>
+        <span class="sbdg sl">🔑 코드</span>
+      </div>
+      <div style="margin-top:7px;font-size:10px;color:var(--gray5)">방장: ${esc(room.hostName||'?')} · ${room.rounds||10}R · ${room.timerSeconds||30}초/턴</div>`;
+    if(!full&&!playing) d.onclick=()=>{document.getElementById('jrmName').textContent=`🚪 "${room.name}"`;document.getElementById('jcode').value='';document.getElementById('jrm').dataset.rid=room.id;openM('jrm');};
+    g.appendChild(d);
+  });
+}
+window.openCR = function() { document.getElementById('rname').value='';document.getElementById('rcode').value='';openM('crm'); };
+window.createRoom = async function() {
+  const name=document.getElementById('rname').value.trim();
+  const code=document.getElementById('rcode').value.trim();
+  const maxP=parseInt(document.getElementById('rmaxp').value);
+  const rounds=parseInt(document.getElementById('rrnds').value);
+  const timer=parseInt(document.getElementById('rtmr').value);
+  if(!name){notify('방 이름을 입력해주세요','wrn');return;}
+  if(!code||code.length<4){notify('입장 코드는 4자리 이상이어야 해요','wrn');return;}
+  const snap=await get(ref(db,'rooms'));
+  if(snap.exists()&&Object.keys(snap.val()).length>=MAX_ROOMS){notify('방이 꽉 찼어요!','err');return;}
+  const rref=push(ref(db,'rooms'));
+  const uid=user.uid;
+  await set(rref,{name,code,maxPlayers:maxP,rounds,timerSeconds:timer,status:'waiting',hostUid:uid,hostName:pinfo.name,currentRound:0,players:{[uid]:{uid,name:pinfo.name,email:user.email,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:true,color:COLORS[0]}},createdAt:serverTimestamp()});
+  closeM('crm'); roomId=rref.key; enterWaiting(rref.key);
+};
+window.joinByCode = async function() {
+  const code=document.getElementById('jci').value.trim();
+  if(!code){notify('코드를 입력해주세요','wrn');return;}
+  const s=await get(ref(db,'rooms')); if(!s.exists()){notify('방을 찾을 수 없어요','err');return;}
+  let found=null; s.forEach(c=>{if(c.val().code===code)found={id:c.key,...c.val()};});
+  if(!found){notify('코드가 일치하는 방이 없어요','err');return;}
+  if(found.status==='playing'){notify('이미 게임 중인 방이에요','wrn');return;}
+  const pl=found.players?Object.keys(found.players).length:0;
+  if(pl>=found.maxPlayers){notify('방이 꽉 찼어요!','err');return;}
+  doJoin(found.id);
+};
+window.confirmJoin = async function() {
+  const code=document.getElementById('jcode').value.trim();
+  const rid=document.getElementById('jrm').dataset.rid;
+  const s=await get(ref(db,`rooms/${rid}`));
+  if(!s.exists()){notify('방을 찾을 수 없어요','err');return;}
+  if(s.val().code!==code){notify('코드가 틀렸어요!','err');return;}
+  closeM('jrm'); doJoin(rid);
+};
+async function doJoin(rid) {
+  const uid=user.uid;
+  const s=await get(ref(db,`rooms/${rid}`)); if(!s.exists()){notify('방을 찾을 수 없어요','err');return;}
+  const r=s.val(), pl=r.players||{}, cnt=Object.keys(pl).length;
+  if(cnt>=r.maxPlayers){notify('방이 꽉 찼어요!','err');return;}
+  await set(ref(db,`rooms/${rid}/players/${uid}`),{uid,name:pinfo.name,email:user.email,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:false,color:COLORS[cnt%COLORS.length]});
+  snd('join');
+  roomId=rid; enterWaiting(rid);
+}
+
+// ============================================================
+// WAITING ROOM
+// ============================================================
+function stopRoomListener() {
+  if(roomListener&&roomRef){off(roomRef,'value',roomListener);roomListener=null;roomRef=null;}
+}
+function stopChatListener() {
+  if(chatListener&&chatRef){off(chatRef,'value',chatListener);chatListener=null;chatRef=null;chatStarted=false;}
+}
+function enterWaiting(rid) {
+  stopRoomListener(); stopTimer();
+  roomId=rid; roomRef=ref(db,`rooms/${rid}`);
+  roomListener=onValue(roomRef, s=>{
+    if(!s.exists()){notify('방이 삭제됐어요','wrn');gotoLobby();return;}
+    roomData=s.val();
+    // 관리자 방 폐쇄 감지
+    if(roomData.closed){
+      notify('🚪 관리자가 방을 폐쇄했어요. 로비로 이동합니다.','wrn');
+      stopRoomListener(); stopChatListener(); stopTimer();
+      roomId=null; roomData=null; isPlayingCard=false;
+      setTimeout(()=>gotoLobby(), 1500);
+      return;
+    }
+    if(roomData.status==='playing'&&roomData.currentRound>0){
+      if(!document.getElementById('gs').classList.contains('on')){
+        show('gs'); snd('go'); chatStarted=false; startChatListener(rid);
+        (function(){
+          const vol = document.getElementById('bgm-vol');
+          const btn = document.getElementById('bgm-btn');
+          const v = vol ? vol.value / 100 * 0.40 : 0.13;
+          BGM.start(v);
+          if (btn) { btn.textContent = '\uD83C\uDFB5'; btn.style.opacity = '1'; }
+        })();
+      }
+      renderGame(roomData); startTimer(roomData);
+    } else if(roomData.status==='finished'){
+      showResult(roomData);
+    } else {
+      show('ws'); renderWaiting(roomData);
+    }
+  });
+}
+function renderWaiting(r) {
+  document.getElementById('wRoomName').textContent=r.name;
+  document.getElementById('wTitle').textContent=`🚪 ${r.name}`;
+  document.getElementById('wCode').textContent=r.code;
+  const g=document.getElementById('wpgrid'); g.innerHTML='';
+  const ps=Object.values(r.players||{});
+  const uid=user.uid, isHost=r.hostUid===uid;
+  ps.forEach((p,i)=>{
+    const me=p.uid===uid;
+    const d=document.createElement('div');
+    d.className=`wpcard ${p.isHost?'hst':''} ${p.ready?'rdy':''}`;
+    d.innerHTML=`<div class="wpavt" style="background:${p.color||COLORS[i%6]}">${esc(p.name.charAt(0))}</div>
+      <div class="wpname">${esc(p.name)}${me?' (나)':''}</div>
+      <div><span class="wpbdg ${p.isHost?'bh':p.ready?'br':'bw'}">${p.isHost?'👑방장':p.ready?'✅준비':'대기'}</span></div>`;
+    g.appendChild(d);
+  });
+  const rdybtn=document.getElementById('rdybtn'), stbtn=document.getElementById('stbtn');
+  if(isHost){
+    rdybtn.style.display='none'; stbtn.style.display='';
+    const allRdy=ps.filter(p=>!p.isHost).every(p=>p.ready);
+    stbtn.disabled=!allRdy||ps.length<2;
+  } else {
+    rdybtn.style.display=''; stbtn.style.display='none';
+    const mp=r.players[uid];
+    rdybtn.className=`rdybtn ${mp?.ready?'yes':'no'}`;
+    rdybtn.textContent=mp?.ready?'✅ 준비 완료!':'준비 완료!';
+  }
+}
+window.toggleReady = async function() {
+  if(!roomId||!user)return;
+  const s=await get(ref(db,`rooms/${roomId}/players/${user.uid}`));
+  if(!s.exists())return;
+  await set(ref(db,`rooms/${roomId}/players/${user.uid}/ready`),!s.val().ready);
+  snd('ready');
+};
+window.startGame = async function() {
+  if(!roomId||!user)return;
+  const s=await get(ref(db,`rooms/${roomId}`)); if(!s.exists())return;
+  const r=s.val(), ps=Object.values(r.players||{});
+  if(ps.length<2){notify('최소 2명이 필요해요','wrn');return;}
+
+  const order = ps.map(p=>p.uid);
+  // 덱 생성 후 각 플레이어에게 7장씩 배분
+  let deck = buildDeck();
+  const hands = {};
+  order.forEach(uid => {
+    const [hand, rest] = dealHand(deck, 7);
+    hands[uid] = hand;
+    deck = rest;
+  });
+
+  await update(ref(db,`rooms/${roomId}`), {
+    status: 'playing',
+    currentRound: 1,
+    totalRounds: r.rounds || 10,
+    currentTurnUid: order[0],
+    playerOrder: order,
+    currentPlayerIndex: 0,
+    direction: 1,           // 1=정방향, -1=역방향
+    centerCarbon: 0,        // 공동 탄소 수치 (핵심!)
+    deck: deck,             // 남은 덱
+    hands: hands,
+    roundResults: [],
+    timerStart: Date.now(),
+    timerSeconds: r.timerSeconds || 30,
+    lastCard: null,
+    skipNext: false,
+    draw2Next: false,
+  });
+  snd('go');
+};
+
+window.leaveRoom = async function() {
+  if(!roomId||!user)return;
+  const uid=user.uid;
+  try {
+    const s=await get(ref(db,`rooms/${roomId}`));
+    if(s.exists()){
+      const r=s.val();
+      if(r.hostUid===uid)await remove(ref(db,`rooms/${roomId}`));
+      else await remove(ref(db,`rooms/${roomId}/players/${uid}`));
+    }
+  }catch(e){}
+  stopRoomListener(); stopChatListener(); stopTimer();
+  roomId=null; roomData=null;
+  gotoLobby();
+};
+
+// ============================================================
+// GAME RENDER (NEW UNO)
+// ============================================================
+let myHand = [];
+
+function renderGame(r) {
+  const uid = user.uid;
+  document.getElementById('gRoomName').textContent = r.name;
+  document.getElementById('gCode').textContent = `코드: ${r.code}`;
+  document.getElementById('gRound').textContent = `라운드 ${r.currentRound}/${r.totalRounds}`;
+  document.getElementById('rbdg').textContent = `라운드 ${r.currentRound}/${r.totalRounds}`;
+  const myScore = (r.players?.[uid]?.score) || 0;
+  document.getElementById('msc').textContent = myScore;
+
+  // 방향 표시
+  const dir = (r.direction || 1) === 1 ? '🔄 정방향' : '🔄 역방향';
+  document.getElementById('dir-ind').textContent = dir;
+
+  // 덱 수 표시
+  const deckArr = r.deck || [];
+  document.getElementById('deckcnt').textContent = deckArr.length;
+
+  // 공동 탄소 수치 게이지 업데이트
+  updateCarbonGauge(r.centerCarbon || 0);
+
+  renderPlayers(r);
+  renderLastCard(r);
+  renderMyHand(r);
+  renderPCardCounts(r);
+  renderHistory(r);
+
+  // 차례 표시
+  const isMe = r.currentTurnUid === uid;
+  const curName = r.players?.[r.currentTurnUid]?.name || '?';
+  const ind = document.getElementById('tindc');
+  ind.className = `tindc ${isMe ? 'my' : 'ot'}`;
+  if (r.skipNext && r.currentTurnUid === uid) {
+    ind.textContent = '⛔ 턴이 스킵됐어요! 다음 차례로...';
+  } else {
+    ind.textContent = isMe ? '🎯 내 차례예요! 카드 1장을 클릭하세요' : `⏳ ${curName}님의 차례예요...`;
+  }
+
+  // 덱에서 뽑기 버튼 활성화: 내 차례일 때만
+  const dpBtn = document.getElementById('drawpile');
+  if (dpBtn) dpBtn.disabled = !isMe;
+
+  // 힌트
+  const hint = document.getElementById('hint');
+  if (hint) {
+    if (isMe) {
+      const cc = r.centerCarbon || 0;
+      if (cc === 0) hint.textContent = '🌿 탄소 수치가 0이에요! 탄소제로를 외치거나 카드를 내세요!';
+      else hint.textContent = '🃏 내 차례! 카드 1장을 클릭해서 내세요.';
+    } else {
+      hint.textContent = `⏳ ${curName}님이 카드를 내는 중이에요...`;
+    }
+  }
+
+  // 탄소제로 버튼: 항상 누를 수 있음 (맞으면 +10, 틀리면 -3)
+  updateZeroBtn(r.centerCarbon || 0);
+}
+
+function updateCarbonGauge(cc) {
+  const fill = document.getElementById('cgauge-fill');
+  const num = document.getElementById('cgauge-num');
+  const hintEl = document.getElementById('cgauge-hint');
+
+  // 수치 표시
+  num.textContent = cc > 0 ? `+${cc}` : cc;
+  num.className = `cgauge-num ${cc === 0 ? 'zero' : cc > 0 ? 'pos' : 'neg'}`;
+
+  // 바 채우기 (중앙 기준, 최대 ±30 범위)
+  const maxRange = 30;
+  const pct = Math.min(Math.abs(cc) / maxRange * 50, 50);
+  if (cc === 0) {
+    fill.className = 'cgauge-fill zero';
+    fill.style.width = '0%';
+    if (hintEl) hintEl.textContent = '✅ 탄소제로 달성 가능! 버튼을 눌러요!';
+  } else if (cc > 0) {
+    fill.className = 'cgauge-fill pos';
+    fill.style.width = pct + '%';
+    if (hintEl) hintEl.textContent = `탄소 배출 +${cc} — 흡수카드로 줄여요!`;
+  } else {
+    fill.className = 'cgauge-fill neg';
+    fill.style.width = pct + '%';
+    if (hintEl) hintEl.textContent = `탄소 흡수 ${cc} — 배출카드로 맞춰요!`;
+  }
+}
+
+function updateZeroBtn(cc) {
+  const btn = document.getElementById('zerobtn');
+  if (!btn) return;
+  btn.disabled = false; // 항상 클릭 가능 (틀리면 감점)
+  if (cc === 0) {
+    btn.classList.remove('flash');
+    btn.classList.add('active');
+    // 깜빡임 시작
+    void btn.offsetWidth;
+    btn.classList.add('flash');
+  } else {
+    btn.classList.remove('active', 'flash');
+  }
+}
+
+function renderPlayers(r) {
+  const list = document.getElementById('plist'); list.innerHTML = '';
+  const ps = Object.values(r.players || {}).sort((a, b) => b.score - a.score);
+  ps.forEach((p, i) => {
+    const me = p.uid === user.uid, cur = p.uid === r.currentTurnUid;
+    const d = document.createElement('div');
+    d.className = `prow${cur ? ' cur' : ''}${me ? ' me' : ''}`;
+    const sc = p.score > 0 ? 'scgr' : p.score < 0 ? 'scrd' : 'scze';
+    const handLen = (r.hands?.[p.uid] || []).length;
+    d.innerHTML = `<div class="pavt" style="background:${p.color || COLORS[i % 6]}">${cur ? '▶' : esc(p.name.charAt(0))}</div>
+      <div class="pinf"><div class="pnm">${me ? '⭐ ' : ''}${esc(p.name)}</div>
+      <span class="psc ${sc}">${p.score > 0 ? '+' : ''}${p.score}점</span>
+      <span style="font-size:9px;color:var(--gray5);margin-left:4px">${handLen}장</span></div>
+      ${p.uid === r.hostUid ? '<span style="font-size:12px">👑</span>' : ''}`;
+    list.appendChild(d);
+  });
+}
+
+function renderPCardCounts(r) {
+  const el = document.getElementById('pcardcnt');
+  if (!el) return;
+  el.innerHTML = '';
+  const ord = r.playerOrder || Object.keys(r.players || {});
+  ord.forEach(uid2 => {
+    const p = r.players?.[uid2]; if (!p) return;
+    const cnt = (r.hands?.[uid2] || []).length;
+    const isMe = uid2 === user.uid;
+    const isCur = uid2 === r.currentTurnUid;
+    const d = document.createElement('div');
+    d.style.cssText = `display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:7px;background:${isCur ? 'var(--g6)' : 'var(--gray1)'};border:${isCur ? '1.5px solid var(--g3)' : '1.5px solid transparent'}`;
+    d.innerHTML = `<div style="width:20px;height:20px;border-radius:50%;background:${p.color || COLORS[0]};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:white">${esc(p.name.charAt(0))}</div>
+      <span style="font-size:11px;font-weight:700;flex:1">${isMe ? '⭐ ' : ''}${esc(p.name)}</span>
+      <span style="font-size:12px;font-weight:800;color:var(--blue)">${cnt}장</span>
+      ${isCur ? '<span style="font-size:10px;color:var(--g2)">▶</span>' : ''}`;
+    el.appendChild(d);
+  });
+}
+
+function mkCardHTML(c) {
+  const svg = CARD_SVGS[c.id];
+  const ico = svg
+    ? `<div class="cico cico-svg">${svg}</div>`
+    : `<div class="cico">${c.emoji}</div>`;
+
+  if (c.type === 'special') {
+    return `<span class="ctbdg">특수</span>${ico}<div class="cnm">${esc(c.name)}</div><div class="csc">특수</div><div class="sp-desc">${esc(c.desc || '')}</div>`;
+  }
+  const valStr = c.val > 0 ? `+${c.val}` : `${c.val}`;
+  const badge = c.type === 'emit' ? '배출' : '흡수';
+  return `<span class="ctbdg">${badge}</span>${ico}<div class="cnm">${esc(c.name)}</div><div class="csc">${valStr}</div>`;
+}
+
+function renderLastCard(r) {
+  const area = document.getElementById('lastcard-area');
+  if (!area) return;
+  area.innerHTML = '';
+  if (!r.lastCard) {
+    area.innerHTML = '<div style="width:110px;min-height:150px;border:2px dashed var(--gray3);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--gray5)">아직 없음</div>';
+    return;
+  }
+  const c = ALL_CARDS.find(x => x.id === r.lastCard);
+  if (!c) return;
+  const el = document.createElement('div');
+  const typeClass = c.type === 'emit' ? 'em' : c.type === 'absorb' ? 'ab' : 'sp';
+  el.className = `gcard ${typeClass}`;
+  el.style.cursor = 'default';
+  el.innerHTML = mkCardHTML(c);
+  area.appendChild(el);
+}
+
+function renderMyHand(r) {
+  const uid = user.uid;
+  const isMe = r.currentTurnUid === uid;
+  const con = document.getElementById('hcards'); con.innerHTML = '';
+  myHand = (r.hands?.[uid]) || [];
+  document.getElementById('handcnt').textContent = myHand.length;
+  document.getElementById('mhandcnt').textContent = myHand.length;
+  myHand.forEach(cid => {
+    const c = ALL_CARDS.find(x => x.id === cid);
+    if (!c) return;
+    const el = document.createElement('div');
+    const typeClass = c.type === 'emit' ? 'em' : c.type === 'absorb' ? 'ab' : 'sp';
+    el.className = `gcard ${typeClass}${!isMe ? ' dis' : ''}`;
+    el.dataset.cid = cid;
+    el.innerHTML = mkCardHTML(c);
+    if (isMe) {
+      el.onclick = () => playCard(cid, r);
+    }
+    con.appendChild(el);
+  });
+}
+
+function renderHistory(r) {
+  const h = document.getElementById('rhist'); h.innerHTML = '';
+  const res = [...(r.roundResults || [])].reverse();
+  res.slice(0, 8).forEach(it => {
+    const d = document.createElement('div'); d.className = 'hitem';
+    const c = ALL_CARDS.find(x => x.id === it.cardId);
+    const nm = c ? esc(c.name) : '?';
+    d.innerHTML = `<span style="color:var(--gray5)">${esc(it.playerName || '?')}</span><span class="hwn">${nm}</span><span style="margin-left:auto;font-weight:700;color:${it.valChange > 0 ? 'var(--blue)' : it.valChange < 0 ? 'var(--red)' : 'var(--g3)'}">${it.valChange > 0 ? '+' : ''}${it.valChange}</span>`;
+    h.appendChild(d);
+  });
+}
+
+// ============================================================
+// PLAY CARD (NEW UNO — 카드 1장 내기)
+// ============================================================
+let isPlayingCard = false;
+
+async function playCard(cid, r) {
+  if (!roomData || !user) return;
+  const uid = user.uid;
+  if (roomData.currentTurnUid !== uid) { notify('내 차례가 아니에요!', 'wrn'); return; }
+  if (isPlayingCard) return;
+  isPlayingCard = true;
+
+  const c = ALL_CARDS.find(x => x.id === cid);
+  if (!c) { isPlayingCard = false; return; }
+  snd('card');
+
+  // 카드를 손에서 제거
+  const newHand = [...(roomData.hands?.[uid] || [])].filter((id, idx) => {
+    if (id === cid) { cid = null; return false; } // 첫 번째만 제거
+    return true;
+  });
+  // 위 방법으로 첫 번째 일치 항목만 제거
+  const origHand = [...(roomData.hands?.[uid] || [])];
+  const removeIdx = origHand.indexOf(c.id);
+  const nh = removeIdx === -1 ? origHand : [...origHand.slice(0, removeIdx), ...origHand.slice(removeIdx + 1)];
+
+  // 탄소 수치 변화
+  let newCarbon = (roomData.centerCarbon || 0) + c.val;
+  let newSkip = false;
+  let newDraw2 = false;
+  let newDirection = roomData.direction || 1;
+
+  // 특수카드 효과 적용
+  if (c.type === 'special') {
+    if (c.special === 'tax') {
+      newCarbon = (roomData.centerCarbon || 0) + 5;
+    } else if (c.special === 'deal') {
+      newCarbon = (roomData.centerCarbon || 0) - 5;
+    } else if (c.special === 'skip') {
+      newSkip = true;
+    } else if (c.special === 'draw2') {
+      newDraw2 = true;
+    } else if (c.special === 'swap') {
+      // swap 처리는 advanceTurn 에서
+    }
+  }
+
+  // 라운드 기록
+  const rr = [...(roomData.roundResults || []), {
+    round: roomData.currentRound,
+    playerName: roomData.players?.[uid]?.name || '?',
+    playerUid: uid,
+    cardId: c.id,
+    valChange: c.type === 'special' ? (c.special === 'tax' ? 5 : c.special === 'deal' ? -5 : 0) : c.val,
+    carbonAfter: newCarbon,
+  }];
+
+  const ups = {};
+  ups[`rooms/${roomId}/hands/${uid}`] = nh;
+  ups[`rooms/${roomId}/centerCarbon`] = newCarbon;
+  ups[`rooms/${roomId}/lastCard`] = c.id;
+  ups[`rooms/${roomId}/roundResults`] = rr;
+  ups[`rooms/${roomId}/skipNext`] = newSkip;
+  ups[`rooms/${roomId}/draw2Next`] = newDraw2;
+
+  // swap 특수카드: 왼쪽 플레이어와 카드 교환
+  if (c.type === 'special' && c.special === 'swap') {
+    const ord = roomData.playerOrder || Object.keys(roomData.players || {});
+    const myIdx = ord.indexOf(uid);
+    const targetIdx = (myIdx - 1 + ord.length) % ord.length;
+    const targetUid = ord[targetIdx];
+    if (targetUid && targetUid !== uid) {
+      const targetHand = [...(roomData.hands?.[targetUid] || [])];
+      ups[`rooms/${roomId}/hands/${uid}`] = targetHand;
+      ups[`rooms/${roomId}/hands/${targetUid}`] = nh;
+      notify(`🔄 ${roomData.players?.[targetUid]?.name || '?'}님과 카드를 교환했어요!`, 'inf');
+    }
+  }
+
+  // draw2 특수카드: 다음 플레이어에게 카드 2장 주기
+  if (c.type === 'special' && c.special === 'draw2') {
+    const ord = roomData.playerOrder || Object.keys(roomData.players || {});
+    const myIdx = ord.indexOf(uid);
+    const nextIdx = (myIdx + newDirection + ord.length) % ord.length;
+    const nextUid = ord[nextIdx];
+    if (nextUid) {
+      let deck2 = [...(roomData.deck || [])];
+      const nextHand = [...(roomData.hands?.[nextUid] || [])];
+      for (let i = 0; i < 2; i++) {
+        if (!deck2.length) deck2 = buildDeck();
+        nextHand.push(deck2.shift());
+      }
+      ups[`rooms/${roomId}/hands/${nextUid}`] = nextHand;
+      ups[`rooms/${roomId}/deck`] = deck2;
+      notify(`💀 ${roomData.players?.[nextUid]?.name || '?'}님이 카드 2장을 받아요!`, 'wrn');
+    }
+  }
+
+  // 특수카드 val은 0이지만 tax/deal은 이미 위에서 처리됨
+  // tax/deal이 아닌 특수카드 val 변화 재계산
+  if (c.type === 'special' && (c.special === 'skip' || c.special === 'draw2' || c.special === 'swap')) {
+    ups[`rooms/${roomId}/centerCarbon`] = roomData.centerCarbon || 0; // 탄소 수치 변화 없음
+  }
+
+  // 턴 진행
+  await update(ref(db), ups);
+  await advanceTurn(newSkip, c.special === 'swap' ? 0 : null);
+  isPlayingCard = false;
+}
+
+// ============================================================
+// DRAW CARD (덱에서 뽑기)
+// ============================================================
+window.drawCardFromDeck = async function() {
+  if (!roomData || !user) return;
+  const uid = user.uid;
+  if (roomData.currentTurnUid !== uid) { notify('내 차례가 아니에요!', 'wrn'); return; }
+  if (isPlayingCard) return;
+  isPlayingCard = true;
+
+  let deck = [...(roomData.deck || [])];
+  if (!deck.length) {
+    deck = buildDeck();
+    notify('카드 더미를 새로 섞었어요!', 'inf');
+  }
+  const drawnCard = deck.shift();
+  const newHand = [...(roomData.hands?.[uid] || []), drawnCard];
+
+  const ups = {};
+  ups[`rooms/${roomId}/deck`] = deck;
+  ups[`rooms/${roomId}/hands/${uid}`] = newHand;
+  await update(ref(db), ups);
+
+  const c = ALL_CARDS.find(x => x.id === drawnCard);
+  notify(`🃏 카드를 뽑았어요: ${c ? c.name : '?'}`, '');
+  snd('card');
+
+  // 뽑은 후 턴 넘김
+  await advanceTurn(false, null);
+  isPlayingCard = false;
+};
+
+// ============================================================
+// CALL ZERO (탄소제로 외치기)
+// ============================================================
+window.callZero = async function() {
+  if (!roomData || !user) return;
+  const uid = user.uid;
+  const cc = roomData.centerCarbon || 0;
+
+  if (cc === 0) {
+    // 정답! +10점
+    snd('ok');
+    const newScore = (roomData.players?.[uid]?.score || 0) + 10;
+    const ups = {};
+    ups[`rooms/${roomId}/players/${uid}/score`] = newScore;
+    // 탄소제로 달성 후 새 라운드
+    ups[`rooms/${roomId}/centerCarbon`] = 0;
+    await update(ref(db), ups);
+    showAOV(true, '탄소제로!', '🎉 탄소제로! +10점 획득!');
+    notify('🌿 탄소제로! +10점!', '');
+    // 채팅에 기록
+    push(ref(db, `rooms/${roomId}/chatMessages`), {
+      sender: '시스템',
+      msg: `🌿 ${esc(roomData.players?.[uid]?.name || '?')}님이 탄소제로를 외쳤어요! +10점!`,
+      isSystem: true, ts: serverTimestamp()
+    });
+    // 라운드 수 확인 — 총 라운드 소진 시 종료
+    const newRound = roomData.currentRound + 1;
+    if (newRound > (roomData.totalRounds || 10)) {
+      await update(ref(db, `rooms/${roomId}`), { status: 'finished' });
+    } else {
+      // 새 라운드 시작: 다음 사람 차례
+      const ord = roomData.playerOrder || Object.keys(roomData.players || {});
+      const ni = (roomData.currentPlayerIndex + 1) % ord.length;
+      await update(ref(db, `rooms/${roomId}`), {
+        currentRound: newRound,
+        currentTurnUid: ord[ni],
+        currentPlayerIndex: ni,
+        timerStart: Date.now(),
+        skipNext: false,
+        draw2Next: false,
+      });
+    }
+  } else {
+    // 오답! -3점 감점
+    snd('ng');
+    const newScore = (roomData.players?.[uid]?.score || 0) - 3;
+    const ups = {};
+    ups[`rooms/${roomId}/players/${uid}/score`] = newScore;
+    await update(ref(db), ups);
+    showAOV(false, '탄소제로 실패!', `😅 수치가 ${cc > 0 ? '+' : ''}${cc}이에요! -3점`);
+    notify(`😅 수치가 0이 아니에요! -3점 감점`, 'err');
+    push(ref(db, `rooms/${roomId}/chatMessages`), {
+      sender: '시스템',
+      msg: `❌ ${esc(roomData.players?.[uid]?.name || '?')}님이 탄소제로를 잘못 외쳤어요! -3점`,
+      isSystem: true, ts: serverTimestamp()
+    });
+  }
+};
+
+// ============================================================
+// TIMER
+// ============================================================
+function startTimer(r) {
+  stopTimer();
+  const tel=document.getElementById('gtimer');
+  const max=r.timerSeconds||30;
+  const elapsed=r.timerStart?Math.floor((Date.now()-r.timerStart)/1000):0;
+  timerSec=Math.max(0,max-elapsed);
+  tel.textContent=timerSec; tel.classList.remove('urg');
+  timerInt=setInterval(async()=>{
+    timerSec--;
+    tel.textContent=Math.max(0,timerSec);
+    if(timerSec<=10){tel.classList.add('urg');snd(timerSec<=5?'urgentTick':'tick');}
+    if(timerSec<=0){
+      stopTimer();
+      // Only host advances (prevents double advance)
+      if(roomData?.hostUid===user?.uid) await timeoutAdvanceTurn();
+    }
+  },1000);
+}
+function stopTimer(){if(timerInt){clearInterval(timerInt);timerInt=null;}}
+
+// ============================================================
+// BGM 컨트롤 함수
+// ============================================================
+window.toggleBGM = function() {
+  const btn = document.getElementById('bgm-btn');
+  const vol = document.getElementById('bgm-vol');
+  if (BGM.playing) {
+    BGM.stop();
+    if (btn) { btn.textContent = '🔇'; btn.style.opacity = '0.55'; }
+  } else {
+    const v = vol ? vol.value / 100 * 0.40 : 0.13;
+    BGM.start(v);
+    if (btn) { btn.textContent = '🎵'; btn.style.opacity = '1'; }
+  }
+};
+window.onBGMVol = function(val) {
+  const v = val / 100 * 0.40;  // 슬라이더 0~100 → 실제 볼륨 0~0.40
+  BGM.setVolume(v);
+  const btn = document.getElementById('bgm-btn');
+  if (btn) {
+    if (parseFloat(val) === 0) {
+      btn.textContent = '🔇';
+    } else if (BGM.playing) {
+      btn.textContent = '🎵';
+      btn.style.opacity = '1';
+    }
+  }
+};
+
+// 턴 진행 (NEW UNO 버전)
+async function advanceTurn(skipOverride = false, swapOffset = null) {
+  if (!roomData || !roomId) return;
+  // 실제 존재하는 플레이어만 필터링 (중간에 나간 사람 제거)
+  const allOrd = roomData.playerOrder || Object.keys(roomData.players || {});
+  const ord = allOrd.filter(uid => roomData.players?.[uid]);
+  if (ord.length === 0) return;
+  const direction = roomData.direction || 1;
+  let step = direction;
+
+  // swap 이후는 스탭 없이 그다음 사람 차례
+  if (swapOffset !== null) step = direction;
+
+  // 현재 인덱스를 필터링된 ord 기준으로 재계산
+  const curUid = roomData.currentTurnUid;
+  const curIdx = ord.indexOf(curUid);
+  const baseIdx = curIdx >= 0 ? curIdx : 0;
+
+  let ni = (baseIdx + step + ord.length) % ord.length;
+
+  // skip: 한 사람 추가 낙김
+  const doSkip = skipOverride || roomData.skipNext;
+  if (doSkip) {
+    ni = (ni + step + ord.length) % ord.length;
+    push(ref(db, `rooms/${roomId}/chatMessages`), {
+      sender: '시스템',
+      msg: `⛔ ${esc(roomData.players?.[ord[ni - step]]?.name || '?')}님의 턴이 스킵됐어요!`,
+      isSystem: true, ts: serverTimestamp()
+    });
+  }
+
+  const nuid = ord[ni];
+  await update(ref(db, `rooms/${roomId}`), {
+    currentTurnUid: nuid,
+    currentPlayerIndex: ni,
+    timerStart: Date.now(),
+    skipNext: false,
+    draw2Next: false,
+  });
+}
+
+// 타임아웃 시 자동 턴 넘김 (호스트만 실행)
+async function timeoutAdvanceTurn() {
+  if (!roomData || !roomId) return;
+  // 타임아웃 감점 (-2점)
+  const uid = roomData.currentTurnUid;
+  if (uid) {
+    const newScore = (roomData.players?.[uid]?.score || 0) - 2;
+    await update(ref(db), { [`rooms/${roomId}/players/${uid}/score`]: newScore });
+    notify(`⏰ 시간 초과! ${roomData.players?.[uid]?.name || '?'}님 -2점`, 'wrn');
+  }
+  snd('timeout');
+  push(ref(db, `rooms/${roomId}/chatMessages`), {
+    sender: '시스템',
+    msg: `⏰ 시간 초과! -2점 감점`,
+    isSystem: true, ts: serverTimestamp()
+  });
+  await advanceTurn(false, null);
+}
+
+// ============================================================
+// CHAT
+// ============================================================
+function startChatListener(rid) {
+  if(chatStarted)return; chatStarted=true;
+  chatRef=ref(db,`rooms/${rid}/chatMessages`);
+  chatListener=onValue(chatRef,s=>{
+    const el=document.getElementById('cmsgs'); if(!el)return;
+    el.innerHTML='';
+    if(!s.exists())return;
+    s.forEach(c=>{
+      const d=c.val(), m=document.createElement('div');
+      m.className=`cmsg${d.isSystem?' sys':''}`;
+      // 시스템 메시지는 코드에서 생성(안전), 사용자 데이터는 반드시 esc()
+      m.innerHTML=d.isSystem?d.msg:`<span class="sndr">${esc(d.sender)}</span>: ${esc(d.msg)}`;
+      el.appendChild(m);
+    });
+    el.scrollTop=el.scrollHeight;
+  });
+}
+window.sendChat = function() {
+  if(!roomId||!user)return;
+  const inp=document.getElementById('cinput'), msg=inp.value.trim(); if(!msg)return;
+  push(ref(db,`rooms/${roomId}/chatMessages`),{sender:pinfo.name,msg,isSystem:false,ts:serverTimestamp()});
+  inp.value='';
+};
+
+// ============================================================
+// RESULT
+// ============================================================
+let resultAutoTimer = null;
+function showResult(r) {
+  show('rs'); stopTimer(); BGM.stop();
+  const ps = Object.values(r.players||{}).sort((a,b)=>b.score-a.score);
+  const uid = user?.uid;
+  const winner = ps[0];
+  const isWinner = winner?.uid === uid;
+
+  // 세션 기록 업데이트 (게임 1회 참여 시 기록)
+  updateRecord(isWinner);
+
+  // 이모지 & 제목
+  document.getElementById('remi').textContent = isWinner ? '🏆' : '🌿';
+  document.getElementById('rtit').textContent = isWinner ? '🎉 우승!' : '게임 종료!';
+  document.getElementById('rsub').textContent = isWinner
+    ? `${winner.name}님이 우승했어요! 탄소중립 영웅!`
+    : `${winner?.name||'?'}님이 우승했어요!`;
+
+  // 승자 강조 카드
+  if (winner) {
+    const wEl = document.getElementById('rwinner');
+    wEl.style.display = 'flex';
+    document.getElementById('rwinneravt').textContent = winner.name.charAt(0);
+    document.getElementById('rwinneravt').style.background =
+      winner.color || 'linear-gradient(135deg,var(--g3),var(--sky))';
+    document.getElementById('rwinnernm').textContent = `👑 ${winner.name}`;
+    document.getElementById('rwinnersc').textContent = `${winner.score}점`;
+  }
+
+  // 순위표
+  const sb = document.getElementById('rsboard'); sb.innerHTML='';
+  ['🥇','🥈','🥉'].forEach((md,i)=>{
+    if(!ps[i])return;
+    const p=ps[i], row=document.createElement('div');
+    row.className=`rrow r${i+1}`;
+    row.innerHTML=`<div class="rrk">${md}</div><div class="rnm"><div>${esc(p.name)}</div><div style="font-size:10px;color:var(--gray5)">${esc(p.grade)}학년 ${esc(p.class)}반 ${esc(p.num)}번</div></div><div class="rsc">${p.score}점</div>`;
+    sb.appendChild(row);
+  });
+  for(let i=3;i<ps.length;i++){
+    const p=ps[i], row=document.createElement('div');
+    row.className='rrow';
+    row.innerHTML=`<div class="rrk">${i+1}위</div><div class="rnm"><div>${esc(p.name)}</div><div style="font-size:10px;color:var(--gray5)">${esc(p.grade)}학년 ${esc(p.class)}반 ${esc(p.num)}번</div></div><div class="rsc">${p.score}점</div>`;
+    sb.appendChild(row);
+  }
+
+  document.getElementById('etip').innerHTML=`🌿 <strong>오늘의 탄소중립 팁:</strong> ${TIPS[Math.floor(Math.random()*TIPS.length)]}`;
+
+  // 5초 카운트다운 후 자동 로비 이동
+  if(resultAutoTimer) clearInterval(resultAutoTimer);
+  let sec = 5;
+  document.getElementById('rautonum').textContent = sec;
+  document.getElementById('rautobar').style.width = '100%';
+  // 바 애니메이션: transition 0.9s 이므로 nextFrame에서 줄이기 시작
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      document.getElementById('rautobar').style.transition = `width ${sec}s linear`;
+      document.getElementById('rautobar').style.width = '0%';
+    });
+  });
+  resultAutoTimer = setInterval(()=>{
+    sec--;
+    document.getElementById('rautonum').textContent = Math.max(0, sec);
+    if(sec <= 0){
+      clearInterval(resultAutoTimer); resultAutoTimer = null;
+      doLeaveAfterGame();
+    }
+  }, 1000);
+}
+
+window.doLeaveAfterGame = async function() {
+  if(resultAutoTimer){ clearInterval(resultAutoTimer); resultAutoTimer = null; }
+  // 방 정리: 방장이면 방 삭제, 아니면 나만 제거
+  if(roomId && user) {
+    try {
+      const s = await get(ref(db, `rooms/${roomId}`));
+      if(s.exists()) {
+        const r = s.val();
+        if(r.hostUid === user.uid) await remove(ref(db, `rooms/${roomId}`));
+        else await remove(ref(db, `rooms/${roomId}/players/${user.uid}`));
+      }
+    } catch(e) {}
+  }
+  stopRoomListener(); stopChatListener(); stopTimer();
+  roomId = null; roomData = null;
+  gotoLobby();
+};
+
+// ============================================================
+// ANSWER OVERLAY
+// ============================================================
+function showAOV(ok, title, sub) {
+  const ov = document.getElementById('aov');
+  document.getElementById('aovem').textContent = ok ? '🎉' : '😅';
+  document.getElementById('aovtxt').textContent = title || (ok ? '탄소제로!' : '아쉬워요!');
+  document.getElementById('aovsub').textContent = sub || '';
+  ov.classList.add('on');
+  setTimeout(() => ov.classList.remove('on'), 2200);
+}
+
+// ============================================================
+// ADMIN
+// ============================================================
+window.gotoAdmin = function() {
+  if(!user)return;
+  if(!isAdmin){notify('🚫 관리자 권한이 없습니다.','err');return;}
+  show('adm'); refreshAdm();
+};
+window.admTab = function(t, btn) {
+  document.querySelectorAll('.atc').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.anb').forEach(b=>b.classList.remove('on'));
+  document.getElementById(`at-${t}`).classList.add('on');
+  btn.classList.add('on');
+};
+window.refreshAdm = async function() {
+  const [rs,ps]=await Promise.all([get(ref(db,'rooms')),get(ref(db,'presence'))]);
+  const rooms=[],studs=[];
+  if(rs.exists())rs.forEach(c=>rooms.push({id:c.key,...c.val()}));
+  if(ps.exists())ps.forEach(c=>studs.push({uid:c.key,...c.val()}));
+  document.getElementById('stotal').textContent=studs.length;
+  document.getElementById('srooms').textContent=rooms.length;
+  document.getElementById('splaying').textContent=rooms.filter(r=>r.status==='playing').length;
+  document.getElementById('swaiting').textContent=rooms.filter(r=>r.status==='waiting').length;
+  renderAdmRooms(rooms);
+  renderStudsTable(studs,rooms);
+};
+function renderAdmRooms(rooms) {
+  ['admRooms','admRoomsDetail'].forEach(id=>{
+    const el=document.getElementById(id); if(!el)return; el.innerHTML='';
+    if(!rooms.length){el.innerHTML='<div style="color:var(--gray5);padding:20px">방 없음</div>';return;}
+    rooms.forEach(r=>{
+      const ps=Object.values(r.players||{});
+      const st=r.status==='playing'?'게임 중':r.status==='finished'?'종료':'대기 중';
+      const stcls=r.status==='playing'?'sp':r.status==='waiting'?'sw':'';
+      const c=document.createElement('div'); c.className='arcrd';
+      let plh='';
+      ps.forEach(p=>{
+        const isHost = r.hostUid===p.uid;
+        // 방장/멤버 버튼: 방장이면 비활성 버튼, 멤버이면 활성 버튼
+        const roleBtn = isHost
+          ? `<button class="akbtn" disabled style="background:#856404;color:#fff;border-color:#856404;opacity:1;cursor:default">👑방장</button>`
+          : `<button class="akbtn adm-chhost" data-rid="${r.id}" data-uid="${p.uid}" data-nm="${esc(p.name)}" style="background:#bbb;color:#fff;border-color:#bbb">멤버</button>`;
+        const kBtn = `<button class="akbtn adm-kick" data-rid="${r.id}" data-uid="${p.uid}" data-nm="${esc(p.name)}" style="background:#c0392b;color:#fff;border-color:#c0392b">강퇴</button>`;
+        plh+=`<div class="aplrow"><div class="pavt" style="background:${p.color||'#2d9c55'};width:22px;height:22px;font-size:10px">${esc(p.name.charAt(0))}</div><div class="apln">${esc(p.grade)}학년${esc(p.class)}반${esc(p.num)}번 ${esc(p.name)}</div><div class="apsc">${p.score}점</div><div style="display:flex;gap:4px">${roleBtn}${kBtn}</div></div>`;
+      });
+      c.innerHTML=`<div class="arhd"><div class="arname">${esc(r.name)}</div><span class="sbdg ${stcls}">${st}</span></div>
+        <div style="font-size:11px;color:var(--gray5);margin-bottom:10px">코드:<strong>${esc(r.code)}</strong> · ${ps.length}/${r.maxPlayers}명 · R${r.currentRound||0}/${r.totalRounds||10}</div>
+        <div>${plh||'<div style="font-size:11px;color:var(--gray5)">없음</div>'}</div>
+        <div style="display:flex;gap:7px;margin-top:10px;flex-wrap:wrap">
+          ${r.status==='playing'?`<button class="btn btw btsm" onclick="forceEnd('${r.id}')">⏹ 강제종료</button>`:''}
+          <button class="btn btsm" style="background:#c0392b;color:#fff;border-color:#c0392b" onclick="closeRoom('${r.id}','${esc(r.name)}')">🚪 방 폐쇄</button>
+          <button class="btn btd btsm" onclick="delRoom('${r.id}')">🗑 삭제</button>
+        </div>`;
+      el.appendChild(c);
+    });
+  });
+}
+// 이벤트 위임: adm-kick / adm-chhost 버튼 클릭 처리
+document.addEventListener('click', async function(e) {
+  const kick = e.target.closest('.adm-kick');
+  if(kick){
+    e.stopPropagation();
+    const {rid, uid, nm} = kick.dataset;
+    await window.kickP(rid, uid, nm, true);
+    return;
+  }
+  const ch = e.target.closest('.adm-chhost');
+  if(ch){
+    e.stopPropagation();
+    const {rid, uid, nm} = ch.dataset;
+    await window.changeHost(rid, uid, nm);
+    return;
+  }
+});
+
+function renderStudsTable(studs,rooms){
+  document.getElementById('stcnt').textContent=`총 ${studs.length}명`;
+  const tbody=document.getElementById('sttbody'); tbody.innerHTML='';
+  studs.forEach(s=>{
+    let rn='-',sc=0;
+    rooms.forEach(r=>{if(r.players?.[s.uid]){rn=r.name;sc=r.players[s.uid].score;}});
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${esc(s.email||'-')}</td><td>${esc(s.name)}</td><td>${esc(s.grade)}학년 ${esc(s.class)}반 ${esc(s.num)}번</td><td>${esc(rn)}</td><td><strong>${sc}점</strong></td><td><button class="akbtn" onclick="kickAll('${s.uid}','${esc(s.name)}')">강퇴</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+window.filterSt = function() {
+  const q=document.getElementById('stsch').value.toLowerCase();
+  document.querySelectorAll('#sttbody tr').forEach(tr=>tr.style.display=tr.textContent.toLowerCase().includes(q)?'':'none');
+};
+window.kickP = async function(rid,uid,nm,force=false) {
+  if(!await showConfirm(`${nm}님을 강퇴할까요?`, '강퇴', '#c0392b'))return;
+  const rs = await get(ref(db,`rooms/${rid}`));
+  if(!rs.exists()){notify('방을 찾을 수 없어요','err');return;}
+  const r = rs.val();
+  const isHost = r.hostUid === uid;
+  if(isHost && force){
+    // 방장 강퇴 시 다른 플레이어에게 방장 자동 위임
+    const others = Object.keys(r.players||{}).filter(k=>k!==uid);
+    if(others.length > 0){
+      await update(ref(db,`rooms/${rid}`),{hostUid: others[0]});
+      await update(ref(db,`rooms/${rid}/players/${others[0]}`),{isHost:true});
+    } else {
+      // 마지막 사람이면 방 삭제
+      await remove(ref(db,`rooms/${rid}`));
+      notify(`${nm}님을 강퇴해 빈 방을 삭제했어요`,'wrn'); refreshAdm(); return;
+    }
+  } else if(isHost && !force){
+    notify('방장은 강퇴할 수 없어요 (관리자 기능을 이용하세요)','err'); return;
+  }
+  await update(ref(db,`rooms/${rid}/players/${uid}`),{isHost:false});
+  await remove(ref(db,`rooms/${rid}/players/${uid}`));
+  notify(`${nm}님을 강퇴했어요`,'wrn'); refreshAdm();
+};
+window.changeHost = async function(rid,uid,nm) {
+  if(!await showConfirm(`${nm}님을 방장으로 지정할까요?\n나머지 플레이어는 자동으로 멤버가 됩니다.`, '방장 지정', '#856404'))return;
+  try {
+    const rs = await get(ref(db,`rooms/${rid}`));
+    if(!rs.exists()){notify('방을 찾을 수 없어요','err');return;}
+    const r = rs.val();
+    const ps = r.players || {};
+    // 새 방장 설정 + 나머지 전원 isHost:false
+    const jobs = [];
+    jobs.push(update(ref(db,`rooms/${rid}`), {hostUid: uid, hostName: ps[uid]?.name || nm}));
+    Object.keys(ps).forEach(puid => {
+      jobs.push(update(ref(db,`rooms/${rid}/players/${puid}`), {isHost: puid === uid}));
+    });
+    await Promise.all(jobs);
+    notify(`👑 ${nm}님이 새 방장이 됐어요`,'ok');
+    setTimeout(()=>refreshAdm(), 500);
+  } catch(err) {
+    notify('방장 변경 실패: ' + err.message, 'err');
+    console.error('changeHost error:', err);
+  }
+};
+window.kickAll = async function(uid,nm) {
+  if(!await showConfirm(`${nm}님을 모든 방에서 강퇴할까요?`, '강퇴', '#c0392b'))return;
+  const s=await get(ref(db,'rooms'));
+  if(s.exists())s.forEach(c=>{if(c.val().players?.[uid])remove(ref(db,`rooms/${c.key}/players/${uid}`));});
+  notify(`${nm}님을 강퇴했어요`,'wrn'); refreshAdm();
+};
+window.forceEnd = async function(rid) {
+  if(!await showConfirm('게임을 강제 종료할까요?', '종료', '#e67e22'))return;
+  await update(ref(db,`rooms/${rid}`),{status:'finished'});
+  notify('강제 종료했어요','wrn'); refreshAdm();
+};
+window.delRoom = async function(rid) {
+  if(!await showConfirm('방을 삭제할까요?', '삭제', '#c0392b'))return;
+  await remove(ref(db,`rooms/${rid}`));
+  notify('방을 삭제했어요'); refreshAdm();
+};
+window.clearAllRooms = async function() {
+  if(!await showConfirm('모든 방을 초기화할까요?\n모든 게임이 종료됩니다.', '초기화', '#c0392b'))return;
+  await remove(ref(db,'rooms')); notify('모든 방 초기화 완료'); refreshAdm();
+};
+window.kickAllStudents = async function() {
+  if(!await showConfirm('접속 중인 모든 학생을 즉시 퇴장시킬까요?', '퇴장', '#c0392b'))return;
+  await set(ref(db,'adminCmd'),{type:'kickAll', ts: Date.now()});
+  notify('🚪 모든 학생을 퇴장시켰어요','wrn');
+  setTimeout(()=>refreshAdm(), 1500);
+};
+// 방 폐쇄: 해당 방의 모든 플레이어를 강제 퇴장
+window.closeRoom = async function(rid, rname) {
+  if(!await showConfirm(`「${rname}」 방을 폐쇄할까요?\n방의 모든 학생이 즉시 퇴장됩니다.`, '폐쇄', '#c0392b'))return;
+  await set(ref(db,`rooms/${rid}/closed`), true);
+  notify(`「${rname}」 방을 폐쇄했어요`,'wrn');
+  setTimeout(async()=>{ await remove(ref(db,`rooms/${rid}`)); refreshAdm(); }, 2000);
+};
+window.openBcast = function() { document.getElementById('bcmsg').value=''; openM('bcm'); };
+window.sendBcast = async function() {
+  const msg=document.getElementById('bcmsg').value.trim(); if(!msg)return;
+  await set(ref(db,'broadcast'),{msg,ts:serverTimestamp()});
+  closeM('bcm'); notify('공지 전송 완료');
+};
+</script>
+
+<!-- pplx-inline-edit 제거 (GitHub Pages용) --></body>
+</html>
