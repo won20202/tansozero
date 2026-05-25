@@ -2518,9 +2518,15 @@ window.doLogin = async function() {
     pinfo = parseInfo(snum, sname);
     isAdmin = false;
     await set(ref(db,`presence/${user.uid}`),{uid:user.uid,email:pinfo.email,name:pinfo.name,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,online:true,ts:serverTimestamp()});
-    onValue(ref(db,'broadcast'),(s)=>{if(s.exists()&&s.val()?.msg)notify('📢 공지: '+s.val().msg,'inf');});
-    // 관리자 전체 퇴장 명령 리스너
-    let lastAdminCmdTs = 0;
+    const _bcJoinTs = Date.now();
+    onValue(ref(db,'broadcast'),(s)=>{
+      if(!s.exists())return;
+      const d=s.val();
+      // 내가 접속한 이후에 보낸 공지만 표시 (ts가 없으면 무시)
+      if(d?.msg && d?.ts && d.ts > _bcJoinTs) notify('📢 공지: '+d.msg,'inf');
+    });
+    // 관리자 전체 퇴장 명령 리스너 — 접속 이후 명령만 처리
+    let lastAdminCmdTs = Date.now();
     onValue(ref(db,'adminCmd'),(s)=>{
       if(!s.exists())return;
       const cmd = s.val();
