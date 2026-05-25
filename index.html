@@ -2084,7 +2084,7 @@ function parseInfo(snum, sname) {
     cls   = String(parseInt(m[2]));
     num   = String(parseInt(m[3]));
   }
-  return { grade, class: cls, num, name: sname || '학생', email: snum+'@student' };
+  return { grade, class: cls, num, name: sname || '학생', snum };
 }
 
 // dealHand(n=6) 구버전 제거 — 신버전 dealHand(deck, n=7) 사용
@@ -2418,6 +2418,7 @@ const BGM = (() => {
       vol = (vol === undefined) ? 0.30 : vol;
       if (isPlaying) return;
       getCtx();
+      if (ctx && ctx.state === 'suspended') ctx.resume();
       masterGain.gain.setValueAtTime(0, ctx.currentTime);
       masterGain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 1.8);
       isPlaying = true;
@@ -2529,7 +2530,7 @@ window.doLogin = async function() {
       let duplicate = false;
       presSnap.forEach(c=>{
         const d=c.val();
-        if(d.email === snum){
+        if(d.snum === snum){
           // lastSeen이 서버 타임스탬프(숫자)로 저장된 경우만 비교
           const lastSeen = typeof d.lastSeen === 'number' ? d.lastSeen : 0;
           if(now - lastSeen > EXPIRE_MS){
@@ -2552,7 +2553,7 @@ window.doLogin = async function() {
     isAdmin = false;
     // presence는 setupPresence()에서 .info/connected 확인 후 등록 (엣지 등 브라우저 호환성)
     // 먼저 임시로 직접 써두어 관리자 화면에 즉시 표시되도록 함 (onDisconnect 없이)
-    await set(ref(db,`presence/${user.uid}`),{uid:user.uid,email:pinfo.email,name:pinfo.name,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,online:true,lastSeen:Date.now()});
+    await set(ref(db,`presence/${user.uid}`),{uid:user.uid,snum:pinfo.snum,name:pinfo.name,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,online:true,lastSeen:Date.now()});
     const _bcJoinTs = Date.now();
     onValue(ref(db,'broadcast'),(s)=>{
       if(!s.exists())return;
@@ -2628,7 +2629,7 @@ function setupPresence(uid) {
       presenceData.grade = pinfo.grade;
       presenceData.class = pinfo.class;
       presenceData.num = pinfo.num;
-      presenceData.email = pinfo.email;
+      presenceData.snum = pinfo.snum;
     }
     // onDisconnect 먼저 등록 후 set() → race condition 방지
     onDisconnect(presenceRef).remove();
@@ -3655,6 +3656,9 @@ function startTimer(r) {
 }
 function stopTimer(){
   if(timerInt){clearInterval(timerInt);timerInt=null;}
+  timerSec=0;
+  const tel=document.getElementById('gtimer');
+  if(tel){tel.textContent='';tel.classList.remove('urg');}
   if(_actx){try{_actx.suspend();}catch(e){}}
 }
 
