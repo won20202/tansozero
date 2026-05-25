@@ -2425,13 +2425,19 @@ const BGM = (() => {
       nextBeatTime = ctx.currentTime + 0.1;
       scheduleBar();
     },
-    stop: function() {
+    stop: function(instant) {
       if (!isPlaying) return;
       isPlaying = false;
       clearTimeout(scheduleTimer);
       if (masterGain && ctx) {
-        masterGain.gain.setValueAtTime(masterGain.gain.value, ctx.currentTime);
-        masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.8);
+        if (instant) {
+          masterGain.gain.cancelScheduledValues(ctx.currentTime);
+          masterGain.gain.setValueAtTime(0, ctx.currentTime);
+          try { ctx.suspend(); } catch(e){}
+        } else {
+          masterGain.gain.setValueAtTime(masterGain.gain.value, ctx.currentTime);
+          masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.8);
+        }
       }
     },
     setVolume: function(v) {
@@ -2544,7 +2550,9 @@ window.doLogin = async function() {
     user = cred.user;
     pinfo = parseInfo(snum, sname);
     isAdmin = false;
-    await set(ref(db,`presence/${user.uid}`),{uid:user.uid,email:pinfo.email,name:pinfo.name,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,online:true,ts:serverTimestamp(),lastSeen:Date.now()});
+    // presence는 setupPresence()에서 .info/connected 확인 후 등록 (엣지 등 브라우저 호환성)
+    // 먼저 임시로 직접 써두어 관리자 화면에 즉시 표시되도록 함 (onDisconnect 없이)
+    await set(ref(db,`presence/${user.uid}`),{uid:user.uid,email:pinfo.email,name:pinfo.name,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,online:true,lastSeen:Date.now()});
     const _bcJoinTs = Date.now();
     onValue(ref(db,'broadcast'),(s)=>{
       if(!s.exists())return;
@@ -2573,7 +2581,7 @@ async function handleAdminKickAll() {
   const isInGame = document.getElementById('gs')?.classList.contains('on');
   const isInWaiting = document.getElementById('ws')?.classList.contains('on');
   if ((isInGame || isInWaiting) && roomId && user) {
-    stopTimer();
+    stopTimer(); BGM.stop(true);
     if (isInGame) {
       // 관리자 강제퇴장 — 감점 없이 시스템 메시지만
       try {
@@ -2622,8 +2630,9 @@ function setupPresence(uid) {
       presenceData.num = pinfo.num;
       presenceData.email = pinfo.email;
     }
-    await set(presenceRef, presenceData);
+    // onDisconnect 먼저 등록 후 set() → race condition 방지
     onDisconnect(presenceRef).remove();
+    await set(presenceRef, presenceData);
 
     // 1분마다 lastSeen 갱신 (좀비 세션 방지)
     if(_presenceHeartbeatTimer) clearInterval(_presenceHeartbeatTimer);
@@ -2908,7 +2917,21 @@ function enterWaiting(rid) {
   if(user) setupPresence(user.uid);
   roomListener=onValue(roomRef, s=>{
     if(!roomId || !user) return; // 강퇴/나가기 후 재진입 차단
-    if(!s.exists()){notify('방이 삭제됐어요','wrn');gotoLobby();return;}
+    if(!s.exists()){
+      // 게임 중이면 즉시 사운드/타이머 정리 후 로비
+      const inGame = document.getElementById('gs')?.classList.contains('on');
+      stopTimer();
+      BGM.stop(true); // 즉시 중단
+      if(inGame){
+        notify('🚪 방장이 나가 게임이 종료됐어요. 로비로 이동합니다.','wrn');
+      } else {
+        notify('방이 삭제됐어요','wrn');
+      }
+      roomId=null; roomData=null;
+      stopRoomListener(); stopChatListener();
+      setTimeout(()=>gotoLobby(), 800);
+      return;
+    }
     roomData=s.val();
     // 강퇴 감지: kicked 플래그가 true인 경우만 강퇴 메시지 표시
     if(user && roomData.status==='waiting') {
@@ -3630,7 +3653,10 @@ function startTimer(r) {
     }
   },1000);
 }
-function stopTimer(){if(timerInt){clearInterval(timerInt);timerInt=null;}}
+function stopTimer(){
+  if(timerInt){clearInterval(timerInt);timerInt=null;}
+  if(_actx){try{_actx.suspend();}catch(e){}}
+}
 
 // ============================================================
 // BGM 컨트롤 함수
