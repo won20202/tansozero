@@ -938,7 +938,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 // 각 탭이 독립적인 로그인 세션을 가지도록 SESSION persistence 설정
 // (같은 브라우저 다른 탭에서 로그인해도 서로 영향 없음)
-setPersistence(auth, browserSessionPersistence).catch(()=>{});
+// browserSessionPersistence는 doLogin 시 적용
 const db = getDatabase(app);
 // ============================================================
 // ============================================================
@@ -2477,6 +2477,7 @@ window.doAdminLogin = async function() {
   if (pw !== correct) { notify('비밀번호가 틀렸습니다','err'); return; }
   closeM('admlm');
   if (!user) {
+    await setPersistence(auth, browserSessionPersistence).catch(()=>{});
     const cred = await signInAnonymously(auth);
     user = cred.user;
   }
@@ -2540,6 +2541,7 @@ window.doLogin = async function() {
         return;
       }
     }
+    await setPersistence(auth, browserSessionPersistence).catch(()=>{});
     const cred = await signInAnonymously(auth);
     user = cred.user;
     pinfo = parseInfo(snum, sname);
@@ -2548,19 +2550,22 @@ window.doLogin = async function() {
     // 먼저 임시로 직접 써두어 관리자 화면에 즉시 표시되도록 함 (onDisconnect 없이)
     await set(ref(db,`presence/${user.uid}`),{uid:user.uid,snum:pinfo.snum,name:pinfo.name,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,online:true,lastSeen:Date.now()});
     const _bcJoinTs = Date.now();
-    onValue(ref(db,'broadcast'),(s)=>{
+    // 이전 리스너 정리 후 재등록 (중복 방지)
+    if(window._bcUnsub){ window._bcUnsub(); window._bcUnsub=null; }
+    if(window._adminCmdUnsub){ window._adminCmdUnsub(); window._adminCmdUnsub=null; }
+    window._bcLoginTs = _bcJoinTs;
+    window._bcUnsub = onValue(ref(db,'broadcast'),(s)=>{
       if(!s.exists())return;
       const d=s.val();
-      // 내가 접속한 이후에 보낸 공지만 표시 (ts가 없으면 무시)
-      if(d?.msg && d?.ts && d.ts > _bcJoinTs) notify('📢 공지: '+d.msg,'inf');
+      if(d?.msg && d?.ts && d.ts > window._bcLoginTs) notify('📢 공지: '+d.msg,'inf');
     });
     // 관리자 전체 퇴장 명령 리스너 — 접속 이후 명령만 처리
-    let lastAdminCmdTs = Date.now();
-    onValue(ref(db,'adminCmd'),(s)=>{
+    window._adminCmdTs = Date.now();
+    window._adminCmdUnsub = onValue(ref(db,'adminCmd'),(s)=>{
       if(!s.exists())return;
       const cmd = s.val();
-      if(cmd?.type==='kickAll' && cmd?.ts > lastAdminCmdTs){
-        lastAdminCmdTs = cmd.ts;
+      if(cmd?.type==='kickAll' && cmd?.ts > window._adminCmdTs){
+        window._adminCmdTs = cmd.ts;
         handleAdminKickAll();
       }
     });
