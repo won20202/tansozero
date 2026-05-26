@@ -889,7 +889,7 @@
     <h3>🚪 새 방 만들기</h3>
     <div class="fg"><label class="fl">방 이름</label><input class="fi" id="rname" placeholder="예) 지구를 지켜라 팀" maxlength="20"/></div>
     <div class="fg"><label class="fl">입장 코드 (4~6자리 영문/숫자)</label><input class="fi codeinp" id="rcode" placeholder="예) ECO123" maxlength="6" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"/></div>
-    <div class="fg"><label class="fl">최대 인원</label><select class="fsel" id="rmaxp"><option value="4">4명 (추천)</option><option value="5" selected>5명 (추천)</option><option value="6">6명</option></select></div>
+    <div class="fg"><label class="fl">최대 인원</label><select class="fsel" id="rmaxp"><option value="2">2명</option><option value="3">3명</option><option value="4" selected>4명 (추천)</option><option value="5">5명</option><option value="6">6명</option></select></div>
     <div class="fg"><label class="fl">라운드 수</label><select class="fsel" id="rrnds"><option value="5">5라운드 (빠른)</option><option value="10" selected>10라운드 (기본)</option><option value="15">15라운드 (긴)</option></select></div>
     <div class="fg"><label class="fl">턴당 제한시간</label><select class="fsel" id="rtmr"><option value="20">20초 (빠름)</option><option value="30" selected>30초 (기본)</option><option value="45">45초 (여유)</option><option value="60">60초 (충분)</option></select></div>
     <div class="mbtns"><button class="btn bts" onclick="closeM('crm')">취소</button><button class="btn btp" onclick="createRoom()">방 만들기</button></div>
@@ -2011,7 +2011,7 @@ const TIPS = [
 ];
 const COLORS = ['#2d9c55','#3bb8e8','#e67e22','#9b59b6','#e74c3c','#1abc9c'];
 let isAdmin = false;
-const MAX_ROOMS = 10;
+const MAX_ROOMS = 15;
 
 // ============================================================
 // STATE
@@ -2826,7 +2826,8 @@ function renderRooms(rooms) {
   // 빈 방(플레이어 0명) 또는 2시간 이상 된 유령 방 필터링
   let list = rooms.filter(r => {
     const pl = r.players ? Object.keys(r.players).length : 0;
-    const age = r.createdAt ? (now - r.createdAt) : 0;
+    // createdAt이 없거나 아직 서버 타임스탬프 미반영(null)이면 유효한 방으로 간주
+    const age = (r.createdAt && typeof r.createdAt === 'number') ? (now - r.createdAt) : 0;
     return pl > 0 && age < 7200000;
   });
   if(curFilter==='waiting')list=list.filter(r=>r.status==='waiting');
@@ -2863,10 +2864,16 @@ window.createRoom = async function() {
   if(!name){notify('방 이름을 입력해주세요','wrn');return;}
   if(!code||code.length<4){notify('입장 코드는 4자리 이상이어야 해요','wrn');return;}
   const snap=await get(ref(db,'rooms'));
-  if(snap.exists()&&Object.keys(snap.val()).length>=MAX_ROOMS){notify('방을 더 만들 수 없어요 (최대 10개)','err');return;}
+  if(snap.exists()){
+    // 활성 방만 카운트 (players가 1명 이상이고 finished 아닌 방)
+    const activeRooms = Object.values(snap.val()).filter(r =>
+      r.players && Object.keys(r.players).length > 0 && r.status !== 'finished'
+    );
+    if(activeRooms.length >= MAX_ROOMS){notify('방을 더 만들 수 없어요 (최대 '+MAX_ROOMS+'개)','err');return;}
+  }
   const rref=push(ref(db,'rooms'));
   const uid=user.uid;
-  await set(rref,{name,code,maxPlayers:maxP,rounds,timerSeconds:timer,status:'waiting',hostUid:uid,hostName:pinfo.name,currentRound:0,players:{[uid]:{uid,name:pinfo.name,email:user.email,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:true,color:COLORS[0]}},createdAt:serverTimestamp()});
+  await set(rref,{name,code,maxPlayers:maxP,rounds,timerSeconds:timer,status:'waiting',hostUid:uid,hostName:pinfo.name,currentRound:0,players:{[uid]:{uid,name:pinfo.name,email:user.email,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:true,color:COLORS[0]}},createdAt:Date.now(),createdAtServer:serverTimestamp()});
   // 방장 연결 끊기면 방 전체 자동 삭제
   onDisconnect(rref).remove();
   closeM('crm'); roomId=rref.key; refreshPlayerPresence(); enterWaiting(rref.key);
