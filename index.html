@@ -916,7 +916,7 @@ function esc(str) {
     .replace(/'/g, '&#x27;');
 }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInAnonymously, onAuthStateChanged, signOut }
+import { getAuth, signInAnonymously, onAuthStateChanged, signOut, setPersistence, browserSessionPersistence }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getDatabase, ref, set, get, push, update, remove, onValue, off, serverTimestamp, onDisconnect }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -936,6 +936,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+// 각 탭이 독립적인 로그인 세션을 가지도록 SESSION persistence 설정
+// (같은 브라우저 다른 탭에서 로그인해도 서로 영향 없음)
+setPersistence(auth, browserSessionPersistence).catch(()=>{});
 const db = getDatabase(app);
 // ============================================================
 // ============================================================
