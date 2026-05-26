@@ -812,9 +812,8 @@
     <div style="display:flex;align-items:center;gap:10px">
       <div class="anav">
         <button class="anb on" onclick="admTab('ov',this)">개요</button>
-        <button class="anb" onclick="admTab('st',this)">학생 현황</button>
-        <button class="anb" onclick="admTab('rm',this)">방 관리</button>
-        <button class="anb" onclick="admTab('cfg',this)">⚙️ 설정</button>
+        <button class="anb" onclick="admTab('rm',this)">방 현황</button>
+        <button class="anb" onclick="admTab('cfg',this)">설정</button>
       </div>
       <button class="btn bts btsm" onclick="gotoLobby()">← 학생 화면</button>
     </div>
@@ -837,17 +836,6 @@
       </div>
       <div class="slbl" style="margin-bottom:12px">📊 방별 현황</div>
       <div class="agrid" id="admRooms"></div>
-    </div>
-    <!-- Students -->
-    <div class="atc" id="at-st">
-      <div style="margin-bottom:14px;display:flex;gap:9px;align-items:center">
-        <input class="fi" id="stsch" placeholder="이름 또는 학번 검색..." style="max-width:280px" oninput="filterSt()"/>
-        <span style="font-size:12px;color:var(--gray5)" id="stcnt">총 0명</span>
-      </div>
-      <table class="atable" id="sttbl">
-        <thead><tr><th>학번</th><th>이름</th><th>학년/반/번</th><th>현재 방</th><th>점수</th><th>관리</th></tr></thead>
-        <tbody id="sttbody"></tbody>
-      </table>
     </div>
     <!-- Rooms -->
     <div class="atc" id="at-rm">
@@ -3839,7 +3827,7 @@ window.refreshAdm=async function(){
       document.getElementById('splaying').textContent=rooms.filter(r=>r.status==='playing').length;
       document.getElementById('swaiting').textContent=rooms.filter(r=>r.status==='waiting').length;
       renderAdmRooms(rooms);
-      renderStudsTable(studs,rooms);
+      
     }catch(e){}
   };
   await doFetch();
