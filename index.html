@@ -3938,11 +3938,22 @@ let admRoomsCache=[], admStudsCache=[];
 function startAdmListeners(){
   // rooms 실시간
   if(admRoomsListener){off(ref(db,'rooms'),'value',admRoomsListener);admRoomsListener=null;}
+  // rooms 실시간 onValue + 3초 폴링 병행
   admRoomsListener=onValue(ref(db,'rooms'),s=>{
     admRoomsCache=[];
     if(s.exists())s.forEach(c=>admRoomsCache.push({id:c.key,...c.val()}));
     _renderAdmAll();
   });
+  // 3초마다 강제 get() 폴링 (onValue 지연 대비)
+  if(window._admPollTimer) clearInterval(window._admPollTimer);
+  window._admPollTimer = setInterval(async()=>{
+    try {
+      const s = await get(ref(db,'rooms'));
+      admRoomsCache=[];
+      if(s.exists())s.forEach(c=>admRoomsCache.push({id:c.key,...c.val()}));
+      _renderAdmAll();
+    } catch(e){}
+  }, 3000);
   // presence 실시간
   if(admPresenceListener){off(ref(db,'presence'),'value',admPresenceListener);admPresenceListener=null;}
   admPresenceListener=onValue(ref(db,'presence'),s=>{
@@ -3954,6 +3965,7 @@ function startAdmListeners(){
 function stopAdmListeners(){
   if(admRoomsListener){off(ref(db,'rooms'),'value',admRoomsListener);admRoomsListener=null;}
   if(admPresenceListener){off(ref(db,'presence'),'value',admPresenceListener);admPresenceListener=null;}
+  if(window._admPollTimer){clearInterval(window._admPollTimer);window._admPollTimer=null;}
 }
 function _renderAdmAll(){
   const rooms=admRoomsCache, studs=admStudsCache;
