@@ -2787,6 +2787,7 @@ window.gotoLobby = function() {
   if(resultAutoTimer){ clearInterval(resultAutoTimer); resultAutoTimer=null; }
   BGM.stop();
   stopRoomListener(); chatStarted=false;
+  if(_roomsPollTimer){clearInterval(_roomsPollTimer);_roomsPollTimer=null;}
   if(isAdmin){
     stopAdmListeners(); // 관리자 리스너 정리
     document.getElementById('topname').textContent='관리자 모드';
@@ -2811,13 +2812,27 @@ window.gotoLobby = function() {
 window.filterR = function(f,btn) {
   curFilter=f; document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('on')); btn.classList.add('on'); loadRooms();
 };
+let _roomsPollTimer = null;
 window.loadRooms = function() {
+  // 기존 리스너 + 폴링 타이머 정리
   if(roomsListener){off(ref(db,'rooms'),'value',roomsListener);roomsListener=null;}
+  if(_roomsPollTimer){clearInterval(_roomsPollTimer);_roomsPollTimer=null;}
+  // 실시간 리스너 등록
   roomsListener=onValue(ref(db,'rooms'),s=>{
     const rooms=[];
     if(s.exists())s.forEach(c=>rooms.push({id:c.key,...c.val()}));
     renderRooms(rooms);
   });
+  // 5초마다 강제 폴링 (onValue가 늦게 반응하는 환경 대비)
+  _roomsPollTimer = setInterval(async()=>{
+    if(!document.getElementById('lobby')?.classList.contains('on')) {
+      clearInterval(_roomsPollTimer); _roomsPollTimer=null; return;
+    }
+    const s = await get(ref(db,'rooms'));
+    const rooms=[];
+    if(s.exists())s.forEach(c=>rooms.push({id:c.key,...c.val()}));
+    renderRooms(rooms);
+  }, 3000);
 };
 function renderRooms(rooms) {
   const g=document.getElementById('rgrid');
@@ -2872,9 +2887,9 @@ window.createRoom = async function() {
   }
   const rref=push(ref(db,'rooms'));
   const uid=user.uid;
-  await set(rref,{name,code,maxPlayers:maxP,rounds,timerSeconds:timer,status:'waiting',hostUid:uid,hostName:pinfo.name,currentRound:0,players:{[uid]:{uid,name:pinfo.name,email:user.email,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:true,color:COLORS[0]}},createdAt:Date.now(),createdAtServer:serverTimestamp()});
-  // 방장 연결 끊기면 방 전체 자동 삭제
+  // onDisconnect 먼저 등록 후 set() (race condition 방지)
   onDisconnect(rref).remove();
+  await set(rref,{name,code,maxPlayers:maxP,rounds,timerSeconds:timer,status:'waiting',hostUid:uid,hostName:pinfo.name,currentRound:0,players:{[uid]:{uid,name:pinfo.name,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:true,color:COLORS[0]}},createdAt:Date.now(),createdAtServer:serverTimestamp()});
   closeM('crm'); roomId=rref.key; refreshPlayerPresence(); enterWaiting(rref.key);
 };
 window.joinByCode = async function() {
@@ -2901,7 +2916,7 @@ async function doJoin(rid) {
   const s=await get(ref(db,`rooms/${rid}`)); if(!s.exists()){notify('방을 찾을 수 없어요','err');return;}
   const r=s.val(), pl=r.players||{}, cnt=Object.keys(pl).length;
   if(cnt>=r.maxPlayers){notify('방이 꽉 찼어요!','err');return;}
-  await await set(ref(db,`rooms/${rid}/players/${uid}`),{uid,name:pinfo.name,email:user.email,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:false,color:COLORS[cnt%COLORS.length]});
+  await set(ref(db,`rooms/${rid}/players/${uid}`),{uid,name:pinfo.name,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:false,color:COLORS[cnt%COLORS.length]});
   // 연결 끊기면 자동으로 players에서 제거
   onDisconnect(ref(db,`rooms/${rid}/players/${uid}`)).remove();
   snd('join');
