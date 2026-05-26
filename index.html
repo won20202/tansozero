@@ -808,7 +808,6 @@
     <div style="display:flex;align-items:center;gap:10px">
       <div class="anav">
         <button class="anb on" onclick="admTab('ov',this)">개요</button>
-        <button class="anb" onclick="admTab('st',this)">학생 현황</button>
         <button class="anb" onclick="admTab('rm',this)">방 관리</button>
         <button class="anb" onclick="admTab('cfg',this)">⚙️ 설정</button>
       </div>
@@ -835,16 +834,7 @@
       <div class="agrid" id="admRooms"></div>
     </div>
     <!-- Students -->
-    <div class="atc" id="at-st">
-      <div style="margin-bottom:14px;display:flex;gap:9px;align-items:center">
-        <input class="fi" id="stsch" placeholder="이름 또는 학번 검색..." style="max-width:280px" oninput="filterSt()"/>
-        <span style="font-size:12px;color:var(--gray5)" id="stcnt">총 0명</span>
-      </div>
-      <table class="atable" id="sttbl">
-        <thead><tr><th>이름</th><th>학년/반/번</th><th>현재 방</th><th>점수</th><th>관리</th></tr></thead>
-        <tbody id="sttbody"></tbody>
-      </table>
-    </div>
+    
     <!-- Rooms -->
     <div class="atc" id="at-rm">
       <div class="agrid" id="admRoomsDetail"></div>
@@ -2616,9 +2606,12 @@ let presenceRef = null;
 let playerPresenceRef = null;
 
 let _presenceHeartbeatTimer = null;
+let _connectedUnsub = null;
 function setupPresence(uid) {
+  // 이전 .info/connected 리스너 해제 (중복 방지)
+  if(_connectedUnsub){ _connectedUnsub(); _connectedUnsub=null; }
   const connectedRef = ref(db, '.info/connected');
-  onValue(connectedRef, async (snap) => {
+  _connectedUnsub = onValue(connectedRef, async (snap) => {
     if (!snap.val()) return;
 
     // presence 등록 + 끊기면 제거 (pinfo 있으면 학생 정보 함께 저장)
@@ -2666,6 +2659,7 @@ function refreshPlayerPresence() {
 onAuthStateChanged(auth, async u => {
   if (!u) {
     if(_presenceHeartbeatTimer){ clearInterval(_presenceHeartbeatTimer); _presenceHeartbeatTimer=null; }
+    if(_connectedUnsub){ _connectedUnsub(); _connectedUnsub=null; }
     user=null; pinfo=null; isAdmin=false; show('ls');
   }
 });
@@ -2798,6 +2792,8 @@ window.gotoLobby = function() {
     document.getElementById('topname').textContent='관리자 모드';
     document.getElementById('topid').textContent='admin';
     document.getElementById('topavt').textContent='관';
+    curFilter='all';
+    if(roomsListener){off(ref(db,'rooms'),'value',roomsListener);roomsListener=null;}
     show('lobby'); loadRooms();
     return;
   }
@@ -2806,13 +2802,16 @@ window.gotoLobby = function() {
   document.getElementById('topid').textContent=user.email;
   document.getElementById('topavt').textContent=p.name.charAt(0);
   renderRecord();
+  curFilter='all';
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('on'));
+  const firstTab=document.querySelector('.ftab'); if(firstTab)firstTab.classList.add('on');
+  if(roomsListener){off(ref(db,'rooms'),'value',roomsListener);roomsListener=null;}
   show('lobby'); loadRooms();
 };
 window.filterR = function(f,btn) {
   curFilter=f; document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('on')); btn.classList.add('on'); loadRooms();
 };
 window.loadRooms = function() {
-  document.getElementById('rgrid').innerHTML='<div class="empty"><div class="spin"></div>불러오는 중...</div>';
   if(roomsListener){off(ref(db,'rooms'),'value',roomsListener);roomsListener=null;}
   roomsListener=onValue(ref(db,'rooms'),s=>{
     const rooms=[];
@@ -2826,9 +2825,9 @@ function renderRooms(rooms) {
   // 빈 방(플레이어 0명) 또는 2시간 이상 된 유령 방 필터링
   let list = rooms.filter(r => {
     const pl = r.players ? Object.keys(r.players).length : 0;
-    // createdAt이 없거나 아직 서버 타임스탬프 미반영(null)이면 유효한 방으로 간주
     const age = (r.createdAt && typeof r.createdAt === 'number') ? (now - r.createdAt) : 0;
-    return pl > 0 && age < 7200000;
+    // 플레이어 있고, 종료된 방 아니고, 2시간 이내 방만 표시
+    return pl > 0 && r.status !== 'finished' && age < 7200000;
   });
   if(curFilter==='waiting')list=list.filter(r=>r.status==='waiting');
   if(curFilter==='playing')list=list.filter(r=>r.status==='playing');
@@ -3944,12 +3943,13 @@ function _renderAdmAll(){
   const srooms=document.getElementById('srooms');
   const splaying=document.getElementById('splaying');
   const swaiting=document.getElementById('swaiting');
-  if(stot)stot.textContent=studs.length;
-  if(srooms)srooms.textContent=rooms.length;
+  // 접속 학생 수: rooms의 players 합산 (더 정확)
+  const totalPlayers = rooms.reduce((acc,r)=>acc+Object.keys(r.players||{}).length,0);
+  if(stot)stot.textContent=totalPlayers;
+  if(srooms)srooms.textContent=rooms.filter(r=>r.status!=='finished').length;
   if(splaying)splaying.textContent=rooms.filter(r=>r.status==='playing').length;
   if(swaiting)swaiting.textContent=rooms.filter(r=>r.status==='waiting').length;
   renderAdmRooms(rooms);
-  renderStudsTable(studs,rooms);
 }
 window.refreshAdm = function() {
   // 리스너가 없으면 다시 시작
