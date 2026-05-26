@@ -2771,9 +2771,7 @@ window.loadRooms=function(){
 function renderRooms(rooms) {
   const g=document.getElementById('rgrid');
   const now = Date.now();
-  console.log('[renderRooms] 받은 방 수:', rooms.length, rooms.map(r=>({id:r.id,name:r.name,status:r.status})));
   let list = rooms.filter(r => r.status !== 'finished');
-  console.log('[renderRooms] 필터 후:', list.length);
   if(curFilter==='waiting')list=list.filter(r=>r.status==='waiting');
   if(curFilter==='playing')list=list.filter(r=>r.status==='playing');
   if(!list.length){g.innerHTML='<div class="empty"><div class="emico">🌿</div>아직 방이 없어요. 방을 만들어보세요!</div>';return;}
