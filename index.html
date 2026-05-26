@@ -790,8 +790,12 @@
     </div>
     <div style="font-size:13px;font-weight:800;color:var(--gray6);margin-bottom:6px;letter-spacing:0.5px">🏆 최종 순위</div>
     <div class="rsboard" id="rsboard"></div>
-    <div class="etip" id="etip" style="display:none"></div>
-    <div id="rauto" style="display:none"></div>
+    <div class="etip" id="etip">🌿 <strong>오늘의 팁:</strong> 가까운 거리는 걸어서 이동해요!</div>
+    <div class="rauto" id="rauto">
+      <div class="rautotxt">🚪 <span id="rautonum">5</span>초 후 자동으로 대기실로 이동...</div>
+      <div class="rautobardiv"><div class="rautobar" id="rautobar"></div></div>
+    </div>
+    <button class="btn bts" onclick="doReturnToWaiting()" style="width:100%;margin-top:10px">🚪 지금 바로 대기실로</button>
   </div>
 </div>
 
@@ -808,6 +812,7 @@
     <div style="display:flex;align-items:center;gap:10px">
       <div class="anav">
         <button class="anb on" onclick="admTab('ov',this)">개요</button>
+        <button class="anb" onclick="admTab('st',this)">학생 현황</button>
         <button class="anb" onclick="admTab('rm',this)">방 관리</button>
         <button class="anb" onclick="admTab('cfg',this)">⚙️ 설정</button>
       </div>
@@ -834,7 +839,16 @@
       <div class="agrid" id="admRooms"></div>
     </div>
     <!-- Students -->
-    
+    <div class="atc" id="at-st">
+      <div style="margin-bottom:14px;display:flex;gap:9px;align-items:center">
+        <input class="fi" id="stsch" placeholder="이름 또는 학번 검색..." style="max-width:280px" oninput="filterSt()"/>
+        <span style="font-size:12px;color:var(--gray5)" id="stcnt">총 0명</span>
+      </div>
+      <table class="atable" id="sttbl">
+        <thead><tr><th>학번</th><th>이름</th><th>학년/반/번</th><th>현재 방</th><th>점수</th><th>관리</th></tr></thead>
+        <tbody id="sttbody"></tbody>
+      </table>
+    </div>
     <!-- Rooms -->
     <div class="atc" id="at-rm">
       <div class="agrid" id="admRoomsDetail"></div>
@@ -879,7 +893,7 @@
     <h3>🚪 새 방 만들기</h3>
     <div class="fg"><label class="fl">방 이름</label><input class="fi" id="rname" placeholder="예) 지구를 지켜라 팀" maxlength="20"/></div>
     <div class="fg"><label class="fl">입장 코드 (4~6자리 영문/숫자)</label><input class="fi codeinp" id="rcode" placeholder="예) ECO123" maxlength="6" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"/></div>
-    <div class="fg"><label class="fl">최대 인원</label><select class="fsel" id="rmaxp"><option value="2">2명</option><option value="3">3명</option><option value="4" selected>4명 (추천)</option><option value="5">5명</option><option value="6">6명</option></select></div>
+    <div class="fg"><label class="fl">최대 인원</label><select class="fsel" id="rmaxp"><option value="4">4명 (추천)</option><option value="5" selected>5명 (추천)</option><option value="6">6명</option></select></div>
     <div class="fg"><label class="fl">라운드 수</label><select class="fsel" id="rrnds"><option value="5">5라운드 (빠른)</option><option value="10" selected>10라운드 (기본)</option><option value="15">15라운드 (긴)</option></select></div>
     <div class="fg"><label class="fl">턴당 제한시간</label><select class="fsel" id="rtmr"><option value="20">20초 (빠름)</option><option value="30" selected>30초 (기본)</option><option value="45">45초 (여유)</option><option value="60">60초 (충분)</option></select></div>
     <div class="mbtns"><button class="btn bts" onclick="closeM('crm')">취소</button><button class="btn btp" onclick="createRoom()">방 만들기</button></div>
@@ -936,9 +950,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-// 각 탭이 독립적인 로그인 세션을 가지도록 SESSION persistence 설정
-// (같은 브라우저 다른 탭에서 로그인해도 서로 영향 없음)
-// 세션 persistence: 기본값(LOCAL) 유지
 const db = getDatabase(app);
 // ============================================================
 // ============================================================
@@ -2004,7 +2015,7 @@ const TIPS = [
 ];
 const COLORS = ['#2d9c55','#3bb8e8','#e67e22','#9b59b6','#e74c3c','#1abc9c'];
 let isAdmin = false;
-const MAX_ROOMS = 15;
+const MAX_ROOMS = 10;
 
 // ============================================================
 // STATE
@@ -2077,7 +2088,7 @@ function parseInfo(snum, sname) {
     cls   = String(parseInt(m[2]));
     num   = String(parseInt(m[3]));
   }
-  return { grade, class: cls, num, name: sname || '학생', snum };
+  return { grade, class: cls, num, name: sname || '학생', email: snum+'@student' };
 }
 
 // dealHand(n=6) 구버전 제거 — 신버전 dealHand(deck, n=7) 사용
@@ -2411,7 +2422,6 @@ const BGM = (() => {
       vol = (vol === undefined) ? 0.30 : vol;
       if (isPlaying) return;
       getCtx();
-      if (ctx && ctx.state === 'suspended') ctx.resume();
       masterGain.gain.setValueAtTime(0, ctx.currentTime);
       masterGain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 1.8);
       isPlaying = true;
@@ -2419,19 +2429,13 @@ const BGM = (() => {
       nextBeatTime = ctx.currentTime + 0.1;
       scheduleBar();
     },
-    stop: function(instant) {
+    stop: function() {
       if (!isPlaying) return;
       isPlaying = false;
       clearTimeout(scheduleTimer);
       if (masterGain && ctx) {
-        if (instant) {
-          masterGain.gain.cancelScheduledValues(ctx.currentTime);
-          masterGain.gain.setValueAtTime(0, ctx.currentTime);
-          try { ctx.suspend(); } catch(e){}
-        } else {
-          masterGain.gain.setValueAtTime(masterGain.gain.value, ctx.currentTime);
-          masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.8);
-        }
+        masterGain.gain.setValueAtTime(masterGain.gain.value, ctx.currentTime);
+        masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.8);
       }
     },
     setVolume: function(v) {
@@ -2513,57 +2517,19 @@ window.doLogin = async function() {
   if (!sname) { notify('이름을 입력하세요','err'); return; }
   if (!/^\d{5}$/.test(snum)) { notify('학번 5자리를 정확히 입력하세요 (예: 10528)','err'); return; }
   try {
-    // 학번 중복 접속 체크 (같은 학번이 이미 presence에 있으면 차단)
-    // 단, lastSeen이 5분 이상 지난 오래된 세션은 자동 만료 처리
-    const presSnap = await get(ref(db,'presence'));
-    const now = Date.now();
-    const EXPIRE_MS = 5 * 60 * 1000; // 5분
-    if(presSnap.exists()){
-      const expireJobs = [];
-      let duplicate = false;
-      presSnap.forEach(c=>{
-        const d=c.val();
-        if(d.snum === snum){
-          // lastSeen이 서버 타임스탬프(숫자)로 저장된 경우만 비교
-          const lastSeen = typeof d.lastSeen === 'number' ? d.lastSeen : 0;
-          if(now - lastSeen > EXPIRE_MS){
-            // 5분 이상 된 세션 → 좀비 세션으로 자동 삭제
-            expireJobs.push(remove(ref(db,'presence/'+c.key)));
-          } else {
-            duplicate = true;
-          }
-        }
-      });
-      if(expireJobs.length) await Promise.all(expireJobs);
-      if(duplicate){
-        notify('⚠️ 이미 접속 중인 학번입니다. 중복 접속은 불가합니다.','err');
-        return;
-      }
-    }
     const cred = await signInAnonymously(auth);
     user = cred.user;
     pinfo = parseInfo(snum, sname);
     isAdmin = false;
-    // presence는 setupPresence()에서 .info/connected 확인 후 등록 (엣지 등 브라우저 호환성)
-    // 먼저 임시로 직접 써두어 관리자 화면에 즉시 표시되도록 함 (onDisconnect 없이)
-    await set(ref(db,`presence/${user.uid}`),{uid:user.uid,snum:pinfo.snum,name:pinfo.name,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,online:true,lastSeen:Date.now()});
-    const _bcJoinTs = Date.now();
-    // 이전 리스너 정리 후 재등록 (중복 방지)
-    if(window._bcUnsub){ window._bcUnsub(); window._bcUnsub=null; }
-    if(window._adminCmdUnsub){ window._adminCmdUnsub(); window._adminCmdUnsub=null; }
-    window._bcLoginTs = _bcJoinTs;
-    window._bcUnsub = onValue(ref(db,'broadcast'),(s)=>{
-      if(!s.exists())return;
-      const d=s.val();
-      if(d?.msg && d?.msg!=='no' && d?.ts && d.ts > window._bcLoginTs) notify('📢 공지: '+d.msg,'inf');
-    });
-    // 관리자 전체 퇴장 명령 리스너 — 접속 이후 명령만 처리
-    window._adminCmdTs = Date.now();
-    window._adminCmdUnsub = onValue(ref(db,'adminCmd'),(s)=>{
+    await set(ref(db,`presence/${user.uid}`),{uid:user.uid,email:pinfo.email,name:pinfo.name,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,online:true,ts:serverTimestamp()});
+    onValue(ref(db,'broadcast'),(s)=>{if(s.exists()&&s.val()?.msg)notify('📢 공지: '+s.val().msg,'inf');});
+    // 관리자 전체 퇴장 명령 리스너
+    let lastAdminCmdTs = 0;
+    onValue(ref(db,'adminCmd'),(s)=>{
       if(!s.exists())return;
       const cmd = s.val();
-      if(cmd?.type==='kickAll' && cmd?.ts > window._adminCmdTs){
-        window._adminCmdTs = cmd.ts;
+      if(cmd?.type==='kickAll' && cmd?.ts > lastAdminCmdTs){
+        lastAdminCmdTs = cmd.ts;
         handleAdminKickAll();
       }
     });
@@ -2578,7 +2544,7 @@ async function handleAdminKickAll() {
   const isInGame = document.getElementById('gs')?.classList.contains('on');
   const isInWaiting = document.getElementById('ws')?.classList.contains('on');
   if ((isInGame || isInWaiting) && roomId && user) {
-    stopTimer(); BGM.stop(true);
+    stopTimer();
     if (isInGame) {
       // 관리자 강제퇴장 — 감점 없이 시스템 메시지만
       try {
@@ -2611,45 +2577,23 @@ async function handleAdminKickAll() {
 let presenceRef = null;
 let playerPresenceRef = null;
 
-let _presenceHeartbeatTimer = null;
-let _connectedUnsub = null;
 function setupPresence(uid) {
-  // 이전 .info/connected 리스너 해제 (중복 방지)
-  if(_connectedUnsub){ _connectedUnsub(); _connectedUnsub=null; }
   const connectedRef = ref(db, '.info/connected');
-  _connectedUnsub = onValue(connectedRef, async (snap) => {
+  onValue(connectedRef, async (snap) => {
     if (!snap.val()) return;
 
-    // presence 등록 + 끊기면 제거 (pinfo 있으면 학생 정보 함께 저장)
+    // presence 등록 + 끊기면 제거
     presenceRef = ref(db, 'presence/'+uid);
-    const presenceData = { uid, online: true, lastSeen: Date.now() };
-    if(pinfo && pinfo.name) {
-      presenceData.name = pinfo.name;
-      presenceData.grade = pinfo.grade;
-      presenceData.class = pinfo.class;
-      presenceData.num = pinfo.num;
-      presenceData.snum = pinfo.snum;
-    }
-    // onDisconnect 먼저 등록 후 set() → race condition 방지
+    await set(presenceRef, { online: true, lastSeen: serverTimestamp() });
     onDisconnect(presenceRef).remove();
-    await set(presenceRef, presenceData);
-
-    // 1분마다 lastSeen 갱신 (좀비 세션 방지)
-    if(_presenceHeartbeatTimer) clearInterval(_presenceHeartbeatTimer);
-    _presenceHeartbeatTimer = setInterval(async ()=>{
-      if(presenceRef && user) {
-        try { await update(presenceRef, {lastSeen: Date.now()}); } catch(e){}
-      }
-    }, 60 * 1000);
 
     // 방에 참여 중이면 연결 끊길 때 처리
-    // roomId가 있고 실제로 방 데이터가 확인된 경우만 onDisconnect 등록
-    if (roomId && roomData) {
+    if (roomId) {
       // 본인 players 자동 제거
       playerPresenceRef = ref(db, 'rooms/'+roomId+'/players/'+uid);
       onDisconnect(playerPresenceRef).remove();
-      // 방장이면 방 전체 삭제 (방 데이터가 실제로 존재할 때만)
-      if (roomData.hostUid === uid) {
+      // 방장이면 방 전체 삭제
+      if (roomData?.hostUid === uid) {
         onDisconnect(ref(db, 'rooms/'+roomId)).remove();
       }
     }
@@ -2664,11 +2608,7 @@ function refreshPlayerPresence() {
 }
 
 onAuthStateChanged(auth, async u => {
-  if (!u) {
-    if(_presenceHeartbeatTimer){ clearInterval(_presenceHeartbeatTimer); _presenceHeartbeatTimer=null; }
-    if(_connectedUnsub){ _connectedUnsub(); _connectedUnsub=null; }
-    user=null; pinfo=null; isAdmin=false; show('ls');
-  }
+  if (!u) { user=null; pinfo=null; isAdmin=false; show('ls'); }
 });
 
 // ============================================================
@@ -2791,17 +2731,14 @@ window.confirmLeaveGame = async function() {
 window.gotoLobby = function() {
   if(!user){show('ls');return;}
   roomId=null; roomData=null; // 항상 초기화 보장
-  if(resultAutoTimer){ clearTimeout(resultAutoTimer); resultAutoTimer=null; }
+  if(resultAutoTimer){ clearInterval(resultAutoTimer); resultAutoTimer=null; }
   BGM.stop();
   stopRoomListener(); chatStarted=false;
-  if(_roomsPollTimer){clearInterval(_roomsPollTimer);_roomsPollTimer=null;}
   if(isAdmin){
-    stopAdmListeners(); // 관리자 리스너 정리
+    // 관리자는 로비로 이동하되 투명하게 관리자 표시
     document.getElementById('topname').textContent='관리자 모드';
     document.getElementById('topid').textContent='admin';
     document.getElementById('topavt').textContent='관';
-    curFilter='all';
-    if(roomsListener){off(ref(db,'rooms'),'value',roomsListener);roomsListener=null;}
     show('lobby'); loadRooms();
     return;
   }
@@ -2810,40 +2747,32 @@ window.gotoLobby = function() {
   document.getElementById('topid').textContent=user.email;
   document.getElementById('topavt').textContent=p.name.charAt(0);
   renderRecord();
-  curFilter='all';
-  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('on'));
-  const firstTab=document.querySelector('.ftab'); if(firstTab)firstTab.classList.add('on');
-  if(roomsListener){off(ref(db,'rooms'),'value',roomsListener);roomsListener=null;}
   show('lobby'); loadRooms();
 };
 window.filterR = function(f,btn) {
   curFilter=f; document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('on')); btn.classList.add('on'); loadRooms();
 };
-let _roomsPollTimer = null;
-window.loadRooms = function() {
-  // 기존 리스너 + 폴링 타이머 정리
+window._rPoll=null;
+window.loadRooms=function(){
   if(roomsListener){off(ref(db,'rooms'),'value',roomsListener);roomsListener=null;}
-  if(_roomsPollTimer){clearInterval(_roomsPollTimer);_roomsPollTimer=null;}
-  // 실시간 리스너 등록
+  if(window._rPoll){clearInterval(window._rPoll);window._rPoll=null;}
   roomsListener=onValue(ref(db,'rooms'),s=>{
     const rooms=[];
     if(s.exists())s.forEach(c=>rooms.push({id:c.key,...c.val()}));
     renderRooms(rooms);
   });
-  // 5초마다 강제 폴링 (onValue가 늦게 반응하는 환경 대비)
-  _roomsPollTimer = setInterval(async()=>{
-    if(!document.getElementById('lobby')?.classList.contains('on')) {
-      clearInterval(_roomsPollTimer); _roomsPollTimer=null; return;
-    }
-    const s = await get(ref(db,'rooms'));
+  window._rPoll=setInterval(async()=>{
+    if(!document.getElementById('lobby')?.classList.contains('on')){clearInterval(window._rPoll);window._rPoll=null;return;}
+    const s=await get(ref(db,'rooms'));
     const rooms=[];
     if(s.exists())s.forEach(c=>rooms.push({id:c.key,...c.val()}));
     renderRooms(rooms);
-  }, 3000);
+  },2000);
 };
 function renderRooms(rooms) {
   const g=document.getElementById('rgrid');
-  // 종료된 방만 제외하고 전부 표시
+  const now = Date.now();
+  // 빈 방(플레이어 0명) 또는 2시간 이상 된 유령 방 필터링
   let list = rooms.filter(r => r.status !== 'finished');
   if(curFilter==='waiting')list=list.filter(r=>r.status==='waiting');
   if(curFilter==='playing')list=list.filter(r=>r.status==='playing');
@@ -2879,18 +2808,10 @@ window.createRoom = async function() {
   if(!name){notify('방 이름을 입력해주세요','wrn');return;}
   if(!code||code.length<4){notify('입장 코드는 4자리 이상이어야 해요','wrn');return;}
   const snap=await get(ref(db,'rooms'));
-  if(snap.exists()){
-    // 활성 방만 카운트 (players가 1명 이상이고 finished 아닌 방)
-    const activeRooms = Object.values(snap.val()).filter(r =>
-      r.players && Object.keys(r.players).length > 0 && r.status !== 'finished'
-    );
-    if(activeRooms.length >= MAX_ROOMS){notify('방을 더 만들 수 없어요 (최대 '+MAX_ROOMS+'개)','err');return;}
-  }
+  if(snap.exists()&&Object.keys(snap.val()).length>=MAX_ROOMS){notify('방을 더 만들 수 없어요 (최대 10개)','err');return;}
   const rref=push(ref(db,'rooms'));
   const uid=user.uid;
-  await set(rref,{name,code,maxPlayers:maxP,rounds,timerSeconds:timer,status:'waiting',hostUid:uid,hostName:pinfo.name,currentRound:0,players:{[uid]:{uid,name:pinfo.name,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:true,color:COLORS[0]}},createdAt:Date.now(),createdAtServer:serverTimestamp()});
-  // set() 완료 후 onDisconnect 등록 (즉시 발동 방지)
-  onDisconnect(rref).remove();
+  await set(rref,{name,code,maxPlayers:maxP,rounds,timerSeconds:timer,status:'waiting',hostUid:uid,hostName:pinfo.name,currentRound:0,players:{[uid]:{uid,name:pinfo.name,email:user.email,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:true,color:COLORS[0]}},createdAt:serverTimestamp()});
   closeM('crm'); roomId=rref.key; refreshPlayerPresence(); enterWaiting(rref.key);
 };
 window.joinByCode = async function() {
@@ -2917,7 +2838,7 @@ async function doJoin(rid) {
   const s=await get(ref(db,`rooms/${rid}`)); if(!s.exists()){notify('방을 찾을 수 없어요','err');return;}
   const r=s.val(), pl=r.players||{}, cnt=Object.keys(pl).length;
   if(cnt>=r.maxPlayers){notify('방이 꽉 찼어요!','err');return;}
-  await set(ref(db,`rooms/${rid}/players/${uid}`),{uid,name:pinfo.name,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:false,color:COLORS[cnt%COLORS.length]});
+  await await set(ref(db,`rooms/${rid}/players/${uid}`),{uid,name:pinfo.name,email:user.email,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:false,color:COLORS[cnt%COLORS.length]});
   // 연결 끊기면 자동으로 players에서 제거
   onDisconnect(ref(db,`rooms/${rid}/players/${uid}`)).remove();
   snd('join');
@@ -2936,34 +2857,17 @@ function stopChatListener() {
 function enterWaiting(rid) {
   stopRoomListener(); stopTimer();
   roomId=rid; roomRef=ref(db,`rooms/${rid}`);
-  // 방 진입 시 onDisconnect 재등록
-  if(user) setupPresence(user.uid);
   roomListener=onValue(roomRef, s=>{
     if(!roomId || !user) return; // 강퇴/나가기 후 재진입 차단
-    if(!s.exists()){
-      // 게임 중이면 즉시 사운드/타이머 정리 후 로비
-      const inGame = document.getElementById('gs')?.classList.contains('on');
-      stopTimer();
-      BGM.stop(true); // 즉시 중단
-      if(inGame){
-        notify('🚪 방장이 나가 게임이 종료됐어요. 로비로 이동합니다.','wrn');
-      } else {
-        notify('방이 삭제됐어요','wrn');
-      }
-      roomId=null; roomData=null;
-      stopRoomListener(); stopChatListener();
-      setTimeout(()=>gotoLobby(), 800);
-      return;
-    }
+    if(!s.exists()){notify('방이 삭제됐어요','wrn');gotoLobby();return;}
     roomData=s.val();
     // 강퇴 감지: kicked 플래그가 true인 경우만 강퇴 메시지 표시
     if(user && roomData.status==='waiting') {
       const myPlayerData = roomData.players?.[user.uid];
       if(myPlayerData?.kicked) {
-        const kickMsg = myPlayerData.kickedBy==='admin' ? '🚫 관리자에 의해 강퇴되었습니다.' : '🚫 방장에 의해 강퇴되었습니다.';
         roomId=null; roomData=null; // 먼저 null → 이후 onValue 콜백 차단
         stopRoomListener(); stopChatListener(); stopTimer();
-        notify(kickMsg,'err');
+        notify('🚫 방장에 의해 강퇴되었습니다.','err');
         setTimeout(()=>gotoLobby(), 300);
         return;
       }
@@ -3052,7 +2956,7 @@ window.kickPlayerFromWaiting = async function(targetUid, targetName) {
   if (!confirm(targetName+'님을 강퇴할까요?')) return;
   try {
     // kicked 플래그 먼저 설정 (상대방이 onValue로 감지)
-    await update(ref(db, 'rooms/'+roomId+'/players/'+targetUid), {kicked: true, kickedBy: 'host'});
+    await update(ref(db, 'rooms/'+roomId+'/players/'+targetUid), {kicked: true});
     // 1.5초 후 삭제 (감지 시간 충분히 확보)
     setTimeout(async () => {
       try { await remove(ref(db, 'rooms/'+roomId+'/players/'+targetUid)); } catch(e){}
@@ -3140,8 +3044,6 @@ function renderGame(r) {
     (async()=>{
       try{
         await update(ref(db,`rooms/${roomId}`),{status:'finished'});
-        // 5초 후 방 자동 삭제
-        setTimeout(async()=>{ try{ await remove(ref(db,`rooms/${roomId}`)); }catch(e){} }, 5000);
         const chatRef=push(ref(db,`chats/${roomId}`));
         await set(chatRef,{uid:'system',name:'🔔 시스템',msg:'👤 남은 인원이 1명이라 게임이 자동 종료됐어요!',ts:Date.now(),type:'system'});
       }catch(e){}
@@ -3601,12 +3503,9 @@ window.callZero = async function() {
 
       if (newRound > (roomData.totalRounds || 10)) {
         await update(ref(db, `rooms/${roomId}`), { status: 'finished' });
-        // 5초 후 방 자동 삭제
-        setTimeout(async()=>{ try{ await remove(ref(db,`rooms/${roomId}`)); }catch(e){} }, 5000);
       } else {
         const ord = roomData.playerOrder || Object.keys(roomData.players || {});
-        // 탄소제로를 누른 사람(uid)이 새 라운드 첫 턴
-        const ni = ord.indexOf(uid) !== -1 ? ord.indexOf(uid) : 0;
+        const ni = ((roomData.currentPlayerIndex || 0) + 1) % ord.length;
         // 새 라운드: zeroClaimed 초기화 + 카드 재배분
         let deck2 = buildDeck();
         const hands2 = {};
@@ -3680,13 +3579,7 @@ function startTimer(r) {
     }
   },1000);
 }
-function stopTimer(){
-  if(timerInt){clearInterval(timerInt);timerInt=null;}
-  timerSec=0;
-  const tel=document.getElementById('gtimer');
-  if(tel){tel.textContent='';tel.classList.remove('urg');}
-  if(_actx){try{_actx.suspend();}catch(e){}}
-}
+function stopTimer(){if(timerInt){clearInterval(timerInt);timerInt=null;}}
 
 // ============================================================
 // BGM 컨트롤 함수
@@ -3866,17 +3759,6 @@ function showResult(r) {
 
   const popup=document.getElementById('result-popup');
   if(popup) popup.style.display='flex';
-
-  // 30초 후 자동으로 결과창 닫고 방 삭제 → 로비 이동
-  if(resultAutoTimer){ clearTimeout(resultAutoTimer); resultAutoTimer=null; }
-  resultAutoTimer = setTimeout(async()=>{
-    resultAutoTimer = null;
-    if(popup) popup.style.display='none';
-    try { if(roomId) await remove(ref(db,'rooms/'+roomId)); } catch(e){}
-    stopRoomListener(); stopChatListener(); stopTimer();
-    roomId=null; roomData=null;
-    gotoLobby();
-  }, 30000);
 }
 
 window.closeResultPopup = async function() {
@@ -3936,8 +3818,7 @@ function showAOV(ok, title, sub) {
 window.gotoAdmin = function() {
   if(!user)return;
   if(!isAdmin){notify('🚫 관리자 권한이 없습니다.','err');return;}
-  show('adm');
-  startAdmListeners(); // 실시간 리스너 시작
+  show('adm'); refreshAdm();
 };
 window.admTab = function(t, btn) {
   document.querySelectorAll('.atc').forEach(x=>x.classList.remove('on'));
@@ -3945,60 +3826,28 @@ window.admTab = function(t, btn) {
   document.getElementById(`at-${t}`).classList.add('on');
   btn.classList.add('on');
 };
-let admRoomsListener=null, admPresenceListener=null;
-let admRoomsCache=[], admStudsCache=[];
-
-function startAdmListeners(){
-  // rooms 실시간
-  if(admRoomsListener){off(ref(db,'rooms'),'value',admRoomsListener);admRoomsListener=null;}
-  // rooms 실시간 onValue + 3초 폴링 병행
-  admRoomsListener=onValue(ref(db,'rooms'),s=>{
-    admRoomsCache=[];
-    if(s.exists())s.forEach(c=>admRoomsCache.push({id:c.key,...c.val()}));
-    _renderAdmAll();
-  });
-  // 3초마다 강제 get() 폴링 (onValue 지연 대비)
-  if(window._admPollTimer) clearInterval(window._admPollTimer);
-  window._admPollTimer = setInterval(async()=>{
-    try {
-      const s = await get(ref(db,'rooms'));
-      admRoomsCache=[];
-      if(s.exists())s.forEach(c=>admRoomsCache.push({id:c.key,...c.val()}));
-      _renderAdmAll();
-    } catch(e){}
-  }, 3000);
-  // presence 실시간
-  if(admPresenceListener){off(ref(db,'presence'),'value',admPresenceListener);admPresenceListener=null;}
-  admPresenceListener=onValue(ref(db,'presence'),s=>{
-    admStudsCache=[];
-    if(s.exists())s.forEach(c=>admStudsCache.push({uid:c.key,...c.val()}));
-    _renderAdmAll();
-  });
-}
-function stopAdmListeners(){
-  if(admRoomsListener){off(ref(db,'rooms'),'value',admRoomsListener);admRoomsListener=null;}
-  if(admPresenceListener){off(ref(db,'presence'),'value',admPresenceListener);admPresenceListener=null;}
-  if(window._admPollTimer){clearInterval(window._admPollTimer);window._admPollTimer=null;}
-}
-function _renderAdmAll(){
-  const rooms=admRoomsCache, studs=admStudsCache;
-  const stot=document.getElementById('stotal');
-  const srooms=document.getElementById('srooms');
-  const splaying=document.getElementById('splaying');
-  const swaiting=document.getElementById('swaiting');
-  // 접속 학생 수: rooms의 players 합산 (더 정확)
-  const totalPlayers = rooms.reduce((acc,r)=>acc+Object.keys(r.players||{}).length,0);
-  if(stot)stot.textContent=totalPlayers;
-  if(srooms)srooms.textContent=rooms.filter(r=>r.status!=='finished').length;
-  if(splaying)splaying.textContent=rooms.filter(r=>r.status==='playing').length;
-  if(swaiting)swaiting.textContent=rooms.filter(r=>r.status==='waiting').length;
-  renderAdmRooms(rooms);
-}
-window.refreshAdm = function() {
-  // 리스너가 없으면 다시 시작
-  if(!admRoomsListener||!admPresenceListener) startAdmListeners();
-  else _renderAdmAll();
+window._aPoll=null;
+window.refreshAdm=async function(){
+  if(window._aPoll){clearInterval(window._aPoll);window._aPoll=null;}
+  const doFetch=async()=>{
+    const [rs,ps]=await Promise.all([get(ref(db,'rooms')),get(ref(db,'presence'))]);
+    const rooms=[],studs=[];
+    if(rs.exists())rs.forEach(c=>rooms.push({id:c.key,...c.val()}));
+    if(ps.exists())ps.forEach(c=>studs.push({uid:c.key,...c.val()}));
+    document.getElementById('stotal').textContent=studs.length;
+    document.getElementById('srooms').textContent=rooms.filter(r=>r.status!=='finished').length;
+    document.getElementById('splaying').textContent=rooms.filter(r=>r.status==='playing').length;
+    document.getElementById('swaiting').textContent=rooms.filter(r=>r.status==='waiting').length;
+    renderAdmRooms(rooms);
+    renderStudsTable(studs,rooms);
+  };
+  await doFetch();
+  window._aPoll=setInterval(async()=>{
+    if(!document.getElementById('adm')?.classList.contains('on')){clearInterval(window._aPoll);window._aPoll=null;return;}
+    await doFetch();
+  },2000);
 };
+
 function renderAdmRooms(rooms) {
   ['admRooms','admRoomsDetail'].forEach(id=>{
     const el=document.getElementById(id); if(!el)return; el.innerHTML='';
@@ -4023,6 +3872,7 @@ function renderAdmRooms(rooms) {
         <div>${plh||'<div style="font-size:11px;color:var(--gray5)">없음</div>'}</div>
         <div style="display:flex;gap:7px;margin-top:10px;flex-wrap:wrap">
           ${r.status==='playing'?`<button class="btn btw btsm" onclick="forceEnd('${r.id}')">⏹ 강제종료</button>`:''}
+          <button class="btn btsm" style="background:#c0392b;color:#fff;border-color:#c0392b" onclick="closeRoom('${r.id}','${esc(r.name)}')">🚪 방 폐쇄</button>
           <button class="btn btd btsm" onclick="delRoom('${r.id}')">🗑 삭제</button>
         </div>`;
       el.appendChild(c);
@@ -4051,21 +3901,10 @@ function renderStudsTable(studs,rooms){
   document.getElementById('stcnt').textContent=`총 ${studs.length}명`;
   const tbody=document.getElementById('sttbody'); tbody.innerHTML='';
   studs.forEach(s=>{
-    let rn='-',sc=0,grade=s.grade||'',cls=s.class||'',num=s.num||'',name=s.name||'-';
-    // presence에 grade/class/num 없으면 rooms.players에서 보완
-    rooms.forEach(r=>{
-      const p=r.players?.[s.uid];
-      if(p){
-        rn=r.name; sc=p.score||0;
-        if(!grade && p.grade) grade=p.grade;
-        if(!cls && p.class) cls=p.class;
-        if(!num && p.num) num=p.num;
-        if(name==='-' && p.name) name=p.name;
-      }
-    });
-    const clsInfo=(grade||cls||num)?(grade+'학년 '+cls+'반 '+num+'번'):'-';
+    let rn='-',sc=0;
+    rooms.forEach(r=>{if(r.players?.[s.uid]){rn=r.name;sc=r.players[s.uid].score;}});
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${esc(name)}</td><td>${esc(clsInfo)}</td><td>${esc(rn)}</td><td><strong>${sc}점</strong></td><td><button class="akbtn" onclick="kickAll('${s.uid}','${esc(name)}')">강퇴</button></td>`;
+    tr.innerHTML=`<td>${esc(s.email||'-')}</td><td>${esc(s.name)}</td><td>${esc(s.grade)}학년 ${esc(s.class)}반 ${esc(s.num)}번</td><td>${esc(rn)}</td><td><strong>${sc}점</strong></td><td><button class="akbtn" onclick="kickAll('${s.uid}','${esc(s.name)}')">강퇴</button></td>`;
     tbody.appendChild(tr);
   });
 }
@@ -4093,10 +3932,9 @@ window.kickP = async function(rid,uid,nm,force=false) {
   } else if(isHost && !force){
     notify('방장은 강퇴할 수 없어요 (관리자 기능을 이용하세요)','err'); return;
   }
-  // kicked 플래그 먼저 → 학생 클라이언트가 감지 후 스스로 퇴장
-  await update(ref(db,`rooms/${rid}/players/${uid}`),{isHost:false, kicked:true, kickedBy:'admin'});
-  setTimeout(async()=>{ await remove(ref(db,`rooms/${rid}/players/${uid}`)); }, 1500);
-  notify(`${nm}님을 강퇴했어요`,'wrn');
+  await update(ref(db,`rooms/${rid}/players/${uid}`),{isHost:false});
+  await remove(ref(db,`rooms/${rid}/players/${uid}`));
+  notify(`${nm}님을 강퇴했어요`,'wrn'); refreshAdm();
 };
 window.changeHost = async function(rid,uid,nm) {
   if(!await showConfirm(`${nm}님을 방장으로 지정할까요?\n나머지 플레이어는 자동으로 멤버가 됩니다.`, '방장 지정', '#856404'))return;
@@ -4122,19 +3960,12 @@ window.changeHost = async function(rid,uid,nm) {
 window.kickAll = async function(uid,nm) {
   if(!await showConfirm(`${nm}님을 모든 방에서 강퇴할까요?`, '강퇴', '#c0392b'))return;
   const s=await get(ref(db,'rooms'));
-  if(s.exists())s.forEach(async c=>{
-    if(c.val().players?.[uid]){
-      await update(ref(db,`rooms/${c.key}/players/${uid}`),{kicked:true, kickedBy:'admin'});
-      setTimeout(()=>remove(ref(db,`rooms/${c.key}/players/${uid}`)),1500);
-    }
-  });
-  notify(`${nm}님을 강퇴했어요`,'wrn');
+  if(s.exists())s.forEach(c=>{if(c.val().players?.[uid])remove(ref(db,`rooms/${c.key}/players/${uid}`));});
+  notify(`${nm}님을 강퇴했어요`,'wrn'); refreshAdm();
 };
 window.forceEnd = async function(rid) {
   if(!await showConfirm('게임을 강제 종료할까요?', '종료', '#e67e22'))return;
   await update(ref(db,`rooms/${rid}`),{status:'finished'});
-  // 3초 후 방 삭제 (강제종료는 빠르게)
-  setTimeout(async()=>{ try{ await remove(ref(db,`rooms/${rid}`)); }catch(e){} }, 3000);
   notify('강제 종료했어요','wrn'); refreshAdm();
 };
 window.delRoom = async function(rid) {
