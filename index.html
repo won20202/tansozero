@@ -2640,12 +2640,13 @@ function setupPresence(uid) {
     }, 60 * 1000);
 
     // 방에 참여 중이면 연결 끊길 때 처리
-    if (roomId) {
+    // roomId가 있고 실제로 방 데이터가 확인된 경우만 onDisconnect 등록
+    if (roomId && roomData) {
       // 본인 players 자동 제거
       playerPresenceRef = ref(db, 'rooms/'+roomId+'/players/'+uid);
       onDisconnect(playerPresenceRef).remove();
-      // 방장이면 방 전체 삭제
-      if (roomData?.hostUid === uid) {
+      // 방장이면 방 전체 삭제 (방 데이터가 실제로 존재할 때만)
+      if (roomData.hostUid === uid) {
         onDisconnect(ref(db, 'rooms/'+roomId)).remove();
       }
     }
@@ -2787,7 +2788,7 @@ window.confirmLeaveGame = async function() {
 window.gotoLobby = function() {
   if(!user){show('ls');return;}
   roomId=null; roomData=null; // 항상 초기화 보장
-  if(resultAutoTimer){ clearInterval(resultAutoTimer); resultAutoTimer=null; }
+  if(resultAutoTimer){ clearTimeout(resultAutoTimer); resultAutoTimer=null; }
   BGM.stop();
   stopRoomListener(); chatStarted=false;
   if(_roomsPollTimer){clearInterval(_roomsPollTimer);_roomsPollTimer=null;}
@@ -2839,14 +2840,8 @@ window.loadRooms = function() {
 };
 function renderRooms(rooms) {
   const g=document.getElementById('rgrid');
-  const now = Date.now();
-  // 빈 방(플레이어 0명) 또는 2시간 이상 된 유령 방 필터링
-  let list = rooms.filter(r => {
-    const pl = r.players ? Object.keys(r.players).length : 0;
-    const age = (r.createdAt && typeof r.createdAt === 'number') ? (now - r.createdAt) : 0;
-    // 플레이어 있고, 종료된 방 아니고, 2시간 이내 방만 표시
-    return pl > 0 && r.status !== 'finished' && age < 7200000;
-  });
+  // 종료된 방만 제외하고 전부 표시
+  let list = rooms.filter(r => r.status !== 'finished');
   if(curFilter==='waiting')list=list.filter(r=>r.status==='waiting');
   if(curFilter==='playing')list=list.filter(r=>r.status==='playing');
   if(!list.length){g.innerHTML='<div class="empty"><div class="emico">🌿</div>아직 방이 없어요. 방을 만들어보세요!</div>';return;}
@@ -2890,9 +2885,9 @@ window.createRoom = async function() {
   }
   const rref=push(ref(db,'rooms'));
   const uid=user.uid;
-  // onDisconnect 먼저 등록 후 set() (race condition 방지)
-  onDisconnect(rref).remove();
   await set(rref,{name,code,maxPlayers:maxP,rounds,timerSeconds:timer,status:'waiting',hostUid:uid,hostName:pinfo.name,currentRound:0,players:{[uid]:{uid,name:pinfo.name,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:true,color:COLORS[0]}},createdAt:Date.now(),createdAtServer:serverTimestamp()});
+  // set() 완료 후 onDisconnect 등록 (즉시 발동 방지)
+  onDisconnect(rref).remove();
   closeM('crm'); roomId=rref.key; refreshPlayerPresence(); enterWaiting(rref.key);
 };
 window.joinByCode = async function() {
@@ -3142,6 +3137,8 @@ function renderGame(r) {
     (async()=>{
       try{
         await update(ref(db,`rooms/${roomId}`),{status:'finished'});
+        // 5초 후 방 자동 삭제
+        setTimeout(async()=>{ try{ await remove(ref(db,`rooms/${roomId}`)); }catch(e){} }, 5000);
         const chatRef=push(ref(db,`chats/${roomId}`));
         await set(chatRef,{uid:'system',name:'🔔 시스템',msg:'👤 남은 인원이 1명이라 게임이 자동 종료됐어요!',ts:Date.now(),type:'system'});
       }catch(e){}
@@ -3601,6 +3598,8 @@ window.callZero = async function() {
 
       if (newRound > (roomData.totalRounds || 10)) {
         await update(ref(db, `rooms/${roomId}`), { status: 'finished' });
+        // 5초 후 방 자동 삭제
+        setTimeout(async()=>{ try{ await remove(ref(db,`rooms/${roomId}`)); }catch(e){} }, 5000);
       } else {
         const ord = roomData.playerOrder || Object.keys(roomData.players || {});
         // 탄소제로를 누른 사람(uid)이 새 라운드 첫 턴
@@ -3864,6 +3863,17 @@ function showResult(r) {
 
   const popup=document.getElementById('result-popup');
   if(popup) popup.style.display='flex';
+
+  // 30초 후 자동으로 결과창 닫고 방 삭제 → 로비 이동
+  if(resultAutoTimer){ clearTimeout(resultAutoTimer); resultAutoTimer=null; }
+  resultAutoTimer = setTimeout(async()=>{
+    resultAutoTimer = null;
+    if(popup) popup.style.display='none';
+    try { if(roomId) await remove(ref(db,'rooms/'+roomId)); } catch(e){}
+    stopRoomListener(); stopChatListener(); stopTimer();
+    roomId=null; roomData=null;
+    gotoLobby();
+  }, 30000);
 }
 
 window.closeResultPopup = async function() {
@@ -4120,6 +4130,8 @@ window.kickAll = async function(uid,nm) {
 window.forceEnd = async function(rid) {
   if(!await showConfirm('게임을 강제 종료할까요?', '종료', '#e67e22'))return;
   await update(ref(db,`rooms/${rid}`),{status:'finished'});
+  // 3초 후 방 삭제 (강제종료는 빠르게)
+  setTimeout(async()=>{ try{ await remove(ref(db,`rooms/${rid}`)); }catch(e){} }, 3000);
   notify('강제 종료했어요','wrn'); refreshAdm();
 };
 window.delRoom = async function(rid) {
