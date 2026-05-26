@@ -2757,36 +2757,23 @@ window.gotoLobby = function() {
 window.filterR = function(f,btn) {
   curFilter=f; document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('on')); btn.classList.add('on'); loadRooms();
 };
-window._rPoll=null;
 window._roomsCache={};
 window.loadRooms=function(){
   if(roomsListener){off(ref(db,'rooms'),'value',roomsListener);roomsListener=null;}
-  if(window._rPoll){clearInterval(window._rPoll);window._rPoll=null;}
   window._roomsCache={};
-  // onValue로 전체 구독 (실시간)
+  // onValue 단순 등록 - 전체 rooms 구독
   roomsListener=onValue(ref(db,'rooms'),s=>{
     window._roomsCache={};
     if(s.exists())s.forEach(c=>{window._roomsCache[c.key]={id:c.key,...c.val()};});
     renderRooms(Object.values(window._roomsCache));
   });
-  // 2초마다 get()으로 강제 동기화 (onValue 미작동 대비)
-  window._rPoll=setInterval(async()=>{
-    if(!document.getElementById('lobby')?.classList.contains('on')){
-      clearInterval(window._rPoll);window._rPoll=null;return;
-    }
-    try{
-      const s=await get(ref(db,'rooms'));
-      window._roomsCache={};
-      if(s.exists())s.forEach(c=>{window._roomsCache[c.key]={id:c.key,...c.val()};});
-      renderRooms(Object.values(window._roomsCache));
-    }catch(e){}
-  },2000);
 };
 function renderRooms(rooms) {
   const g=document.getElementById('rgrid');
   const now = Date.now();
-  // 빈 방(플레이어 0명) 또는 2시간 이상 된 유령 방 필터링
+  console.log('[renderRooms] 받은 방 수:', rooms.length, rooms.map(r=>({id:r.id,name:r.name,status:r.status})));
   let list = rooms.filter(r => r.status !== 'finished');
+  console.log('[renderRooms] 필터 후:', list.length);
   if(curFilter==='waiting')list=list.filter(r=>r.status==='waiting');
   if(curFilter==='playing')list=list.filter(r=>r.status==='playing');
   if(!list.length){g.innerHTML='<div class="empty"><div class="emico">🌿</div>아직 방이 없어요. 방을 만들어보세요!</div>';return;}
