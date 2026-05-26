@@ -3804,6 +3804,10 @@ function showAOV(ok, title, sub) {
 window.gotoAdmin = function() {
   if(!user)return;
   if(!isAdmin){notify('🚫 관리자 권한이 없습니다.','err');return;}
+  // 결과 팝업 등 모든 오버레이 닫기
+  const rp=document.getElementById('result-popup');
+  if(rp) rp.style.display='none';
+  if(typeof resultAutoTimer!=='undefined'&&resultAutoTimer){clearTimeout(resultAutoTimer);resultAutoTimer=null;}
   show('adm'); refreshAdm();
 };
 window.admTab = function(t, btn) {
