@@ -2522,9 +2522,14 @@ window.doLogin = async function() {
     pinfo = parseInfo(snum, sname);
     isAdmin = false;
     await set(ref(db,`presence/${user.uid}`),{uid:user.uid,email:pinfo.email,name:pinfo.name,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,online:true,ts:serverTimestamp()});
-    onValue(ref(db,'broadcast'),(s)=>{if(s.exists()&&s.val()?.msg)notify('📢 공지: '+s.val().msg,'inf');});
+    const _bcTs=Date.now();
+    onValue(ref(db,'broadcast'),(s)=>{
+      if(!s.exists())return;
+      const d=s.val();
+      if(d?.msg && d?.ts && d.ts>_bcTs) notify('📢 공지: '+d.msg,'inf');
+    });
     // 관리자 전체 퇴장 명령 리스너
-    let lastAdminCmdTs = 0;
+    let lastAdminCmdTs = Date.now();
     onValue(ref(db,'adminCmd'),(s)=>{
       if(!s.exists())return;
       const cmd = s.val();
@@ -2753,20 +2758,28 @@ window.filterR = function(f,btn) {
   curFilter=f; document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('on')); btn.classList.add('on'); loadRooms();
 };
 window._rPoll=null;
+window._roomsCache={};
 window.loadRooms=function(){
   if(roomsListener){off(ref(db,'rooms'),'value',roomsListener);roomsListener=null;}
   if(window._rPoll){clearInterval(window._rPoll);window._rPoll=null;}
+  window._roomsCache={};
+  // onValue로 전체 구독 (실시간)
   roomsListener=onValue(ref(db,'rooms'),s=>{
-    const rooms=[];
-    if(s.exists())s.forEach(c=>rooms.push({id:c.key,...c.val()}));
-    renderRooms(rooms);
+    window._roomsCache={};
+    if(s.exists())s.forEach(c=>{window._roomsCache[c.key]={id:c.key,...c.val()};});
+    renderRooms(Object.values(window._roomsCache));
   });
+  // 2초마다 get()으로 강제 동기화 (onValue 미작동 대비)
   window._rPoll=setInterval(async()=>{
-    if(!document.getElementById('lobby')?.classList.contains('on')){clearInterval(window._rPoll);window._rPoll=null;return;}
-    const s=await get(ref(db,'rooms'));
-    const rooms=[];
-    if(s.exists())s.forEach(c=>rooms.push({id:c.key,...c.val()}));
-    renderRooms(rooms);
+    if(!document.getElementById('lobby')?.classList.contains('on')){
+      clearInterval(window._rPoll);window._rPoll=null;return;
+    }
+    try{
+      const s=await get(ref(db,'rooms'));
+      window._roomsCache={};
+      if(s.exists())s.forEach(c=>{window._roomsCache[c.key]={id:c.key,...c.val()};});
+      renderRooms(Object.values(window._roomsCache));
+    }catch(e){}
   },2000);
 };
 function renderRooms(rooms) {
@@ -3830,16 +3843,19 @@ window._aPoll=null;
 window.refreshAdm=async function(){
   if(window._aPoll){clearInterval(window._aPoll);window._aPoll=null;}
   const doFetch=async()=>{
-    const [rs,ps]=await Promise.all([get(ref(db,'rooms')),get(ref(db,'presence'))]);
-    const rooms=[],studs=[];
-    if(rs.exists())rs.forEach(c=>rooms.push({id:c.key,...c.val()}));
-    if(ps.exists())ps.forEach(c=>studs.push({uid:c.key,...c.val()}));
-    document.getElementById('stotal').textContent=studs.length;
-    document.getElementById('srooms').textContent=rooms.filter(r=>r.status!=='finished').length;
-    document.getElementById('splaying').textContent=rooms.filter(r=>r.status==='playing').length;
-    document.getElementById('swaiting').textContent=rooms.filter(r=>r.status==='waiting').length;
-    renderAdmRooms(rooms);
-    renderStudsTable(studs,rooms);
+    try{
+      const [rs,ps]=await Promise.all([get(ref(db,'rooms')),get(ref(db,'presence'))]);
+      const rooms=[],studs=[];
+      if(rs.exists())rs.forEach(c=>rooms.push({id:c.key,...c.val()}));
+      if(ps.exists())ps.forEach(c=>studs.push({uid:c.key,...c.val()}));
+      const active=rooms.filter(r=>r.status!=='finished');
+      document.getElementById('stotal').textContent=studs.length;
+      document.getElementById('srooms').textContent=active.length;
+      document.getElementById('splaying').textContent=rooms.filter(r=>r.status==='playing').length;
+      document.getElementById('swaiting').textContent=rooms.filter(r=>r.status==='waiting').length;
+      renderAdmRooms(rooms);
+      renderStudsTable(studs,rooms);
+    }catch(e){}
   };
   await doFetch();
   window._aPoll=setInterval(async()=>{
