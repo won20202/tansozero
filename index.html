@@ -7,10 +7,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <style>* { -webkit-tap-highlight-color: transparent; }
     /* 관리자 모드 진입 시 결과 잔재 숨기기 */
-    body.adm-mode #rwinner,
-    body.adm-mode #rsboard,
-    body.adm-mode #etip,
-    body.adm-mode #rauto { display: none !important; }
+    body.adm-mode #result-overlay { display: none !important; }
 </style>
   <title>🌿 탄소중립 제로 게임 — won 선생님</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&family=Black+Han+Sans&display=swap" rel="stylesheet"/>
@@ -788,7 +785,7 @@
     </div>
   </div>
 </div>
-중립을 위해 노력한 모두 수고했어요!</div>
+<div id="result-overlay">중립을 위해 노력한 모두 수고했어요!</div>
     <div class="rwinner" id="rwinner" style="display:none">
       <div class="rwinneravt" id="rwinneravt">?</div>
       <div class="rwinnernm" id="rwinnernm">우승자</div>
@@ -804,6 +801,7 @@
     <button class="btn bts" onclick="doReturnToWaiting()" style="width:100%;margin-top:10px">🚪 지금 바로 대기실로</button>
   </div>
 </div>
+</div><!-- /result-overlay -->
 
 
 
@@ -2732,13 +2730,9 @@ window.gotoLobby = function() {
   if(resultAutoTimer){ clearInterval(resultAutoTimer); resultAutoTimer=null; }
   BGM.stop();
   document.body.classList.remove('adm-mode');
-  // 결과 잔재 복원
-  ['rwinner','rsboard','etip','rauto'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.style.display='';
-  });
-  document.querySelectorAll('body > *:not(.scr):not(#result-popup):not(#nc)').forEach(el=>{
-    el.style.display='';
-  });
+  // result-overlay 복원
+  const ro=document.getElementById('result-overlay');
+  if(ro) ro.style.display='';
   stopRoomListener(); chatStarted=false;
   if(isAdmin){
     // 관리자는 로비로 이동하되 투명하게 관리자 표시
@@ -3714,6 +3708,8 @@ window.sendEmoji = async function(emoji, label) {
 let resultAutoTimer = null;
 function showResult(r) {
   stopTimer(); BGM.stop(); gameSoundOff = true;
+  // 결과 오버레이 복원
+  const _ro=document.getElementById('result-overlay'); if(_ro) _ro.style.display='';
   const ps = Object.values(r.players||{}).sort((a,b)=>b.score-a.score);
   const uid = user?.uid;
   const winner = ps[0];
@@ -3821,14 +3817,9 @@ window.gotoAdmin = function() {
   const rp=document.getElementById('result-popup');
   if(rp) rp.style.display='none';
   if(typeof resultAutoTimer!=='undefined'&&resultAutoTimer){clearTimeout(resultAutoTimer);resultAutoTimer=null;}
-  // 결과 잔재 요소 숨기기 (학생 게임 코드 미변경)
-  ['rwinner','rsboard','etip','rauto'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.style.display='none';
-  });
-  // "수고했어요" 텍스트 노드 포함 div 숨기기
-  document.querySelectorAll('body > *:not(.scr):not(#result-popup):not(#nc)').forEach(el=>{
-    el.style.display='none';
-  });
+  // 결과 잔재 숨기기 (학생 게임 코드 미변경)
+  const ro=document.getElementById('result-overlay');
+  if(ro) ro.style.display='none';
   document.body.classList.add('adm-mode');
   show('adm'); refreshAdm();
 };
