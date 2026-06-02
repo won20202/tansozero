@@ -3848,7 +3848,10 @@ window.refreshAdm=async function(){
       if(rs.exists())rs.forEach(c=>rooms.push({id:c.key,...c.val()}));
       if(ps.exists())ps.forEach(c=>studs.push({uid:c.key,...c.val()}));
       const active=rooms.filter(r=>r.status!=='finished');
-      document.getElementById('stotal').textContent=studs.length;
+      // 접속 학생 수: presence + rooms 안의 players 합산 (중복 제거)
+      const allUids = new Set(studs.map(s=>s.uid));
+      rooms.forEach(r=>{ Object.keys(r.players||{}).forEach(uid=>allUids.add(uid)); });
+      document.getElementById('stotal').textContent=allUids.size;
       document.getElementById('srooms').textContent=active.length;
       document.getElementById('splaying').textContent=rooms.filter(r=>r.status==='playing').length;
       document.getElementById('swaiting').textContent=rooms.filter(r=>r.status==='waiting').length;
@@ -3864,7 +3867,7 @@ window.refreshAdm=async function(){
 };
 
 function renderAdmRooms(rooms) {
-  ['admRoomsDetail'].forEach(id=>{
+  ['admRooms','admRoomsDetail'].forEach(id=>{
     const el=document.getElementById(id); if(!el)return; el.innerHTML='';
     if(!rooms.length){el.innerHTML='<div style="color:var(--gray5);padding:20px">방 없음</div>';return;}
     rooms.forEach(r=>{
