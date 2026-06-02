@@ -8,6 +8,15 @@
   <style>* { -webkit-tap-highlight-color: transparent; }
     /* 관리자 모드 진입 시 결과 잔재 숨기기 */
     body.adm-mode #result-overlay { display: none !important; }
+    /* 관리자 화면 - 항상 최상단에 완전히 덮기 */
+    #adm.on {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 9000 !important;
+      height: 100vh !important;
+      background: #f0f2f5;
+    }
+
 </style>
   <title>🌿 탄소중립 제로 게임 — won 선생님</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&family=Black+Han+Sans&display=swap" rel="stylesheet"/>
