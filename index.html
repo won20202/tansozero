@@ -5,7 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0" />
   <!-- 크롤북 최적화: 드래그 비활성화, 텍스트 자동 확대 방지 -->
   <meta name="mobile-web-app-capable" content="yes" />
-  <style>* { -webkit-tap-highlight-color: transparent; }</style>
+  <style>* { -webkit-tap-highlight-color: transparent; }
+    /* 관리자 모드 진입 시 결과 잔재 숨기기 */
+    body.adm-mode #rwinner,
+    body.adm-mode #rsboard,
+    body.adm-mode #etip,
+    body.adm-mode #rauto { display: none !important; }
+</style>
   <title>🌿 탄소중립 제로 게임 — won 선생님</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&family=Black+Han+Sans&display=swap" rel="stylesheet"/>
   <style>
@@ -2725,6 +2731,14 @@ window.gotoLobby = function() {
   roomId=null; roomData=null; // 항상 초기화 보장
   if(resultAutoTimer){ clearInterval(resultAutoTimer); resultAutoTimer=null; }
   BGM.stop();
+  document.body.classList.remove('adm-mode');
+  // 결과 잔재 복원
+  ['rwinner','rsboard','etip','rauto'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.style.display='';
+  });
+  document.querySelectorAll('body > *:not(.scr):not(#result-popup):not(#nc)').forEach(el=>{
+    el.style.display='';
+  });
   stopRoomListener(); chatStarted=false;
   if(isAdmin){
     // 관리자는 로비로 이동하되 투명하게 관리자 표시
@@ -3807,6 +3821,15 @@ window.gotoAdmin = function() {
   const rp=document.getElementById('result-popup');
   if(rp) rp.style.display='none';
   if(typeof resultAutoTimer!=='undefined'&&resultAutoTimer){clearTimeout(resultAutoTimer);resultAutoTimer=null;}
+  // 결과 잔재 요소 숨기기 (학생 게임 코드 미변경)
+  ['rwinner','rsboard','etip','rauto'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.style.display='none';
+  });
+  // "수고했어요" 텍스트 노드 포함 div 숨기기
+  document.querySelectorAll('body > *:not(.scr):not(#result-popup):not(#nc)').forEach(el=>{
+    el.style.display='none';
+  });
+  document.body.classList.add('adm-mode');
   show('adm'); refreshAdm();
 };
 window.admTab = function(t, btn) {
@@ -3841,7 +3864,7 @@ window.refreshAdm=async function(){
 };
 
 function renderAdmRooms(rooms) {
-  ['admRooms','admRoomsDetail'].forEach(id=>{
+  ['admRoomsDetail'].forEach(id=>{
     const el=document.getElementById(id); if(!el)return; el.innerHTML='';
     if(!rooms.length){el.innerHTML='<div style="color:var(--gray5);padding:20px">방 없음</div>';return;}
     rooms.forEach(r=>{
