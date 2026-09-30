@@ -3913,7 +3913,7 @@ window.refreshAdm=async function(){
       const lobby = studs.filter(s => s.name && !inRoom.has(s.uid));
       document.getElementById('admLobby').innerHTML = lobby.length
         ? `🙋 <b>방에 안 들어간 학생 ${lobby.length}명</b> — ` + lobby.map(s => `${esc(s.grade)}-${esc(s.class)}-${esc(s.num)} ${esc(s.name)}`).join(', ')
-        : '✅ 접속한 학생이 모두 방에 들어가 있어요';
+        : (studs.some(s => s.name) || inRoom.size) ? '✅ 접속한 학생이 모두 방에 들어가 있어요' : '💤 지금 접속한 학생이 없어요';
       
     }catch(e){}
   };
