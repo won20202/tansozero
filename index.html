@@ -510,13 +510,13 @@
           <div style="background:var(--redp);border:2px solid var(--red);border-radius:11px;padding:11px;width:115px;text-align:center">
             <div style="font-size:22px;margin-bottom:4px">🏭</div>
             <div style="font-size:11px;font-weight:700">탄소배출카드</div>
-            <div style="font-size:16px;font-weight:900;color:var(--red);margin-top:3px">-1 ~ -9</div>
+            <div style="font-size:16px;font-weight:900;color:var(--red);margin-top:3px">+1 ~ +9</div>
             <div style="font-size:9px;color:var(--red);font-weight:700;margin-top:3px">탄소 수치 올라감</div>
           </div>
           <div style="background:var(--bluep);border:2px solid var(--blue);border-radius:11px;padding:11px;width:115px;text-align:center">
             <div style="font-size:22px;margin-bottom:4px">🌱</div>
             <div style="font-size:11px;font-weight:700">탄소흡수카드</div>
-            <div style="font-size:16px;font-weight:900;color:var(--blue);margin-top:3px">+1 ~ +6</div>
+            <div style="font-size:16px;font-weight:900;color:var(--blue);margin-top:3px">-1 ~ -6</div>
             <div style="font-size:9px;color:var(--blue);font-weight:700;margin-top:3px">탄소 수치 내려감</div>
           </div>
           <div style="background:#e8d5f5;border:2px solid #9b59b6;border-radius:11px;padding:11px;width:115px;text-align:center">
@@ -627,7 +627,7 @@
       <div class="empty"><div class="spin"></div>방 목록 불러오는 중...</div>
     </div>
   </div>
-  <button class="adminlnk" onclick="gotoAdmin()">🔧 관리자 화면</button>
+  <button class="adminlnk" id="adminlnk" style="display:none" onclick="gotoAdmin()">🔧 관리자 화면</button>
 </div>
 
 <!-- ======= WAITING ======= -->
@@ -914,9 +914,9 @@ function esc(str) {
     .replace(/'/g, '&#x27;');
 }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInAnonymously, onAuthStateChanged, signOut }
+import { getAuth, signInAnonymously, onAuthStateChanged, signOut, setPersistence, browserSessionPersistence }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getDatabase, ref, set, get, push, update, remove, onValue, off, serverTimestamp, onDisconnect }
+import { getDatabase, ref, set, get, push, update, remove, onValue, off, serverTimestamp, onDisconnect, increment }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // ============================================================
@@ -934,6 +934,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+setPersistence(auth, browserSessionPersistence);
 const db = getDatabase(app);
 // ============================================================
 // ============================================================
@@ -1948,28 +1949,28 @@ const CARD_SVGS = {
 // ============================================================
 // 카드 타입: 'emit'(배출), 'absorb'(흡수), 'special'(특수)
 const ALL_CARDS = [
-  // 배출 카드 (탄소 수치 증가)
-  {id:'e1', name:'비닐봉지 사용',   val:-1,  type:'emit',    emoji:'🛍️'},
-  {id:'e2', name:'일회용컵 사용',   val:-1,  type:'emit',    emoji:'☕'},
-  {id:'e3', name:'유튜브 시청',     val:-2,  type:'emit',    emoji:'📺'},
-  {id:'e4', name:'샤워하기',        val:-2,  type:'emit',    emoji:'🚿'},
-  {id:'e5', name:'화장지 사용',     val:-2,  type:'emit',    emoji:'🧻'},
-  {id:'e6', name:'커피 소비',       val:-3,  type:'emit',    emoji:'☕'},
-  {id:'e7', name:'치킨 배달',       val:-4,  type:'emit',    emoji:'🍗'},
-  {id:'e8', name:'의류 구매',       val:-5,  type:'emit',    emoji:'👕'},
-  {id:'e9', name:'소고기 섭취',     val:-6,  type:'emit',    emoji:'🐄'},
-  {id:'e10',name:'자동차 이용',     val:-7,  type:'emit',    emoji:'🚗'},
-  {id:'e11',name:'비행기 탑승',     val:-9,  type:'emit',    emoji:'✈️'},
-  {id:'e12',name:'나무 소각',       val:-5,  type:'emit',    emoji:'🔥'},
-  // 흡수 카드 (탄소 수치 감소)
-  {id:'a1', name:'나무 심기',       val:1,   type:'absorb',  emoji:'🌱'},
-  {id:'a2', name:'자원 재활용',     val:2,   type:'absorb',  emoji:'♻️'},
-  {id:'a3', name:'저탄소 소비',     val:3,   type:'absorb',  emoji:'🛒'},
-  {id:'a4', name:'에너지 절약',     val:4,   type:'absorb',  emoji:'⚡'},
-  {id:'a5', name:'태양광 에너지',   val:5,   type:'absorb',  emoji:'🌞'},
-  {id:'a6', name:'자전거 타기',     val:6,   type:'absorb',  emoji:'🚲'},
-  {id:'a7', name:'대중교통 이용',   val:3,   type:'absorb',  emoji:'🚌'},
-  {id:'a8', name:'채식 식단',       val:4,   type:'absorb',  emoji:'🥗'},
+  // 배출 카드 (탄소 수치 증가, +)
+  {id:'e1', name:'비닐봉지 사용',   val:1,  type:'emit',    emoji:'🛍️'},
+  {id:'e2', name:'일회용컵 사용',   val:1,  type:'emit',    emoji:'☕'},
+  {id:'e3', name:'유튜브 시청',     val:2,  type:'emit',    emoji:'📺'},
+  {id:'e4', name:'샤워하기',        val:2,  type:'emit',    emoji:'🚿'},
+  {id:'e5', name:'화장지 사용',     val:2,  type:'emit',    emoji:'🧻'},
+  {id:'e6', name:'커피 소비',       val:3,  type:'emit',    emoji:'☕'},
+  {id:'e7', name:'치킨 배달',       val:4,  type:'emit',    emoji:'🍗'},
+  {id:'e8', name:'의류 구매',       val:5,  type:'emit',    emoji:'👕'},
+  {id:'e9', name:'소고기 섭취',     val:6,  type:'emit',    emoji:'🐄'},
+  {id:'e10',name:'자동차 이용',     val:7,  type:'emit',    emoji:'🚗'},
+  {id:'e11',name:'비행기 탑승',     val:9,  type:'emit',    emoji:'✈️'},
+  {id:'e12',name:'나무 소각',       val:5,  type:'emit',    emoji:'🔥'},
+  // 흡수 카드 (탄소 수치 감소, −)
+  {id:'a1', name:'나무 심기',       val:-1,   type:'absorb',  emoji:'🌱'},
+  {id:'a2', name:'자원 재활용',     val:-2,   type:'absorb',  emoji:'♻️'},
+  {id:'a3', name:'저탄소 소비',     val:-3,   type:'absorb',  emoji:'🛒'},
+  {id:'a4', name:'에너지 절약',     val:-4,   type:'absorb',  emoji:'⚡'},
+  {id:'a5', name:'태양광 에너지',   val:-5,   type:'absorb',  emoji:'🌞'},
+  {id:'a6', name:'자전거 타기',     val:-6,   type:'absorb',  emoji:'🚲'},
+  {id:'a7', name:'대중교통 이용',   val:-3,   type:'absorb',  emoji:'🚌'},
+  {id:'a8', name:'채식 식단',       val:-4,   type:'absorb',  emoji:'🥗'},
   // 특수 카드
   {id:'s1', name:'지구의 날',       val:0,   type:'special', special:'swap',    emoji:'🔄', desc:'옆 플레이어와 카드 교환!'},
   {id:'s2', name:'태풍 경보',       val:0,   type:'special', special:'skip',    emoji:'⛔', desc:'다음 사람 턴 스킵!'},
@@ -2046,13 +2047,13 @@ function show(id) {
   document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
   document.getElementById(id).classList.add('on');
 }
-function notify(msg, type='') {
+function notify(msg, type='', ms=3100) {
   const c = document.getElementById('nc');
   const n = document.createElement('div');
   n.className = `ntf ${type}`;
   n.textContent = msg;
   c.appendChild(n);
-  setTimeout(() => n.remove(), 3100);
+  setTimeout(() => n.remove(), ms);
 }
 function openM(id) { document.getElementById(id).classList.add('on'); }
 window.closeM = id => document.getElementById(id).classList.remove('on');
@@ -2504,22 +2505,20 @@ window.doLogin = async function() {
     pinfo = parseInfo(snum, sname);
     isAdmin = false;
     await set(ref(db,`presence/${user.uid}`),{uid:user.uid,email:pinfo.email,name:pinfo.name,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,online:true,ts:serverTimestamp()});
-    const _bcTs=Date.now();
-    onValue(ref(db,'broadcast'),(s)=>{
-      if(!s.exists())return;
-      const d=s.val();
-      if(d?.msg && d?.ts && d.ts>_bcTs) notify('📢 공지: '+d.msg,'inf');
-    });
-    // 관리자 전체 퇴장 명령 리스너
-    let lastAdminCmdTs = Date.now();
-    onValue(ref(db,'adminCmd'),(s)=>{
-      if(!s.exists())return;
-      const cmd = s.val();
-      if(cmd?.type==='kickAll' && cmd?.ts > lastAdminCmdTs){
-        lastAdminCmdTs = cmd.ts;
-        handleAdminKickAll();
-      }
-    });
+    // 공지·전체퇴장: 첫 값(접속 전 것)은 건너뛰고 이후 바뀔 때만 반응 → 기기 시계가 틀려도 동작
+    if(!window._globalListeners){
+      window._globalListeners=true;
+      let bcFirst=true, cmdFirst=true;
+      onValue(ref(db,'broadcast'),(s)=>{
+        if(bcFirst){bcFirst=false;return;}
+        const d=s.val();
+        if(d?.msg){ notify('📢 공지: '+d.msg,'inf',10000); snd('ready'); }
+      });
+      onValue(ref(db,'adminCmd'),(s)=>{
+        if(cmdFirst){cmdFirst=false;return;}
+        if(s.val()?.type==='kickAll' && !isAdmin) handleAdminKickAll();
+      });
+    }
     // 접속 시 presence 등록 (.info/connected 감지)
     setupPresence(user.uid);
     if(tutorialSeen){gotoLobby();}else{tutorialSeen=true;tutStep=0;initTutProg();updateTNav();show('ts');}
@@ -2662,8 +2661,8 @@ window.confirmLeaveGame = async function() {
             // ⑥ 플레이어 제거
             await remove(ref(db, `rooms/${roomId}/players/${uid}`));
 
-            const sysRef1=push(ref(db,`chats/${roomId}`));
-            await set(sysRef1,{uid:'system',name:'🔔 시스템',msg:`👑 방장 ${esc(pinfo?.name||'?')}님이 나갔어요. ${esc(newHost.name)}님이 새 방장이 됐어요!`,ts:Date.now(),type:'system'});
+            const sysRef1=push(ref(db,`rooms/${roomId}/chatMessages`));
+            await set(sysRef1,{uid:'system',name:'🔔 시스템',msg:`👑 방장 ${esc(pinfo?.name||'?')}님이 나갔어요. ${esc(newHost.name)}님이 새 방장이 됐어요!`,ts:Date.now(),type:'system',isSystem:true});
           }
         } else {
           // ① 꼴등 점수 계산
@@ -2702,8 +2701,8 @@ window.confirmLeaveGame = async function() {
           // ⑤ 플레이어 제거
           await remove(ref(db, `rooms/${roomId}/players/${uid}`));
 
-          const sysRef2=push(ref(db,`chats/${roomId}`));
-          await set(sysRef2,{uid:'system',name:'🔔 시스템',msg:`👋 ${esc(pinfo?.name||'?')}님이 게임을 나갔어요 (꼴등 처리${wasMyTurn?' · 턴 자동 넘김':''})`,ts:Date.now(),type:'system'});
+          const sysRef2=push(ref(db,`rooms/${roomId}/chatMessages`));
+          await set(sysRef2,{uid:'system',name:'🔔 시스템',msg:`👋 ${esc(pinfo?.name||'?')}님이 게임을 나갔어요 (꼴등 처리${wasMyTurn?' · 턴 자동 넘김':''})`,ts:Date.now(),type:'system',isSystem:true});
         }
       }
     } catch(e) { console.error('leaveGame error:', e); }
@@ -2729,6 +2728,7 @@ window.gotoLobby = function() {
     document.getElementById('topname').textContent='관리자 모드';
     document.getElementById('topid').textContent='admin';
     document.getElementById('topavt').textContent='관';
+    document.getElementById('adminlnk').style.display='';
     show('lobby'); loadRooms();
     return;
   }
@@ -2737,6 +2737,7 @@ window.gotoLobby = function() {
   document.getElementById('topid').textContent=user.email;
   document.getElementById('topavt').textContent=p.name.charAt(0);
   renderRecord();
+  document.getElementById('adminlnk').style.display='none';
   show('lobby'); loadRooms();
 };
 window.filterR = function(f,btn) {
@@ -2756,7 +2757,7 @@ window.loadRooms=function(){
 function renderRooms(rooms) {
   const g=document.getElementById('rgrid');
   const now = Date.now();
-  let list = rooms.filter(r => r.status !== 'finished');
+  let list = rooms.filter(r => r.status !== 'finished' && r.players && Object.keys(r.players).length);
   if(curFilter==='waiting')list=list.filter(r=>r.status==='waiting');
   if(curFilter==='playing')list=list.filter(r=>r.status==='playing');
   if(!list.length){g.innerHTML='<div class="empty"><div class="emico">🌿</div>아직 방이 없어요. 방을 만들어보세요!</div>';return;}
@@ -2777,7 +2778,9 @@ function renderRooms(rooms) {
         <span class="sbdg sl">🔑 코드</span>
       </div>
       <div style="margin-top:7px;font-size:10px;color:var(--gray5)">방장: ${esc(room.hostName||'?')} · ${room.rounds||10}R · ${room.timerSeconds||30}초/턴</div>`;
-    if(!full&&!playing) d.onclick=()=>{document.getElementById('jrmName').textContent=`🚪 "${room.name}"`;document.getElementById('jcode').value='';document.getElementById('jrm').dataset.rid=room.id;openM('jrm');};
+    if(playing) d.onclick=()=>notify('지금 게임 중인 방이에요. 끝나면 들어갈 수 있어요!','wrn');
+    else if(full) d.onclick=()=>notify('방이 꽉 찼어요!','wrn');
+    else d.onclick=()=>{document.getElementById('jrmName').textContent=`🚪 "${room.name}"`;document.getElementById('jcode').value='';document.getElementById('jrm').dataset.rid=room.id;openM('jrm');};
     g.appendChild(d);
   });
 }
@@ -2791,7 +2794,7 @@ window.createRoom = async function() {
   if(!name){notify('방 이름을 입력해주세요','wrn');return;}
   if(!code||code.length<4){notify('입장 코드는 4자리 이상이어야 해요','wrn');return;}
   const snap=await get(ref(db,'rooms'));
-  if(snap.exists()&&Object.keys(snap.val()).length>=MAX_ROOMS){notify('방을 더 만들 수 없어요 (최대 10개)','err');return;}
+  if(snap.exists()&&Object.values(snap.val()).filter(r=>r.players&&Object.keys(r.players).length).length>=MAX_ROOMS){notify('방을 더 만들 수 없어요 (최대 10개)','err');return;}
   const rref=push(ref(db,'rooms'));
   const uid=user.uid;
   await set(rref,{name,code,maxPlayers:maxP,rounds,timerSeconds:timer,status:'waiting',hostUid:uid,hostName:pinfo.name,currentRound:0,players:{[uid]:{uid,name:pinfo.name,email:user.email,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:true,color:COLORS[0]}},createdAt:serverTimestamp()});
@@ -2821,7 +2824,8 @@ async function doJoin(rid) {
   const s=await get(ref(db,`rooms/${rid}`)); if(!s.exists()){notify('방을 찾을 수 없어요','err');return;}
   const r=s.val(), pl=r.players||{}, cnt=Object.keys(pl).length;
   if(cnt>=r.maxPlayers){notify('방이 꽉 찼어요!','err');return;}
-  await await set(ref(db,`rooms/${rid}/players/${uid}`),{uid,name:pinfo.name,email:user.email,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:false,color:COLORS[cnt%COLORS.length]});
+  if(r.status!=='waiting'){notify('이미 게임 중인 방이에요. 끝나면 다시 시도해요!','wrn');return;}
+  await set(ref(db,`rooms/${rid}/players/${uid}`),{uid,name:pinfo.name,email:user.email,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:false,color:COLORS[cnt%COLORS.length]});
   // 연결 끊기면 자동으로 players에서 제거
   onDisconnect(ref(db,`rooms/${rid}/players/${uid}`)).remove();
   snd('join');
@@ -2863,6 +2867,21 @@ function enterWaiting(rid) {
       setTimeout(()=>gotoLobby(), 1500);
       return;
     }
+    // 방장이 나갔거나 연결이 끊겼으면 남은 사람 중 순서상 첫 번째가 방장 승계 (게임이 멈추지 않게)
+    const _ps=roomData.players||{};
+    if(Object.keys(_ps).length && !_ps[roomData.hostUid]){
+      const heir=(roomData.playerOrder||[]).find(u=>_ps[u]) || Object.keys(_ps).sort()[0];
+      if(heir===user.uid && window._healedFrom!==roomData.hostUid){ // 같은 승계를 한 번만
+        window._healedFrom=roomData.hostUid;
+        update(roomRef,{hostUid:heir,hostName:_ps[heir].name,[`players/${heir}/isHost`]:true,[`players/${heir}/ready`]:false});
+        push(ref(db,`rooms/${rid}/chatMessages`),{sender:'시스템',msg:`👑 ${esc(_ps[heir].name)}님이 새 방장이 됐어요!`,isSystem:true,ts:serverTimestamp()});
+      }
+      return; // 승계가 반영된 다음 스냅샷에서 이어서 처리
+    }
+    // 차례인 사람이 나갔으면 방장이 바로 다음 사람에게 넘김
+    if(roomData.status==='playing' && roomData.hostUid===user.uid && roomData.currentTurnUid && !_ps[roomData.currentTurnUid]){
+      advanceTurn(false,null);
+    }
     if(roomData.status==='playing'&&roomData.currentRound>0){
       if(!document.getElementById('gs').classList.contains('on')){
         show('gs'); snd('go'); chatStarted=false; startChatListener(rid);
@@ -2883,6 +2902,7 @@ function enterWaiting(rid) {
   });
 }
 function renderWaiting(r) {
+  window._autoEnded=null; // 대기실로 돌아오면 다음 게임을 위해 해제
   document.getElementById('wRoomName').textContent=r.name;
   document.getElementById('wTitle').textContent=`🚪 ${r.name}`;
   document.getElementById('wCode').textContent=r.code;
@@ -2980,6 +3000,8 @@ window.startGame = async function() {
     timerStart: Date.now(),
     timerSeconds: r.timerSeconds || 30,
     lastCard: null,
+    zeroReady: false,
+    zeroClaimed: false,
     skipNext: false,
     draw2Next: false,
   });
@@ -2994,18 +3016,10 @@ window.leaveRoom = async function() {
     const s=await get(ref(db,'rooms/'+roomId));
     if(!s.exists()){stopRoomListener();stopChatListener();stopTimer();roomId=null;roomData=null;gotoLobby();return;}
     const r=s.val(), uid=user.uid;
-    if(r.hostUid===uid){
-      // 방장 나가기 → 방 삭제
-      await remove(ref(db,'rooms/'+roomId));
-    } else {
-      // 일반 플레이어 나가기 → players에서 제거
-      await remove(ref(db,'rooms/'+roomId+'/players/'+uid));
-      // 남은 플레이어 없으면 방 삭제
-      const afterSnap = await get(ref(db,'rooms/'+roomId+'/players'));
-      if(!afterSnap.exists() || Object.keys(afterSnap.val()||{}).length === 0){
-        await remove(ref(db,'rooms/'+roomId));
-      }
-    }
+    // 본인만 빠짐. 방장이었으면 남은 사람이 자동 승계(enterWaiting 리스너), 아무도 없으면 방 삭제
+    const others=Object.keys(r.players||{}).filter(k=>k!==uid);
+    if(!others.length) await remove(ref(db,'rooms/'+roomId));
+    else await remove(ref(db,'rooms/'+roomId+'/players/'+uid));
   }catch(e){}
   stopRoomListener();stopChatListener();stopTimer();roomId=null;roomData=null;gotoLobby();
 };
@@ -3024,11 +3038,13 @@ function renderGame(r) {
   // 남은 인원 1명이면 자동 게임 종료 (방장만 처리)
   const activePlayers = Object.values(r.players||{});
   if(activePlayers.length === 1 && r.status === 'playing' && r.hostUid === uid) {
+    if(window._autoEnded===roomId) return; // 한 번만
+    window._autoEnded=roomId;
     (async()=>{
       try{
         await update(ref(db,`rooms/${roomId}`),{status:'finished'});
-        const chatRef=push(ref(db,`chats/${roomId}`));
-        await set(chatRef,{uid:'system',name:'🔔 시스템',msg:'👤 남은 인원이 1명이라 게임이 자동 종료됐어요!',ts:Date.now(),type:'system'});
+        const chatRef=push(ref(db,`rooms/${roomId}/chatMessages`));
+        await set(chatRef,{uid:'system',name:'🔔 시스템',msg:'👤 남은 인원이 1명이라 게임이 자동 종료됐어요!',ts:Date.now(),type:'system',isSystem:true});
       }catch(e){}
     })();
     return;
@@ -3231,7 +3247,7 @@ function renderHistory(r) {
     const d = document.createElement('div'); d.className = 'hitem';
     const c = ALL_CARDS.find(x => x.id === it.cardId);
     const nm = c ? esc(c.name) : '?';
-    d.innerHTML = `<span style="color:var(--gray5)">${esc(it.playerName || '?')}</span><span class="hwn">${nm}</span><span style="margin-left:auto;font-weight:700;color:${it.valChange > 0 ? 'var(--blue)' : it.valChange < 0 ? 'var(--red)' : 'var(--g3)'}">${it.valChange > 0 ? '+' : ''}${it.valChange}</span>`;
+    d.innerHTML = `<span style="color:var(--gray5)">${esc(it.playerName || '?')}</span><span class="hwn">${nm}</span><span style="margin-left:auto;font-weight:700;color:${it.valChange > 0 ? 'var(--red)' : it.valChange < 0 ? 'var(--blue)' : 'var(--g3)'}">${it.valChange > 0 ? '+' : ''}${it.valChange}</span>`;
     h.appendChild(d);
   });
 }
@@ -3263,10 +3279,12 @@ async function playCard(cid, r) {
   const nh = removeIdx === -1 ? origHand : [...origHand.slice(0, removeIdx), ...origHand.slice(removeIdx + 1)];
 
   // 탄소 수치 변화
-  let newCarbon = (roomData.centerCarbon || 0) + c.val;
+  const oldCarbon = roomData.centerCarbon || 0;
+  let newCarbon = oldCarbon + c.val;
   let newSkip = false;
   let newDraw2 = false;
   let newDirection = roomData.direction || 1;
+  if (c.special === 'reverse') newDirection = -newDirection;
 
   // 특수카드 효과 적용
   if (c.type === 'special') {
@@ -3354,7 +3372,7 @@ async function playCard(cid, r) {
   if (c.type === 'special' && c.special === 'trade') {
     const ord2 = roomData.playerOrder || Object.keys(roomData.players || {});
     const myIdx2 = ord2.indexOf(uid);
-    const nextIdx2 = (myIdx2 + 1) % ord2.length;
+    const nextIdx2 = (myIdx2 + newDirection + ord2.length) % ord2.length;
     const nextUid2 = ord2[nextIdx2];
     if (nextUid2 && nextUid2 !== uid) {
       const myHand2 = [...nh];
@@ -3377,11 +3395,27 @@ async function playCard(cid, r) {
     ups[`rooms/${roomId}/centerCarbon`] = roomData.centerCarbon || 0; // 탄소 수치 변화 없음
   }
 
-  // 빈 손패 보너스 +5점
-  if (nh.length === 0) {
-    const curScore = roomData.players?.[uid]?.score || 0;
+  // 탄소제로 버튼은 '이번 카드로 0이 됐을 때'만 정답 (0에서 특수카드를 내 공짜 +10 받는 것 방지)
+  const finalCarbon = ups[`rooms/${roomId}/centerCarbon`];
+  ups[`rooms/${roomId}/zeroReady`] = finalCarbon === 0 && oldCarbon !== 0;
+
+  // ±25 도달 패널티 (튜토리얼 규칙 ④): 0에서 더 멀어지며 ±25 이상이 되면 -5점
+  let scoreDelta = 0;
+  if (Math.abs(finalCarbon) >= 25 && Math.abs(finalCarbon) > Math.abs(oldCarbon)) {
+    scoreDelta -= 5;
+    showAOV(false, '탄소 폭주! 🔥', `탄소 수치 ${finalCarbon > 0 ? '+' : ''}${finalCarbon} — ±25 도달로 -5점`);
+    push(ref(db, `rooms/${roomId}/chatMessages`), {
+      sender: '시스템',
+      msg: `🔥 ${esc(roomData.players?.[uid]?.name || '?')}님이 탄소 수치를 ${finalCarbon > 0 ? '+' : ''}${finalCarbon}까지 올렸어요! -5점`,
+      isSystem: true, ts: serverTimestamp()
+    });
+  }
+
+  // 빈 손패 보너스 +5점 (라운드당 1번만 — 1장 뽑고 내기 반복으로 점수 쌓는 것 방지)
+  if (nh.length === 0 && roomData.players?.[uid]?.bonusRound !== roomData.currentRound) {
+    ups[`rooms/${roomId}/players/${uid}/bonusRound`] = roomData.currentRound;
     if (Math.abs(newCarbon) <= 10) {
-      ups[`rooms/${roomId}/players/${uid}/score`] = curScore + 5;
+      scoreDelta += 5;
       showAOV(true, '손패 소진! 🎴', `탄소 수치 ${newCarbon}점 — ±10 범위! +5점 보너스!`);
       notify('🎴 손패 소진 보너스! +5점!', '');
       push(ref(db, `rooms/${roomId}/chatMessages`), {
@@ -3399,6 +3433,8 @@ async function playCard(cid, r) {
       });
     }
   }
+
+  if (scoreDelta) ups[`rooms/${roomId}/players/${uid}/score`] = increment(scoreDelta);
 
   // 턴 진행
   await update(ref(db), ups);
@@ -3455,7 +3491,7 @@ window.callZero = async function() {
   const { runTransaction } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
   const claimRef = ref(db, `rooms/${roomId}/zeroClaimed`);
 
-  if (cc === 0) {
+  if (roomData.zeroReady) {
     // 탄소제로 정답 시도 — 트랜잭션으로 선착순 1명만 성공
     let claimed = false;
     try {
@@ -3471,7 +3507,6 @@ window.callZero = async function() {
     if (claimed) {
       // ✅ 선착순 성공!
       snd('ok');
-      const newScore = (roomData.players?.[uid]?.score || 0) + 10;
       const newRound = (roomData.currentRound || 1) + 1;
       const _sArr=[['탄소제로 달성! 🌍','선착순 성공! +10점 획득!'],['완벽한 타이밍! ⚡','가장 먼저 외쳤어요! +10점!'],['탄소중립 영웅! 🏆','멋진 판단력이에요! +10점!']];
       const _sm=_sArr[Math.floor(Math.random()*3)];
@@ -3482,7 +3517,7 @@ window.callZero = async function() {
         msg: `🌿 ${esc(roomData.players?.[uid]?.name || '?')}님이 탄소제로! +10점!`,
         isSystem: true, ts: serverTimestamp()
       });
-      await update(ref(db, `rooms/${roomId}/players/${uid}`), { score: newScore });
+      await update(ref(db, `rooms/${roomId}/players/${uid}`), { score: increment(10) });
 
       if (newRound > (roomData.totalRounds || 10)) {
         await update(ref(db, `rooms/${roomId}`), { status: 'finished' });
@@ -3500,6 +3535,7 @@ window.callZero = async function() {
           deck: deck2,
           hands: hands2,
           zeroClaimed: false,   // ★ 잠금 해제
+          zeroReady: false,
           currentTurnUid: ord[ni],
           currentPlayerIndex: ni,
           timerStart: Date.now(),
@@ -3508,25 +3544,16 @@ window.callZero = async function() {
         });
       }
     } else {
-      // ❌ 늦게 눌림 — 감점
+      // 한발 늦음 — 감점 없음 (기기·인터넷 속도 차이로 벌점 받지 않도록)
       snd('ng');
-      const newScore = (roomData.players?.[uid]?.score || 0) - 3;
-      await update(ref(db, `rooms/${roomId}/players/${uid}`), { score: newScore });
-      showAOV(false, '이미 선점됐어요! 😅', '다른 친구가 먼저 외쳤어요 -3점');
-      notify('😅 다른 사람이 먼저 눌렀어요! -3점', 'err');
-      push(ref(db, `rooms/${roomId}/chatMessages`), {
-        sender: '시스템',
-        msg: `❌ ${esc(roomData.players?.[uid]?.name || '?')}님 탄소제로 늦게 외침! -3점`,
-        isSystem: true, ts: serverTimestamp()
-      });
+      showAOV(false, '아깝다! 😅', '다른 친구가 한발 먼저 외쳤어요');
       // 2초 후 버튼 상태는 renderGame에서 자동 처리됨
     }
   } else {
     // 탄소 수치가 0이 아닌데 누름 — 오답 -3점
     snd('ng');
-    const newScore = (roomData.players?.[uid]?.score || 0) - 3;
-    await update(ref(db, `rooms/${roomId}/players/${uid}`), { score: newScore });
-    showAOV(false, '아직 탄소가 남았어요! 😬', `수치가 ${cc > 0 ? '+' : ''}${cc}이에요! -3점`);
+    await update(ref(db, `rooms/${roomId}/players/${uid}`), { score: increment(-3) });
+    showAOV(false, cc === 0 ? '타이밍을 놓쳤어요! 😬' : '아직 탄소가 남았어요! 😬', cc === 0 ? '카드를 내서 0이 된 바로 그때만 외칠 수 있어요! -3점' : `수치가 ${cc > 0 ? '+' : ''}${cc}이에요! -3점`);
     notify('😅 수치가 0이 아니에요! -3점 감점', 'err');
     push(ref(db, `rooms/${roomId}/chatMessages`), {
       sender: '시스템',
@@ -3619,7 +3646,7 @@ async function advanceTurn(skipOverride = false, swapOffset = null) {
     ni = (ni + step + ord.length) % ord.length;
     push(ref(db, `rooms/${roomId}/chatMessages`), {
       sender: '시스템',
-      msg: `⛔ ${esc(roomData.players?.[ord[ni - step]]?.name || '?')}님의 턴이 스킵됐어요!`,
+      msg: `⛔ ${esc(roomData.players?.[ord[(ni - step + ord.length) % ord.length]]?.name || '?')}님의 턴이 스킵됐어요!`,
       isSystem: true, ts: serverTimestamp()
     });
   }
@@ -3639,9 +3666,8 @@ async function timeoutAdvanceTurn() {
   if (!roomData || !roomId) return;
   // 타임아웃 감점 (-2점)
   const uid = roomData.currentTurnUid;
-  if (uid) {
-    const newScore = (roomData.players?.[uid]?.score || 0) - 2;
-    await update(ref(db), { [`rooms/${roomId}/players/${uid}/score`]: newScore });
+  if (uid && roomData.players?.[uid]) {
+    await update(ref(db), { [`rooms/${roomId}/players/${uid}/score`]: increment(-2) });
     notify(`⏰ 시간 초과! ${roomData.players?.[uid]?.name || '?'}님 -2점`, 'wrn');
   }
   snd('timeout');
@@ -3697,6 +3723,8 @@ window.sendEmoji = async function(emoji, label) {
 // ============================================================
 let resultAutoTimer = null;
 function showResult(r) {
+  const popup=document.getElementById('result-popup');
+  if(popup && popup.style.display==='flex') return; // 이미 표시 중 (전적 중복 집계 방지)
   stopTimer(); BGM.stop(); gameSoundOff = true;
   // 결과 오버레이 복원
   const _ro=document.getElementById('result-overlay'); if(_ro) _ro.style.display='';
@@ -3742,21 +3770,14 @@ function showResult(r) {
   const tipEl=document.getElementById('etip2');
   if(tipEl) tipEl.innerHTML='🌿 <strong>오늘의 탄소중립 팁:</strong> '+TIPS[Math.floor(Math.random()*TIPS.length)];
 
-  const popup=document.getElementById('result-popup');
   if(popup) popup.style.display='flex';
 }
 
+// ✕ / 방 나가기: 이 방에서 나가 로비로 (다른 친구들은 그대로 대기실로 갈 수 있음)
 window.closeResultPopup = async function() {
   const popup = document.getElementById('result-popup');
   if(popup) popup.style.display = 'none';
-  if(resultAutoTimer){ clearInterval(resultAutoTimer); resultAutoTimer = null; }
-  // 게임 종료 후 방 삭제 → 로비로 이동
-  try {
-    if(roomId) await remove(ref(db, 'rooms/'+roomId));
-  } catch(e) {}
-  stopRoomListener(); stopChatListener(); stopTimer();
-  roomId = null; roomData = null;
-  gotoLobby();
+  await leaveRoom();
 };
 
 window.doLeaveAfterGame = async function() {
@@ -3772,16 +3793,15 @@ window.doReturnToWaiting = async function() {
   try {
     const s = await get(ref(db,`rooms/${roomId}`));
     if(!s.exists()){ stopRoomListener();stopChatListener();stopTimer();roomId=null;roomData=null;gotoLobby();return; }
-    const r=s.val(), uid=user.uid, isHost=r.hostUid===uid;
-    if(isHost){
+    const popup=document.getElementById('result-popup'); if(popup) popup.style.display='none';
+    const r=s.val();
+    // 먼저 누른 사람이 방 전체를 대기 상태로 초기화 (방장 여부 무관)
+    if(r.status==='finished'){
       const players=r.players||{}, resetPlayers={};
-      Object.keys(players).forEach(u=>{ resetPlayers[u]={...players[u],score:0,ready:false,isHost:u===uid}; });
-      await update(ref(db,`rooms/${roomId}`),{status:'waiting',currentRound:1,centerCarbon:0,lastCard:null,deck:[],hands:{},zeroClaimed:false,roundResults:[],players:resetPlayers});
-    } else {
-      const mySnap=await get(ref(db,`rooms/${roomId}/players/${uid}`));
-      if(mySnap.exists()) await update(ref(db,`rooms/${roomId}/players/${uid}`),{score:0,ready:false});
+      Object.keys(players).forEach(u=>{ resetPlayers[u]={...players[u],score:0,ready:false,isHost:u===r.hostUid,bonusRound:null}; });
+      await update(ref(db,`rooms/${roomId}`),{status:'waiting',currentRound:0,centerCarbon:0,lastCard:null,deck:[],hands:{},zeroClaimed:false,zeroReady:false,roundResults:[],chatMessages:null,players:resetPlayers});
     }
-    show('ws'); startRoomListener(roomId);
+    enterWaiting(roomId);
   } catch(e){ stopRoomListener();stopChatListener();stopTimer();roomId=null;roomData=null;gotoLobby(); }
 };
 
@@ -4019,7 +4039,8 @@ window.sendBcast = async function() {
     </div>
     <div id="rsboard2"></div>
     <div id="etip2" style="margin-top:14px;background:var(--g6);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--g1)"></div>
-    <button onclick="closeResultPopup()" class="btn btp" style="width:100%;margin-top:16px">🏠 대기실로 이동</button>
+    <button onclick="doReturnToWaiting()" class="btn btp" style="width:100%;margin-top:16px">🔄 대기실로 (한 판 더!)</button>
+    <button onclick="closeResultPopup()" class="btn bts" style="width:100%;margin-top:8px">🏠 방 나가기</button>
   </div>
 </div>
 
