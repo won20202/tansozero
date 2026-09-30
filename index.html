@@ -4039,8 +4039,10 @@ window.sendBcast = async function() {
     </div>
     <div id="rsboard2"></div>
     <div id="etip2" style="margin-top:14px;background:var(--g6);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--g1)"></div>
-    <button onclick="doReturnToWaiting()" class="btn btp" style="width:100%;margin-top:16px">🔄 대기실로 (한 판 더!)</button>
-    <button onclick="closeResultPopup()" class="btn bts" style="width:100%;margin-top:8px">🏠 방 나가기</button>
+    <div style="display:flex;gap:8px;margin-top:16px;position:sticky;bottom:-28px;background:white;padding:8px 0">
+      <button onclick="doReturnToWaiting()" class="btn btp" style="flex:1.4">🔄 이 방에서 한 판 더!</button>
+      <button onclick="closeResultPopup()" class="btn bts" style="flex:1">🏠 방 나가기</button>
+    </div>
   </div>
 </div>
 
