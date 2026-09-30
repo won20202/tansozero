@@ -78,7 +78,39 @@
     .tcbody{background:var(--gbg);border-radius:var(--r);padding:16px 18px;margin-bottom:12px}
     .tcnum{font-family:'Black Han Sans',sans-serif;font-size:26px;color:var(--g4);margin-bottom:4px}
     .tctit{font-size:15px;font-weight:800;color:var(--g2);margin-bottom:6px}
-    .tcdesc{font-size:12px;color:var(--gray7);line-height:1.7}
+    .tcdesc{font-size:15px;color:var(--gray7);line-height:1.75}
+    .tctit{font-size:20px!important;margin-bottom:10px!important}
+    .tg{color:var(--g3)} .tr{color:var(--red)}
+    .tgauge{display:flex;align-items:center;gap:12px;background:#1a3a1a;border-radius:12px;padding:12px 14px;margin:14px 0}
+    .tgbar{flex:1;height:20px;background:rgba(255,255,255,.12);border-radius:12px;position:relative;overflow:hidden}
+    .tgmid{position:absolute;left:50%;top:0;bottom:0;width:3px;background:white;transform:translateX(-50%);z-index:2}
+    .tgfill{position:absolute;top:0;height:100%;transition:all .6s ease}
+    .tgnum{font-family:'Black Han Sans',sans-serif;font-size:30px;min-width:64px;text-align:center;color:#ff8080;transition:color .3s}
+    .tgnum.z{color:#4cca78;animation:zflash .6s ease 2}
+    .ttry{background:white;border:2px dashed var(--g4);border-radius:14px;padding:14px;text-align:center}
+    .ttry-q{font-size:15px;font-weight:700;margin-bottom:12px}
+    .tzero{background:linear-gradient(135deg,#27ae60,#2ecc71);color:white;border:none;border-radius:14px;padding:14px 34px;font-size:20px;font-weight:900;font-family:inherit;cursor:pointer;box-shadow:0 4px 14px rgba(39,174,96,.4)}
+    .tzero:active{transform:scale(.96)}
+    .tfb{min-height:26px;margin-top:10px;font-size:16px;font-weight:800}
+    .tfb.ok{color:var(--g3);animation:bnc .4s ease} .tfb.ng{color:var(--red);animation:tshake .4s}
+    @keyframes tshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+    .tkinds{display:flex;gap:12px;margin-bottom:14px}
+    .tkind{flex:1;border-radius:14px;padding:12px;text-align:center;font-size:14px;border:2.5px solid}
+    .tkind.em{background:var(--redp);border-color:var(--red);color:#922b21} .tkind.ab{background:var(--bluep);border-color:var(--blue);color:#154f8a}
+    .tk-ico{font-size:30px} .tk-val{font-family:'Black Han Sans',sans-serif;font-size:24px;margin:2px 0}
+    .tpicks{display:flex;gap:10px;justify-content:center}
+    .tpick{width:110px;padding:10px 6px;border-radius:12px;border:2.5px solid;font-family:inherit;font-size:14px;line-height:1.5;cursor:pointer;transition:transform .15s}
+    .tpick:hover{transform:translateY(-4px)} .tpick b{font-size:20px}
+    .tpick.em{background:var(--redp);border-color:var(--red)} .tpick.ab{background:var(--bluep);border-color:var(--blue)}
+    .tpick.pk{outline:4px solid var(--g3);outline-offset:2px}
+    .tsp{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+    .tspc{background:white;border:2px solid #9b59b6;border-radius:14px;padding:12px 8px;text-align:center;font-size:13px;color:var(--gray7);opacity:0;animation:bnc .5s ease forwards;animation-delay:var(--d)}
+    .tspc span{display:block;font-size:30px} .tspc b{display:block;font-size:16px;color:#7d3c98;margin:2px 0}
+    .tscore{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+    .tsc{border-radius:14px;padding:10px;text-align:center;font-size:13px;line-height:1.45}
+    .tsc b{display:block;font-family:'Black Han Sans',sans-serif;font-size:28px}
+    .tsc.gd{background:var(--g6);color:var(--g1)} .tsc.bd{background:var(--redp);color:#922b21}
+    .btn:disabled{opacity:.4;cursor:not-allowed}
     .tprog{display:flex;gap:7px;justify-content:center;margin-bottom:10px}
     .tpdot{width:9px;height:9px;border-radius:50%;background:var(--gray3);transition:background .3s}
     .tpdot.on{background:var(--g3)}
@@ -446,134 +478,80 @@
 <div class="scr" id="ts">
   <div class="twrap">
     <div class="thead2">
-      <h2>🎮 게임 방법 알아보기</h2>
-      <p style="font-size:12px;color:var(--gray5)">중1 탄소중립 카드 게임 규칙이에요!</p>
+      <h2>🎮 게임 방법 — 직접 해 보면서 배워요!</h2>
     </div>
     <div class="tprog" id="tprog"></div>
-    <!-- 5 cards (새 UNO 룰) -->
+
+    <!-- 1. 목표 -->
     <div class="tcard on" id="tc0">
-      <div class="tcbody"><div class="tcnum">01</div>
-        <div class="tctit">🌍 탄소중립 카드 게임이란?</div>
-        <div class="tcdesc">이 게임은 <strong>UNO 스타일</strong>의 탄소중립 카드 게임이에요!<br>
-        모두가 공유하는 <strong style="color:var(--g3)">공동 탄소 수치</strong>를 카드를 내며 함께 조절해요.<br>
-        수치가 <strong style="color:var(--g3)">0</strong>이 되면 — 먼저 <strong>🌿 탄소제로!</strong>를 누른 <strong style="color:var(--red)">1명</strong>만 +10점! (선착순)<br>
-        탄소 배출카드 → 수치 ↑ &nbsp;|&nbsp; 흡수카드 → 수치 ↓</div>
-        <!-- 공동 탄소 수치 게이지 UI (이미지 대체) -->
-        <div style="background:linear-gradient(135deg,#1a4a2a,#1a3a1a);border-radius:13px;padding:13px 16px;margin:10px 0 6px;box-shadow:0 3px 12px rgba(0,0,0,.25)">
-          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.65);margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase">🌍 화면 최상단에 항상 표시되는 공동 탄소 수치</div>
-          <!-- 게이지 바 재현 -->
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.8);white-space:nowrap;min-width:68px">공동 탄소 수치</div>
-            <div style="flex:1;height:18px;background:rgba(0,0,0,.35);border-radius:12px;position:relative;border:1px solid rgba(255,255,255,.15)">
-              <!-- 중앙 기준선(0점) -->
-              <div style="position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:rgba(255,255,255,.9);border-radius:3px;transform:translateX(-50%);z-index:2"></div>
-              <!-- 배출(빨강) 예시 -->
-              <div style="position:absolute;top:0;height:100%;width:26%;background:linear-gradient(90deg,#e74c3c,#ff6b6b);left:50%;border-radius:0 12px 12px 0;z-index:1"></div>
-            </div>
-            <div style="font-family:'Black Han Sans',sans-serif;font-size:22px;color:#ff8080;min-width:48px;text-align:center">+8</div>
-          </div>
-          <!-- 음수 예시 -->
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.8);white-space:nowrap;min-width:68px"></div>
-            <div style="flex:1;height:18px;background:rgba(0,0,0,.35);border-radius:12px;position:relative;border:1px solid rgba(255,255,255,.15)">
-              <div style="position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:rgba(255,255,255,.9);border-radius:3px;transform:translateX(-50%);z-index:2"></div>
-              <!-- 흡수(파랑) 예시 -->
-              <div style="position:absolute;top:0;height:100%;width:18%;background:linear-gradient(90deg,#3bb8e8,#1a6bba);right:50%;border-radius:12px 0 0 12px;z-index:1"></div>
-            </div>
-            <div style="font-family:'Black Han Sans',sans-serif;font-size:22px;color:#7dd8f8;min-width:48px;text-align:center">-5</div>
-          </div>
-          <!-- 제로 예시 -->
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.8);white-space:nowrap;min-width:68px"></div>
-            <div style="flex:1;height:18px;background:rgba(0,0,0,.35);border-radius:12px;position:relative;border:1px solid rgba(255,255,255,.15)">
-              <div style="position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:rgba(255,255,255,.9);border-radius:3px;transform:translateX(-50%);z-index:2"></div>
-            </div>
-            <div style="font-family:'Black Han Sans',sans-serif;font-size:22px;color:#4cca78;min-width:48px;text-align:center;animation:glow .8s ease infinite alternate">0</div>
-          </div>
-          <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:9px;color:rgba(255,255,255,.5)">
-            <span>← 흡수(파랑, 수치↓)</span>
-            <span style="color:rgba(255,255,255,.8);font-weight:700">| 0 = 탄소제로! |</span>
-            <span>배출(빨강, 수치↑) →</span>
-          </div>
-        </div>
-        <div style="background:var(--yelp);border:1.5px solid var(--yel);border-radius:10px;padding:7px 12px;margin-top:6px;font-size:11px;color:var(--gray7);line-height:1.6">
-          ⚠️ <strong>주의!</strong> 탄소제로 버튼은 카드를 낸 후 수치가 <strong>0이 될 때만</strong> 활성화돼요. 게임 시작 직후엔 눌러도 소용없어요!
+      <div class="tcbody">
+        <div class="tctit">🎯 목표는 딱 하나!</div>
+        <div class="tcdesc">모두 함께 쓰는 <b>탄소 수치</b>를 <b class="tg">0</b>으로 만들기!<br>
+          0이 되는 순간 <b>🌿 탄소제로!</b>를 <b>가장 먼저</b> 누르면 <b class="tg">+10점</b></div>
+        <div class="tgauge"><div class="tgbar"><div class="tgmid"></div><div class="tgfill" id="tg0fill"></div></div><div class="tgnum" id="tg0num">+6</div></div>
+        <div class="ttry">
+          <div class="ttry-q">👉 연습! 수치가 <b>0</b>이 되는 순간 버튼을 눌러 보세요</div>
+          <button class="tzero" id="tzero" onclick="tutZero()">🌿 탄소제로!</button>
+          <div class="tfb" id="tfb0"></div>
         </div>
       </div>
     </div>
 
+    <!-- 2. 카드 -->
     <div class="tcard" id="tc1">
-      <div class="tcbody"><div class="tcnum">02</div>
-        <div class="tctit">🃏 세 가지 카드</div>
-        <div class="tcdesc" style="margin-bottom:12px">세 종류 카드가 있어요!</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <div style="background:var(--redp);border:2px solid var(--red);border-radius:11px;padding:11px;width:115px;text-align:center">
-            <div style="font-size:22px;margin-bottom:4px">🏭</div>
-            <div style="font-size:11px;font-weight:700">탄소배출카드</div>
-            <div style="font-size:16px;font-weight:900;color:var(--red);margin-top:3px">+1 ~ +9</div>
-            <div style="font-size:9px;color:var(--red);font-weight:700;margin-top:3px">탄소 수치 올라감</div>
+      <div class="tcbody">
+        <div class="tctit">🃏 카드로 수치를 바꿔요</div>
+        <div class="tkinds">
+          <div class="tkind em"><div class="tk-ico">🏭</div><b>배출 카드</b><div class="tk-val">+1 ~ +9</div><div>수치 ⬆ 올라가요</div></div>
+          <div class="tkind ab"><div class="tk-ico">🌱</div><b>흡수 카드</b><div class="tk-val">−1 ~ −6</div><div>수치 ⬇ 내려가요</div></div>
+        </div>
+        <div class="ttry">
+          <div class="ttry-q">🧩 퀴즈! 지금 탄소 수치 <b class="tr">+4</b> — 어떤 카드를 내면 <b class="tg">0</b>이 될까요?</div>
+          <div class="tpicks">
+            <button class="tpick em" onclick="tutPick(this,2)">🚿<br>샤워하기<br><b>+2</b></button>
+            <button class="tpick ab" onclick="tutPick(this,-4)">⚡<br>에너지 절약<br><b>−4</b></button>
+            <button class="tpick ab" onclick="tutPick(this,-1)">🌱<br>나무 심기<br><b>−1</b></button>
           </div>
-          <div style="background:var(--bluep);border:2px solid var(--blue);border-radius:11px;padding:11px;width:115px;text-align:center">
-            <div style="font-size:22px;margin-bottom:4px">🌱</div>
-            <div style="font-size:11px;font-weight:700">탄소흡수카드</div>
-            <div style="font-size:16px;font-weight:900;color:var(--blue);margin-top:3px">-1 ~ -6</div>
-            <div style="font-size:9px;color:var(--blue);font-weight:700;margin-top:3px">탄소 수치 내려감</div>
-          </div>
-          <div style="background:#e8d5f5;border:2px solid #9b59b6;border-radius:11px;padding:11px;width:115px;text-align:center">
-            <div style="font-size:22px;margin-bottom:4px">✨</div>
-            <div style="font-size:11px;font-weight:700">특수카드</div>
-            <div style="font-size:16px;font-weight:900;color:#9b59b6;margin-top:3px">5종류</div>
-            <div style="font-size:9px;color:#7d3c98;font-weight:700;margin-top:3px">특별 효과!</div>
-          </div>
+          <div class="tfb" id="tfb1"></div>
         </div>
       </div>
     </div>
+
+    <!-- 3. 특수카드 -->
     <div class="tcard" id="tc2">
-      <div class="tcbody"><div class="tcnum">03</div>
-        <div class="tctit">🎯 게임 진행 방법</div>
-        <div class="tcdesc">
-          ① 시작 시 <strong>7장씩</strong> 카드를 받아요<br><br>
-          ② 순서대로 1장씩 카드를 내요 → <strong>공동 탄소 수치</strong> 변화<br>
-          <span style="font-size:10px;color:var(--gray5)">📍 탄소 수치는 <strong>화면 최상단 게이지</strong>에서 항상 확인하세요!</span><br><br>
-          ③ 수치가 <strong style="color:var(--g3)">0</strong>이 되면 → &quot;<strong>탄소제로!</strong>&quot; 버튼 클릭 → <strong style="color:var(--g3)">+10점</strong><br><br>
-          ④ 탄소 수치가 <strong style="color:var(--red)">±25</strong>에 도달하면 → 그 수치를 만든 플레이어 <strong style="color:var(--red)">-5점</strong> 패널티!<br><br>
-          ⑤ 낼 카드가 없으면 덱에서 1장 뽑아요 (턴 넘어감)<br><br>
-          ⑥ 제한 시간 내에 안 내면 <strong style="color:var(--red)">-2점</strong>
+      <div class="tcbody">
+        <div class="tctit">✨ 특수카드 5가지</div>
+        <div class="tsp">
+          <div class="tspc" style="--d:0s"><span>⛔</span><b>태풍 경보</b>다음 사람 건너뛰기</div>
+          <div class="tspc" style="--d:.15s"><span>💀</span><b>산업 재해</b>다음 사람 카드 +2장</div>
+          <div class="tspc" style="--d:.3s"><span>🔃</span><b>탄소 역전</b>순서가 반대로</div>
+          <div class="tspc" style="--d:.45s"><span>🔥</span><b>기후 위기</b>수치 2배 (+6 → +12)</div>
+          <div class="tspc" style="--d:.6s"><span>🌳</span><b>숲 복원</b>수치 절반 (+6 → +3)</div>
         </div>
+        <div class="tcdesc" style="margin-top:12px;text-align:center">💡 +1일 때 🌳 숲 복원을 내면 <b class="tg">0</b>! 탄소제로 기회!</div>
       </div>
     </div>
+
+    <!-- 4. 점수 -->
     <div class="tcard" id="tc3">
-      <div class="tcbody"><div class="tcnum">04</div>
-        <div class="tctit">✨ 특수카드 5종류</div>
-        <div class="tcdesc">
-          ⛔ <strong>태풍 경보</strong> — 다음 사람 건너뛰기!<br>
-          💀 <strong>산업 재해</strong> — 다음 사람 카드 +2장!<br>
-          🔃 <strong>탄소 역전</strong> — 순서가 반대로!<br>
-          🔥 <strong>기후 위기</strong> — 탄소 수치 2배! (예: +6 → +12)<br>
-          🌳 <strong>숲 복원</strong> — 탄소 수치 절반! (예: +6 → +3, +1 → 0!)<br><br>
-          <span style="color:#9b59b6;font-weight:700">전략적으로 특수카드를 활용하세요!</span>
+      <div class="tcbody">
+        <div class="tctit">🏆 점수는 이렇게!</div>
+        <div class="tscore">
+          <div class="tsc gd"><b>+10</b>🌿 0이 된 순간<br>탄소제로 외치기</div>
+          <div class="tsc gd"><b>+5</b>🎴 손패 다 쓰기<br><small>(수치 ±10 안, 라운드당 1번)</small></div>
+          <div class="tsc bd"><b>−3</b>❌ 0이 아닐 때<br>탄소제로 누르기</div>
+          <div class="tsc bd"><b>−2</b>⏰ 시간 안에<br>카드 안 내기</div>
+          <div class="tsc bd"><b>−5</b>🔥 수치를 ±25<br>넘게 만들기</div>
+        </div>
+        <div class="tcdesc" style="margin-top:12px">
+          👉 내 차례엔 카드 <b>1장</b> 클릭! 낼 카드가 없으면 <b>카드 더미</b>를 눌러 1장 뽑아요.<br>
+          👉 게임 중에 나가면 <b class="tr">꼴등</b> 처리돼요.
         </div>
       </div>
     </div>
-    <div class="tcard" id="tc4">
-      <div class="tcbody"><div class="tcnum">05</div>
-        <div class="tctit">🏆 점수 및 팁</div>
-        <div class="tcdesc">
-          🌿 탄소제로 정확히 외치기: <strong style="color:var(--g3)">+10점</strong><br>
-          🎴 손패 소진 보너스: <strong style="color:var(--g3)">+5점</strong><br>
-          &nbsp;&nbsp;&nbsp;<span style="font-size:10px;color:var(--gray5)">※ 탄소 수치가 <strong>±10 범위</strong> 내일 때만 인정!</span><br>
-          ❌ 탄소제로 잘못 외치기: <strong style="color:var(--red)">-3점</strong><br>
-          ⏰ 타임아웃: <strong style="color:var(--red)">-2점</strong><br>
-          ⚠️ ±25 탄소 수치 유발: <strong style="color:var(--red)">-5점</strong><br>
-          👋 게임 도중 나가기: <strong style="color:var(--red)">자동패 (꼴등)</strong><br><br>
-          👑 <strong>방장</strong>이 방 이름과 코드 설정 후 <strong>모두 준비</strong> 시 게임 시작!<br><br>
-          <span style="color:var(--g3);font-weight:700">🌿 탄소 수치를 ±10 범위로 유지하며 손패를 비우는 전략이 핵심!</span>
-        </div>
-      </div>
-    </div>
-    </div>
+
     <div class="tbtns" id="tbtns">
-      <button class="tskip" onclick="skipT()">게임 방법 알아요 →</button>
+      <button class="tskip" id="tskip" onclick="skipT()" style="display:none">게임 방법 알아요 →</button>
       <button class="btn bts" id="tprev" onclick="tPrev()" style="display:none">◀ 이전</button>
       <button class="btn btp" id="tnext" onclick="tNext()">다음 ▶</button>
     </div>
@@ -932,6 +910,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 setPersistence(auth, browserSessionPersistence);
+// 처리 못 한 오류는 조용히 넘기지 않고 화면에 알림 (예: 관리자 인증이 풀려 공지 전송 실패)
+window.addEventListener('unhandledrejection', e => {
+  const m = String(e.reason?.message || e.reason || '');
+  notify(/PERMISSION_DENIED/.test(m) ? (isAdmin ? '⚠️ 관리자 인증이 풀렸어요. 새로고침 후 다시 관리자로 접속해 주세요.' : '⚠️ 권한이 없어 처리하지 못했어요. 새로고침해 주세요.') : '⚠️ 처리 중 오류: ' + m, 'err', 6000);
+});
 const db = getDatabase(app);
 // ============================================================
 // ============================================================
@@ -2004,7 +1987,7 @@ let roomRef = null, roomListener = null, chatRef = null, chatListener = null;
 let chatStarted = false;
 let gameSoundOff = false; // 게임 종료 후 효과음 차단
 let curFilter = 'all', roomsRef = null, roomsListener = null;
-const TSTEPS = 5; // 튜토리얼 카드 수 (tc0~tc4)
+const TSTEPS = 4; // 튜토리얼 카드 수 (tc0~tc3)
 let tutStep = 0, tutorialSeen = false;
 // 세션 게임 기록 (사이트 닫을 때까지 유지)
 let myRecord = { games: 0, wins: 0, losses: 0 };
@@ -2433,7 +2416,37 @@ function initTutProg() {
   const p=document.getElementById('tprog'); p.innerHTML='';
   for(let i=0;i<TSTEPS;i++){const d=document.createElement('div');d.className='tpdot'+(i===tutStep?' on':'');p.appendChild(d);}
 }
+const tutDone = [false, false, true, true]; // 1·2단계는 직접 해 봐야 통과
+let tutAnim = null, tutVal = 6;
+function tutGauge(v) {
+  const f = document.getElementById('tg0fill'), n = document.getElementById('tg0num');
+  const w = Math.min(Math.abs(v) / 10 * 50, 50) + '%';
+  f.style.width = w; f.style.left = v > 0 ? '50%' : ''; f.style.right = v < 0 ? '50%' : '';
+  f.style.background = v > 0 ? 'linear-gradient(90deg,#e74c3c,#ff6b6b)' : 'linear-gradient(90deg,#3bb8e8,#1a6bba)';
+  n.textContent = v > 0 ? '+' + v : v; n.className = 'tgnum' + (v === 0 ? ' z' : '');
+  n.style.color = v > 0 ? '#ff8080' : v < 0 ? '#7dd8f8' : '';
+}
+function tutStart() { // 수치가 +6 → +2 → −3 → 0 (잠깐 멈춤) 을 반복
+  clearInterval(tutAnim); const seq = [6, 2, -3, 0, 0, 0]; let i = 0;
+  tutAnim = setInterval(() => { tutVal = seq[i++ % seq.length]; tutGauge(tutVal); }, 900);
+  tutGauge(6);
+}
+window.tutZero = function() {
+  const fb = document.getElementById('tfb0');
+  if (tutVal === 0) { fb.className = 'tfb ok'; fb.textContent = '🎉 정답! 0일 때 딱 눌렀어요! +10점'; tutDone[0] = true; clearInterval(tutAnim); snd('ok'); }
+  else { fb.className = 'tfb'; void fb.offsetWidth; fb.className = 'tfb ng'; fb.textContent = '아직이에요! 0이 될 때까지 기다려요 (실제 게임에선 −3점)'; snd('ng'); }
+  updateTNav();
+};
+window.tutPick = function(el, v) {
+  const fb = document.getElementById('tfb1');
+  document.querySelectorAll('.tpick').forEach(x => x.classList.remove('pk')); el.classList.add('pk');
+  const r = 4 + v;
+  if (r === 0) { fb.className = 'tfb ok'; fb.textContent = '🎉 정답! +4 − 4 = 0 → 🌿 탄소제로 찬스!'; tutDone[1] = true; snd('ok'); }
+  else { fb.className = 'tfb'; void fb.offsetWidth; fb.className = 'tfb ng'; fb.textContent = `+4 ${v > 0 ? '+' : '−'} ${Math.abs(v)} = ${r > 0 ? '+' : ''}${r} … 다시 골라 보세요!`; snd('ng'); }
+  updateTNav();
+};
 window.tNext = function() {
+  if(!tutDone[tutStep]) return;
   if(tutStep<TSTEPS-1){document.getElementById(`tc${tutStep}`).classList.remove('on');tutStep++;document.getElementById(`tc${tutStep}`).classList.add('on');initTutProg();updateTNav();}
   else skipT();
 };
@@ -2442,9 +2455,17 @@ window.tPrev = function() {
 };
 function updateTNav(){
   document.getElementById('tprev').style.display=tutStep>0?'':'none';
-  document.getElementById('tnext').textContent=tutStep===TSTEPS-1?'게임 시작! 🎮':'다음 ▶';
+  const nx=document.getElementById('tnext');
+  nx.disabled=!tutDone[tutStep];
+  nx.textContent=tutStep===TSTEPS-1?'게임 시작! 🎮':tutDone[tutStep]?'다음 ▶':'위에서 직접 해 보세요 ☝';
+  let seen=false; try{seen=localStorage.getItem('tz_tut_done')==='1';}catch(e){}
+  document.getElementById('tskip').style.display=seen?'':'none'; // 이 기기에서 한 번 끝까지 본 학생만 건너뛰기
 }
-window.skipT = function() { gotoLobby(); };
+window.skipT = function() {
+  clearInterval(tutAnim);
+  if(tutStep===TSTEPS-1){ try{localStorage.setItem('tz_tut_done','1');}catch(e){} }
+  gotoLobby();
+};
 
 // ============================================================
 // AUTH
@@ -2515,7 +2536,7 @@ window.doLogin = async function() {
     }
     // 접속 시 presence 등록 (.info/connected 감지)
     setupPresence(user.uid);
-    if(tutorialSeen){gotoLobby();}else{tutorialSeen=true;tutStep=0;initTutProg();updateTNav();show('ts');}
+    if(tutorialSeen){gotoLobby();}else{tutorialSeen=true;tutStep=0;document.querySelectorAll('.tcard').forEach((c,i)=>c.classList.toggle('on',i===0));initTutProg();updateTNav();tutStart();show('ts');}
   } catch(e) { notify('접속 실패: '+e.message,'err'); }
 };
 
