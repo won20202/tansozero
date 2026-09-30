@@ -2868,6 +2868,7 @@ window.createRoom = async function() {
   if((await get(ref(db,'lock'))).val()===true){notify('🔒 지금은 게임이 잠겨 있어요. 선생님 안내를 기다려요','wrn');return;}
   if(!code||code.length<4){notify('입장 코드는 4자리 이상이어야 해요','wrn');return;}
   const snap=await get(ref(db,'rooms'));
+  if(Object.values(snap.val()||{}).some(r=>r.code===code&&r.players&&Object.keys(r.players).length)){notify('이미 다른 방이 쓰는 코드예요. 다른 코드로 해 주세요','wrn');return;}
   if(snap.exists()&&Object.values(snap.val()).filter(r=>r.players&&Object.keys(r.players).length).length>=MAX_ROOMS){notify('방을 더 만들 수 없어요 (최대 10개)','err');return;}
   const rref=push(ref(db,'rooms'));
   const uid=user.uid;
@@ -3866,7 +3867,8 @@ window.refreshAdm=async function(){
     try{
       const [rs,ps]=await Promise.all([get(ref(db,'rooms')),get(ref(db,'presence'))]);
       const rooms=[],studs=[];
-      if(rs.exists())rs.forEach(c=>rooms.push({id:c.key,...c.val()}));
+      // 주의: Firebase forEach는 콜백이 참 값을 돌려주면 멈춤 → push 결과를 돌려주지 않게 중괄호
+      if(rs.exists())rs.forEach(c=>{rooms.push({id:c.key,...c.val()});});
       // ponytail: 6시간 지난 접속기록은 유령(연결 끊김 처리 실패)으로 보고 제외
       if(ps.exists())ps.forEach(c=>{const v=c.val(); if(Date.now()-(v.ts||v.lastSeen||0)<6*3600e3) studs.push({uid:c.key,...v});});
       const active=rooms.filter(r=>r.status!=='finished');
@@ -3911,7 +3913,7 @@ function renderAdmRooms(rooms) {
           ?`<button class="akbtn" disabled style="background:#856404;color:#fff;border-color:#856404;opacity:1;cursor:default">👑방장</button>`
           :`<button class="akbtn adm-chhost" data-rid="${r.id}" data-uid="${p.uid}" data-nm="${esc(p.name)}" style="background:#bbb;color:#fff;border-color:#bbb">멤버</button>`;
         const kBtn=`<button class="akbtn adm-kick" data-rid="${r.id}" data-uid="${p.uid}" data-nm="${esc(p.name)}" style="background:#c0392b;color:#fff;border-color:#c0392b">강퇴</button>`;
-        plh+=`<div class="aplrow"><div class="pavt" style="background:${p.color||'#2d9c55'};width:22px;height:22px;font-size:10px">${esc(p.name.charAt(0))}</div><div class="apln">${esc(p.grade)}학년${esc(p.class)}반${esc(p.num)}번 ${esc(p.name)}</div><div class="apsc">${p.score}점</div><div style="display:flex;gap:4px">${roleBtn}${kBtn}</div></div>`;
+        plh+=`<div class="aplrow"><div class="pavt" style="background:${p.color||'#2d9c55'};width:22px;height:22px;font-size:10px">${esc((p.name||'?').charAt(0))}</div><div class="apln">${esc(p.grade)}학년${esc(p.class)}반${esc(p.num)}번 ${esc(p.name)}</div><div class="apsc">${p.score}점</div><div style="display:flex;gap:4px">${roleBtn}${kBtn}</div></div>`;
       });
       html+=`<div class="arcrd">
         <div class="arhd"><div class="arname">${esc(r.name)}</div><span class="sbdg ${stcls}">${st}</span></div>
