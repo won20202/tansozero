@@ -3002,8 +3002,11 @@ function renderWaiting(r) {
   const rdybtn=document.getElementById('rdybtn'), stbtn=document.getElementById('stbtn');
   if(isHost){
     rdybtn.style.display='none'; stbtn.style.display='';
-    const allRdy=ps.filter(p=>!p.isHost).every(p=>p.ready);
-    stbtn.disabled=!allRdy||ps.length<2;
+    const notRdy=ps.filter(p=>!p.isHost&&!p.ready);
+    stbtn.disabled=notRdy.length>0||ps.length<2;
+    // 누구를 기다리는지 방장에게 바로 보이게 (오래 안 누르면 강퇴 버튼으로 정리)
+    stbtn.textContent = ps.length<2 ? '👥 친구가 들어오길 기다리는 중…'
+      : notRdy.length ? `⏳ ${notRdy.map(p=>p.name).join(', ')} 준비 기다리는 중` : '🎮 게임 시작!';
   } else {
     rdybtn.style.display=''; stbtn.style.display='none';
     const mp=r.players[uid];
@@ -3013,7 +3016,6 @@ function renderWaiting(r) {
 }
 
 // ============================================================
-// 대기실 60초 준비 안 하면 자동 퇴장
 // ============================================================
 
 
