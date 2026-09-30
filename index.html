@@ -522,7 +522,7 @@
           <div style="background:#e8d5f5;border:2px solid #9b59b6;border-radius:11px;padding:11px;width:115px;text-align:center">
             <div style="font-size:22px;margin-bottom:4px">✨</div>
             <div style="font-size:11px;font-weight:700">특수카드</div>
-            <div style="font-size:16px;font-weight:900;color:#9b59b6;margin-top:3px">8종류</div>
+            <div style="font-size:16px;font-weight:900;color:#9b59b6;margin-top:3px">5종류</div>
             <div style="font-size:9px;color:#7d3c98;font-weight:700;margin-top:3px">특별 효과!</div>
           </div>
         </div>
@@ -544,16 +544,13 @@
     </div>
     <div class="tcard" id="tc3">
       <div class="tcbody"><div class="tcnum">04</div>
-        <div class="tctit">✨ 특수카드 8종류</div>
+        <div class="tctit">✨ 특수카드 5종류</div>
         <div class="tcdesc">
-          🔄 <strong>지구의 날</strong> — 왼쪽 플레이어와 카드 전체 교환!<br>
-          ⛔ <strong>태풍 경보</strong> — 다음 사람 턴 스킵!<br>
-          💀 <strong>산업 재해</strong> — 다음 사람 카드 2장 추가!<br>
-          💸 <strong>탄소세 부과</strong> — 탄소 수치 +5 (배출 증가)<br>
-          🌍 <strong>그린 뉴딜</strong> — 탄소 수치 -5 (흡수 증가)<br>
-          🔃 <strong>탄소 역전</strong> — 진행 방향이 역전돼요!<br>
-          🌊 <strong>해수면 상승</strong> — 모든 플레이어 카드 1장씩 추가!<br>
-          🤝 <strong>탄소 거래제</strong> — 다음 플레이어와 카드 1장 교환!<br><br>
+          ⛔ <strong>태풍 경보</strong> — 다음 사람 건너뛰기!<br>
+          💀 <strong>산업 재해</strong> — 다음 사람 카드 +2장!<br>
+          🔃 <strong>탄소 역전</strong> — 순서가 반대로!<br>
+          🔥 <strong>기후 위기</strong> — 탄소 수치 2배! (예: +6 → +12)<br>
+          🌳 <strong>숲 복원</strong> — 탄소 수치 절반! (예: +6 → +3, +1 → 0!)<br><br>
           <span style="color:#9b59b6;font-weight:700">전략적으로 특수카드를 활용하세요!</span>
         </div>
       </div>
@@ -879,7 +876,7 @@
     <div class="fg"><label class="fl">입장 코드 (4~6자리 영문/숫자)</label><input class="fi codeinp" id="rcode" placeholder="예) ECO123" maxlength="6" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"/></div>
     <div class="fg"><label class="fl">최대 인원</label><select class="fsel" id="rmaxp"><option value="4">4명 (추천)</option><option value="5" selected>5명 (추천)</option><option value="6">6명</option></select></div>
     <div class="fg"><label class="fl">라운드 수</label><select class="fsel" id="rrnds"><option value="5">5라운드 (빠른)</option><option value="10" selected>10라운드 (기본)</option><option value="15">15라운드 (긴)</option></select></div>
-    <div class="fg"><label class="fl">턴당 제한시간</label><select class="fsel" id="rtmr"><option value="20">20초 (빠름)</option><option value="30" selected>30초 (기본)</option><option value="45">45초 (여유)</option><option value="60">60초 (충분)</option></select></div>
+    <div class="fg"><label class="fl">턴당 제한시간</label><select class="fsel" id="rtmr"><option value="15">15초 (빠름)</option><option value="20" selected>20초 (기본)</option><option value="30">30초 (여유)</option></select></div>
     <div class="mbtns"><button class="btn bts" onclick="closeM('crm')">취소</button><button class="btn btp" onclick="createRoom()">방 만들기</button></div>
   </div>
 </div>
@@ -1972,14 +1969,11 @@ const ALL_CARDS = [
   {id:'a7', name:'대중교통 이용',   val:-3,   type:'absorb',  emoji:'🚌'},
   {id:'a8', name:'채식 식단',       val:-4,   type:'absorb',  emoji:'🥗'},
   // 특수 카드
-  {id:'s1', name:'지구의 날',       val:0,   type:'special', special:'swap',    emoji:'🔄', desc:'옆 플레이어와 카드 교환!'},
-  {id:'s2', name:'태풍 경보',       val:0,   type:'special', special:'skip',    emoji:'⛔', desc:'다음 사람 턴 스킵!'},
-  {id:'s3', name:'산업 재해',       val:0,   type:'special', special:'draw2',   emoji:'💀', desc:'다음 사람 카드 2장 추가!'},
-  {id:'s4', name:'탄소세 부과',     val:0,   type:'special', special:'tax',     emoji:'💸', desc:'탄소 수치 +5 (배출 증가)'},
-  {id:'s5', name:'그린 뉴딜',       val:0,   type:'special', special:'deal',    emoji:'🌍', desc:'탄소 수치 -5 (흡수 증가)'},
-  {id:'s6', name:'탄소 역전',       val:0,   type:'special', special:'reverse', emoji:'🔃', desc:'진행 방향이 역전됩니다!'},
-  {id:'s7', name:'해수면 상승',     val:0,   type:'special', special:'flood',   emoji:'🌊', desc:'모든 플레이어 카드 1장씩 추가!'},
-  {id:'s8', name:'탄소 거래제',     val:0,   type:'special', special:'trade',   emoji:'🤝', desc:'원하는 플레이어와 카드 1장 교환!'},
+  {id:'s2', name:'태풍 경보',       val:0,   type:'special', special:'skip',    emoji:'⛔', desc:'다음 사람 건너뛰기!'},
+  {id:'s3', name:'산업 재해',       val:0,   type:'special', special:'draw2',   emoji:'💀', desc:'다음 사람 카드 +2장!'},
+  {id:'s9', name:'기후 위기',       val:0,   type:'special', special:'double',  emoji:'🔥', desc:'탄소 수치 2배!'},
+  {id:'s10',name:'숲 복원',         val:0,   type:'special', special:'half',    emoji:'🌳', desc:'탄소 수치 절반!'},
+  {id:'s6', name:'탄소 역전',       val:0,   type:'special', special:'reverse', emoji:'🔃', desc:'순서가 반대로!'},
 ];
 // 편의 참조
 const EMIT  = ALL_CARDS.filter(c=>c.type==='emit');
@@ -2998,7 +2992,7 @@ window.startGame = async function() {
     hands: hands,
     roundResults: [],
     timerStart: Date.now(),
-    timerSeconds: r.timerSeconds || 30,
+    timerSeconds: r.timerSeconds || 20,
     lastCard: null,
     zeroReady: false,
     zeroClaimed: false,
@@ -3288,16 +3282,14 @@ async function playCard(cid, r) {
 
   // 특수카드 효과 적용
   if (c.type === 'special') {
-    if (c.special === 'tax') {
-      newCarbon = (roomData.centerCarbon || 0) + 5;
-    } else if (c.special === 'deal') {
-      newCarbon = (roomData.centerCarbon || 0) - 5;
+    if (c.special === 'double') {
+      newCarbon = oldCarbon * 2;              // 🔥 기후 위기: 0에서 멀어짐 (±25 패널티 주의)
+    } else if (c.special === 'half') {
+      newCarbon = Math.trunc(oldCarbon / 2);  // 🌳 숲 복원: 0 쪽으로 반 (±1이면 0 → 탄소제로 기회!)
     } else if (c.special === 'skip') {
       newSkip = true;
     } else if (c.special === 'draw2') {
       newDraw2 = true;
-    } else if (c.special === 'swap') {
-      // swap 처리는 advanceTurn 에서
     }
   }
 
@@ -3307,7 +3299,7 @@ async function playCard(cid, r) {
     playerName: roomData.players?.[uid]?.name || '?',
     playerUid: uid,
     cardId: c.id,
-    valChange: c.type === 'special' ? (c.special === 'tax' ? 5 : c.special === 'deal' ? -5 : 0) : c.val,
+    valChange: newCarbon - oldCarbon,
     carbonAfter: newCarbon,
   }];
 
@@ -3319,20 +3311,6 @@ async function playCard(cid, r) {
   ups[`rooms/${roomId}/skipNext`] = newSkip;
   ups[`rooms/${roomId}/draw2Next`] = newDraw2;
   ups[`rooms/${roomId}/direction`] = newDirection;
-
-  // swap 특수카드: 왼쪽 플레이어와 카드 교환
-  if (c.type === 'special' && c.special === 'swap') {
-    const ord = roomData.playerOrder || Object.keys(roomData.players || {});
-    const myIdx = ord.indexOf(uid);
-    const targetIdx = (myIdx - 1 + ord.length) % ord.length;
-    const targetUid = ord[targetIdx];
-    if (targetUid && targetUid !== uid) {
-      const targetHand = [...(roomData.hands?.[targetUid] || [])];
-      ups[`rooms/${roomId}/hands/${uid}`] = targetHand;
-      ups[`rooms/${roomId}/hands/${targetUid}`] = nh;
-      notify(`🔄 ${roomData.players?.[targetUid]?.name || '?'}님과 카드를 교환했어요!`, 'inf');
-    }
-  }
 
   // draw2 특수카드: 다음 플레이어에게 카드 2장 주기
   if (c.type === 'special' && c.special === 'draw2') {
@@ -3351,48 +3329,6 @@ async function playCard(cid, r) {
       ups[`rooms/${roomId}/deck`] = deck2;
       notify(`💀 ${roomData.players?.[nextUid]?.name || '?'}님이 카드 2장을 받아요!`, 'wrn');
     }
-  }
-
-  // 🔃 역전 카드: direction 이미 newDirection에 반영됨
-  // 🌊 해수면 상승: 모든 플레이어 손패 +1장
-  if (c.type === 'special' && c.special === 'flood') {
-    let floodDeck = [...(roomData.deck || [])];
-    const allPlayers = roomData.playerOrder || Object.keys(roomData.players || {});
-    allPlayers.forEach(puid => {
-      const pHand = puid === uid ? [...nh] : [...(roomData.hands?.[puid] || [])];
-      if (!floodDeck.length) floodDeck = buildDeck();
-      pHand.push(floodDeck.shift());
-      ups[`rooms/${roomId}/hands/${puid}`] = pHand;
-    });
-    ups[`rooms/${roomId}/deck`] = floodDeck;
-    notify('🌊 해수면 상승! 모든 플레이어 카드 1장씩 추가!', 'wrn');
-  }
-
-  // 🤝 탄소 거래제: 다음 플레이어와 카드 1장씩 교환 (자동 처리)
-  if (c.type === 'special' && c.special === 'trade') {
-    const ord2 = roomData.playerOrder || Object.keys(roomData.players || {});
-    const myIdx2 = ord2.indexOf(uid);
-    const nextIdx2 = (myIdx2 + newDirection + ord2.length) % ord2.length;
-    const nextUid2 = ord2[nextIdx2];
-    if (nextUid2 && nextUid2 !== uid) {
-      const myHand2 = [...nh];
-      const nextHand2 = [...(roomData.hands?.[nextUid2] || [])];
-      if (myHand2.length > 0 && nextHand2.length > 0) {
-        const myCard = myHand2.splice(Math.floor(Math.random() * myHand2.length), 1)[0];
-        const theirCard = nextHand2.splice(Math.floor(Math.random() * nextHand2.length), 1)[0];
-        myHand2.push(theirCard);
-        nextHand2.push(myCard);
-        ups[`rooms/${roomId}/hands/${uid}`] = myHand2;
-        ups[`rooms/${roomId}/hands/${nextUid2}`] = nextHand2;
-        notify('🤝 ' + (roomData.players?.[nextUid2]?.name||'?') + '님과 카드 1장 교환!', 'inf');
-      }
-    }
-  }
-
-  // 특수카드 val은 0이지만 tax/deal은 이미 위에서 처리됨
-  // tax/deal이 아닌 특수카드 val 변화 재계산
-  if (c.type === 'special' && (c.special === 'skip' || c.special === 'draw2' || c.special === 'swap' || c.special === 'reverse' || c.special === 'flood' || c.special === 'trade')) {
-    ups[`rooms/${roomId}/centerCarbon`] = roomData.centerCarbon || 0; // 탄소 수치 변화 없음
   }
 
   // 탄소제로 버튼은 '이번 카드로 0이 됐을 때'만 정답 (0에서 특수카드를 내 공짜 +10 받는 것 방지)
@@ -3438,7 +3374,7 @@ async function playCard(cid, r) {
 
   // 턴 진행
   await update(ref(db), ups);
-  await advanceTurn(newSkip, c.special === 'swap' ? 0 : null);
+  await advanceTurn(newSkip, null);
   isPlayingCard = false;
 }
 
@@ -3621,7 +3557,7 @@ window.onBGMVol = function(val) {
 };
 
 // 턴 진행 (NEW UNO 버전)
-async function advanceTurn(skipOverride = false, swapOffset = null) {
+async function advanceTurn(skipOverride = false) {
   if (!roomData || !roomId) return;
   // 실제 존재하는 플레이어만 필터링 (중간에 나간 사람 제거)
   const allOrd = roomData.playerOrder || Object.keys(roomData.players || {});
@@ -3630,8 +3566,6 @@ async function advanceTurn(skipOverride = false, swapOffset = null) {
   const direction = roomData.direction || 1;
   let step = direction;
 
-  // swap 이후는 스탭 없이 그다음 사람 차례
-  if (swapOffset !== null) step = direction;
 
   // 현재 인덱스를 필터링된 ord 기준으로 재계산
   const curUid = roomData.currentTurnUid;
