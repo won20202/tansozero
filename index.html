@@ -7,7 +7,6 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <style>* { -webkit-tap-highlight-color: transparent; }
     /* 관리자 모드 진입 시 결과 잔재 숨기기 */
-    body.adm-mode #result-overlay { display: none !important; }
     /* 관리자 화면 - 항상 최상단에 완전히 덮기 */
     #adm.on {
       position: fixed !important;
@@ -794,23 +793,7 @@
     </div>
   </div>
 </div>
-<div id="result-overlay">중립을 위해 노력한 모두 수고했어요!</div>
-    <div class="rwinner" id="rwinner" style="display:none">
-      <div class="rwinneravt" id="rwinneravt">?</div>
-      <div class="rwinnernm" id="rwinnernm">우승자</div>
-      <div class="rwinnersc" id="rwinnersc">0점</div>
-    </div>
-    <div style="font-size:13px;font-weight:800;color:var(--gray6);margin-bottom:6px;letter-spacing:0.5px">🏆 최종 순위</div>
-    <div class="rsboard" id="rsboard"></div>
-    <div class="etip" id="etip">🌿 <strong>오늘의 팁:</strong> 가까운 거리는 걸어서 이동해요!</div>
-    <div class="rauto" id="rauto">
-      <div class="rautotxt">🚪 <span id="rautonum">5</span>초 후 자동으로 대기실로 이동...</div>
-      <div class="rautobardiv"><div class="rautobar" id="rautobar"></div></div>
-    </div>
-    <button class="btn bts" onclick="doReturnToWaiting()" style="width:100%;margin-top:10px">🚪 지금 바로 대기실로</button>
-  </div>
-</div>
-</div><!-- /result-overlay -->
+
 
 
 
@@ -3844,7 +3827,8 @@ window.refreshAdm=async function(){
       const [rs,ps]=await Promise.all([get(ref(db,'rooms')),get(ref(db,'presence'))]);
       const rooms=[],studs=[];
       if(rs.exists())rs.forEach(c=>rooms.push({id:c.key,...c.val()}));
-      if(ps.exists())ps.forEach(c=>studs.push({uid:c.key,...c.val()}));
+      // ponytail: 6시간 지난 접속기록은 유령(연결 끊김 처리 실패)으로 보고 제외
+      if(ps.exists())ps.forEach(c=>{const v=c.val(); if(Date.now()-(v.ts||v.lastSeen||0)<6*3600e3) studs.push({uid:c.key,...v});});
       const active=rooms.filter(r=>r.status!=='finished');
       // 접속 학생 수: presence + rooms 안의 players 합산 (중복 제거)
       const allUids = new Set(studs.map(s=>s.uid));
