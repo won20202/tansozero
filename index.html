@@ -804,17 +804,23 @@
         <button class="btn btw btsm" onclick="openBcast()">📢 전체 공지</button>
         <button class="btn btp btsm" onclick="refreshAdm()">↻ 새로고침</button>
         <button class="btn btsm" style="background:#c0392b;color:#fff;border-color:#c0392b" onclick="kickAllStudents()">🚪 전체 학생 퇴장</button>
+        <button class="btn btsm" id="pausebtn" style="background:#e67e22;color:#fff" onclick="togglePause()">⏸ 전체 일시정지</button>
+        <button class="btn btsm" style="background:#856404;color:#fff" onclick="openResults()">🏆 오늘 결과</button>
       </div>
       <div class="slbl" style="margin-bottom:12px">📊 방별 현황</div>
       <div class="agrid" id="admRooms"></div>
     </div>
     <!-- Rooms -->
     <div class="atc" id="at-rm">
+      <div id="admLobby" style="background:white;border-radius:12px;padding:12px 16px;margin-bottom:14px;font-size:13px;box-shadow:var(--sh1)"></div>
       <div class="agrid" id="admRoomsDetail"></div>
     </div>
     <!-- Settings -->
     <div class="atc" id="at-cfg">
       <div style="max-width:400px">
+        <div class="slbl" style="margin-bottom:10px">🔒 게임 잠금</div>
+        <div style="font-size:12px;color:var(--gray5);margin-bottom:10px">잠그면 학생이 새로 접속하거나 방을 만들 수 없어요 (쉬는 시간·방과후용)</div>
+        <button class="btn" id="lockbtn" onclick="toggleLock()" style="margin-bottom:26px">🔓 열려 있음 — 눌러서 잠그기</button>
         <div class="slbl" style="margin-bottom:16px">🔑 관리자 비밀번호 변경</div>
         <div class="fg"><label class="fl">현재 비밀번호</label><input class="fi" id="cfg_oldpw" type="password" placeholder="현재 비밀번호"/></div>
         <div class="fg"><label class="fl">새 비밀번호</label><input class="fi" id="cfg_newpw" type="password" placeholder="새 비밀번호"/></div>
@@ -871,7 +877,14 @@
 <div class="mback" id="bcm">
   <div class="modal">
     <h3>📢 전체 공지</h3>
-    <div class="fg"><label class="fl">공지 메시지</label><textarea class="fi" id="bcmsg" rows="3" placeholder="모든 학생에게 전달할 메시지" style="resize:none"></textarea></div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+      <button class="btn bts btsm" onclick="bcPreset(this)">모두 선생님을 봐 주세요 👀</button>
+      <button class="btn bts btsm" onclick="bcPreset(this)">5분 뒤에 게임이 끝나요 ⏰</button>
+      <button class="btn bts btsm" onclick="bcPreset(this)">이번 판까지만 해요 🙏</button>
+      <button class="btn bts btsm" onclick="bcPreset(this)">자리에 앉아 주세요 🪑</button>
+      <button class="btn bts btsm" onclick="bcPreset(this)">정리하고 로그아웃해요 🧹</button>
+    </div>
+    <div class="fg"><label class="fl">공지 메시지</label><textarea class="fi" id="bcmsg" rows="3" placeholder="모든 학생에게 전달할 메시지 (위 버튼으로 빠르게 입력)" style="resize:none"></textarea></div>
     <div class="mbtns"><button class="btn bts" onclick="closeM('bcm')">취소</button><button class="btn btp" onclick="sendBcast()">전송</button></div>
   </div>
 </div>
@@ -2035,6 +2048,12 @@ function notify(msg, type='', ms=3100) {
 function openM(id) { document.getElementById(id).classList.add('on'); }
 window.closeM = id => document.getElementById(id).classList.remove('on');
 
+// 이름·방 이름 비속어/사칭 필터 (띄어쓰기·특수문자 넣어 피하는 것도 잡음)
+const BAD_WORDS = ['시발','씨발','ㅅㅂ','ㅆㅂ','병신','ㅂㅅ','좆','존나','ㅈㄴ','개새','새끼','ㅅㄲ','미친','ㅁㅊ','지랄','ㅈㄹ','닥쳐','꺼져','애미','느금','씹','섹스','fuck','shit','bitch','관리자','선생님'];
+function hasBadWord(t) {
+  const x = String(t || '').toLowerCase().replace(/[\s\d_.,!?~\-*·ㆍ]/g, '');
+  return BAD_WORDS.some(w => x.includes(w));
+}
 function parseInfo(snum, sname) {
   // 학번 형식: 앞 2자리(연도) + 뒤 5자리(실제 학번)
   // 예) 2610528 → 뒤 5자리 10528 → 1학년 5반 28번
@@ -2514,8 +2533,10 @@ window.doLogin = async function() {
   if (!snum) { notify('학번을 입력하세요','err'); return; }
   if (!sname) { notify('이름을 입력하세요','err'); return; }
   if (!/^\d{5}$/.test(snum)) { notify('학번 5자리를 정확히 입력하세요 (예: 10528)','err'); return; }
+  if (hasBadWord(sname)) { notify('이름에 쓸 수 없는 말이 있어요. 본인 이름을 입력해요','err'); return; }
   try {
     const cred = await signInAnonymously(auth);
+    if ((await get(ref(db,'lock'))).val() === true) { notify('🔒 지금은 게임 시간이 아니에요. 선생님 안내를 기다려요','wrn',5000); return; }
     user = cred.user;
     pinfo = parseInfo(snum, sname);
     isAdmin = false;
@@ -2529,6 +2550,7 @@ window.doLogin = async function() {
         const d=s.val();
         if(d?.msg) showBcast(d.msg);
       });
+      onValue(ref(db,'pause'),(s)=>applyPause(s.val()||{}));
       onValue(ref(db,'adminCmd'),(s)=>{
         if(cmdFirst){cmdFirst=false;return;}
         if(s.val()?.type==='kickAll' && !isAdmin) handleAdminKickAll();
@@ -2560,6 +2582,19 @@ function showBcast(msg) {
     if (left <= 0) { clearInterval(bcastTimer); ov.style.display = 'none'; }
   };
   tick(); bcastTimer = setInterval(tick, 250);
+}
+
+// 전체 일시정지: 켜져 있는 동안 화면을 덮고 턴 타이머 정지.
+// 풀리면 방장이 '멈춰 있던 시간(서버 시각 기준)'만큼 턴 시작 시각을 뒤로 → 남은 시간 그대로
+let pauseState = {};
+function applyPause(p) {
+  pauseState = p;
+  if (isAdmin) return;
+  document.getElementById('pauseov').style.display = p.on ? 'flex' : 'none';
+  if (!p.on && p.from && p.ts && roomId && roomData?.status === 'playing' && roomData.hostUid === user?.uid && window._resumeApplied !== p.ts) {
+    window._resumeApplied = p.ts;
+    update(ref(db, `rooms/${roomId}`), { timerStart: (roomData.timerStart || Date.now()) + (p.ts - p.from) });
+  }
 }
 
 // 관리자 전체 퇴장 명령 처리
@@ -2607,7 +2642,7 @@ function setupPresence(uid) {
 
     // presence 등록 + 끊기면 제거
     presenceRef = ref(db, 'presence/'+uid);
-    await set(presenceRef, { online: true, lastSeen: serverTimestamp() });
+    await update(presenceRef, { online: true, lastSeen: serverTimestamp() });
     onDisconnect(presenceRef).remove();
 
     // 방에 참여 중이면 연결 끊길 때 처리
@@ -2829,6 +2864,8 @@ window.createRoom = async function() {
   const rounds=parseInt(document.getElementById('rrnds').value);
   const timer=parseInt(document.getElementById('rtmr').value);
   if(!name){notify('방 이름을 입력해주세요','wrn');return;}
+  if(hasBadWord(name)){notify('방 이름에 쓸 수 없는 말이 있어요','err');return;}
+  if((await get(ref(db,'lock'))).val()===true){notify('🔒 지금은 게임이 잠겨 있어요. 선생님 안내를 기다려요','wrn');return;}
   if(!code||code.length<4){notify('입장 코드는 4자리 이상이어야 해요','wrn');return;}
   const snap=await get(ref(db,'rooms'));
   if(snap.exists()&&Object.values(snap.val()).filter(r=>r.players&&Object.keys(r.players).length).length>=MAX_ROOMS){notify('방을 더 만들 수 없어요 (최대 10개)','err');return;}
@@ -3558,6 +3595,7 @@ function startTimer(r) {
   const paint=()=>{ timerSec=left(); tel.textContent=timerSec>max?'⏸':Math.max(0,timerSec); }; // 공지 중엔 ⏸
   paint(); tel.classList.remove('urg');
   timerInt=setInterval(async()=>{
+    if(pauseState.on){ tel.textContent='⏸'; return; } // 전체 일시정지 중엔 시간 안 감
     paint();
     if(timerSec<=10){tel.classList.add('urg');snd(timerSec<=5?'urgentTick':'tick');}
     if(timerSec<=0){
@@ -3747,6 +3785,10 @@ function showResult(r) {
   if(tipEl) tipEl.innerHTML='🌿 <strong>오늘의 탄소중립 팁:</strong> '+TIPS[Math.floor(Math.random()*TIPS.length)];
 
   if(popup) popup.style.display='flex';
+  // 오늘의 결과 기록: 방장 기기가 한 번만 저장 (관리자 '오늘 결과'에서 봄)
+  if(r.hostUid===uid){
+    push(ref(db,'results'),{room:r.name||'',ts:serverTimestamp(),players:ps.map((p,i)=>({name:p.name,grade:p.grade,class:p.class,num:p.num,score:p.score||0,rank:i+1}))}).catch(()=>{});
+  }
 }
 
 // ✕ / 방 나가기: 이 방에서 나가 로비로 (다른 친구들은 그대로 대기실로 갈 수 있음)
@@ -3834,10 +3876,15 @@ window.refreshAdm=async function(){
       document.getElementById('splaying').textContent=rooms.filter(r=>r.status==='playing').length;
       document.getElementById('swaiting').textContent=rooms.filter(r=>r.status==='waiting').length;
       renderAdmRooms(rooms);
+      const inRoom = new Set(); rooms.forEach(r => Object.keys(r.players||{}).forEach(u => inRoom.add(u)));
+      const lobby = studs.filter(s => s.name && !inRoom.has(s.uid));
+      document.getElementById('admLobby').innerHTML = lobby.length
+        ? `🙋 <b>방에 안 들어간 학생 ${lobby.length}명</b> — ` + lobby.map(s => `${esc(s.grade)}-${esc(s.class)}-${esc(s.num)} ${esc(s.name)}`).join(', ')
+        : '✅ 접속한 학생이 모두 방에 들어가 있어요';
       
     }catch(e){}
   };
-  await doFetch();
+  await doFetch(); paintAdminToggles();
   window._aPoll=setInterval(async()=>{
     if(!document.getElementById('adm')?.classList.contains('on')){clearInterval(window._aPoll);window._aPoll=null;return;}
     await doFetch();
@@ -3990,6 +4037,65 @@ window.closeRoom = async function(rid, rname) {
   notify(`「${rname}」 방을 폐쇄했어요`,'wrn');
   setTimeout(async()=>{ await remove(ref(db,`rooms/${rid}`)); refreshAdm(); }, 2000);
 };
+window.bcPreset = function(btn) { document.getElementById('bcmsg').value = btn.textContent.trim(); };
+
+window.togglePause = async function() {
+  const p = (await get(ref(db,'pause'))).val() || {};
+  if (p.on) {
+    await set(ref(db,'pause'), { on:false, from:p.ts, ts:serverTimestamp() });
+    notify('▶ 모든 게임을 다시 시작했어요','ok');
+  } else {
+    if(!await showConfirm('모든 학생의 게임을 멈출까요?\n[다시 시작]을 누를 때까지 멈춰 있어요.','멈추기','#e67e22'))return;
+    await set(ref(db,'pause'), { on:true, ts:serverTimestamp() });
+    notify('⏸ 모든 게임을 멈췄어요','wrn');
+  }
+  paintAdminToggles();
+};
+window.toggleLock = async function() {
+  const on = (await get(ref(db,'lock'))).val() === true;
+  if(!on && !await showConfirm('게임을 잠글까요?\n학생이 새로 접속하거나 방을 만들 수 없어요.','잠그기','#c0392b'))return;
+  await set(ref(db,'lock'), !on);
+  notify(on ? '🔓 게임을 열었어요' : '🔒 게임을 잠갔어요', on ? 'ok' : 'wrn');
+  paintAdminToggles();
+};
+async function paintAdminToggles() {
+  const [ps, ls] = await Promise.all([get(ref(db,'pause')), get(ref(db,'lock'))]);
+  const pb = document.getElementById('pausebtn'), lb = document.getElementById('lockbtn');
+  if (ps.val()?.on) { pb.textContent='▶ 다시 시작'; pb.style.background='#27ae60'; } else { pb.textContent='⏸ 전체 일시정지'; pb.style.background='#e67e22'; }
+  if (ls.val()===true) { lb.textContent='🔒 잠겨 있음 — 눌러서 열기'; lb.style.background='#c0392b'; lb.style.color='#fff'; }
+  else { lb.textContent='🔓 열려 있음 — 눌러서 잠그기'; lb.style.background=''; lb.style.color=''; }
+}
+
+// 오늘의 결과: 학생별 합산 (판 수·1등 횟수·총점)
+let todayRows = [];
+window.openResults = async function() {
+  const s = await get(ref(db,'results'));
+  const start = new Date(); start.setHours(0,0,0,0);
+  const games = Object.values(s.val() || {}).filter(g => g.ts >= start.getTime());
+  const byStu = {};
+  games.forEach(g => (g.players || []).forEach(p => {
+    const k = `${p.grade}-${p.class}-${p.num}-${p.name}`;
+    const o = byStu[k] || (byStu[k] = { grade:p.grade, class:p.class, num:p.num, name:p.name, games:0, wins:0, total:0 });
+    o.games++; o.total += p.score || 0; if (p.rank === 1) o.wins++;
+  }));
+  todayRows = Object.values(byStu).sort((a,b) => b.total - a.total || b.wins - a.wins);
+  document.getElementById('resbody').innerHTML = !todayRows.length ? '<div style="padding:20px;color:var(--gray5);text-align:center">오늘 끝난 게임이 아직 없어요</div>' :
+    `<div style="margin-bottom:8px;color:var(--gray5)">오늘 끝난 게임 ${games.length}판 · 학생 ${todayRows.length}명</div>
+     <table style="width:100%;border-collapse:collapse"><tr style="background:var(--gray1)"><th style="padding:6px">순위</th><th>학번</th><th>이름</th><th>판</th><th>1등</th><th>총점</th></tr>` +
+    todayRows.map((r,i) => `<tr style="border-bottom:1px solid var(--gray2);text-align:center"><td style="padding:6px">${i<3?['🥇','🥈','🥉'][i]:i+1}</td><td>${esc(r.grade)}-${esc(r.class)}-${esc(r.num)}</td><td style="font-weight:700">${esc(r.name)}</td><td>${r.games}</td><td>${r.wins}</td><td style="font-weight:800;color:${r.total>=0?'var(--g2)':'var(--red)'}">${r.total}</td></tr>`).join('') + '</table>';
+  openM('resm');
+};
+window.downloadResults = function() {
+  if (!todayRows.length) { notify('다운로드할 결과가 없어요','wrn'); return; }
+  const q = v => `"${String(v).replace(/"/g,'""')}"`;
+  const csv = '\ufeff' + [['순위','학년','반','번호','이름','판 수','1등','총점'].map(q).join(',')]
+    .concat(todayRows.map((r,i) => [i+1,r.grade,r.class,r.num,r.name,r.games,r.wins,r.total].map(q).join(','))).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
+  a.download = `탄소중립게임_결과_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+
 window.openBcast = function() { document.getElementById('bcmsg').value=''; openM('bcm'); };
 window.sendBcast = async function() {
   const msg=document.getElementById('bcmsg').value.trim(); if(!msg)return;
@@ -4000,6 +4106,23 @@ window.sendBcast = async function() {
 
 <!-- pplx-inline-edit 제거 (GitHub Pages용) -->
 <!-- ======= 게임 종료 결과 팝업 ======= -->
+<!-- ======= 오늘 결과 (관리자) ======= -->
+<div class="mback" id="resm">
+  <div class="modal" style="max-width:640px;width:94%">
+    <h3>🏆 오늘의 결과</h3>
+    <div id="resbody" style="max-height:55vh;overflow-y:auto;font-size:13px"></div>
+    <div class="mbtns"><button class="btn bts" onclick="closeM('resm')">닫기</button><button class="btn btp" onclick="downloadResults()">📥 엑셀(CSV) 다운로드</button></div>
+  </div>
+</div>
+<!-- ======= 전체 일시정지 (선생님이 다시 시작할 때까지) ======= -->
+<div id="pauseov" style="display:none;position:fixed;inset:0;background:rgba(15,40,25,.88);z-index:10001;align-items:center;justify-content:center;padding:16px;text-align:center;color:white">
+  <div>
+    <div style="font-size:64px;line-height:1">⏸</div>
+    <div style="font-family:'Black Han Sans',sans-serif;font-size:40px;margin:14px 0 8px">잠깐! 게임 멈춤</div>
+    <div style="font-size:22px;font-weight:700;opacity:.9">선생님 말씀을 들어요 👀</div>
+    <div style="font-size:14px;opacity:.6;margin-top:18px">선생님이 다시 시작하면 이어서 해요</div>
+  </div>
+</div>
 <!-- ======= 선생님 공지 (화면 중앙, 10초) ======= -->
 <div id="bcov" style="display:none;position:fixed;inset:0;background:rgba(15,76,39,.75);z-index:10000;align-items:center;justify-content:center;padding:16px">
   <div style="background:white;border-radius:20px;padding:28px 32px;max-width:560px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.35);border-top:6px solid var(--g3)">
