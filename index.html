@@ -460,8 +460,8 @@
     <h1 class="ltitle">탄소중립 제로<br>🌿 카드 게임</h1>
     <p class="lsub">탄소흡수카드와 탄소배출카드로<br>탄소중립을 직접 체험해봐요!</p>
     <div class="fg" style="margin-bottom:12px;text-align:left">
-      <label class="fl">학번 5자리 (예: 10528)</label>
-      <input class="fi" id="inp_snum" placeholder="학번 5자리 입력" maxlength="5" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <label class="fl">학번 (예: 10528 → 1학년 5반 28번)</label>
+      <input class="fi" id="inp_snum" placeholder="학번 4~5자리 입력" maxlength="5" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')doLogin()"/>
     </div>
     <div class="fg" style="margin-bottom:20px;text-align:left">
       <label class="fl">이름</label>
@@ -2532,7 +2532,7 @@ window.doLogin = async function() {
   const sname = document.getElementById('inp_sname').value.trim();
   if (!snum) { notify('학번을 입력하세요','err'); return; }
   if (!sname) { notify('이름을 입력하세요','err'); return; }
-  if (!/^\d{5}$/.test(snum)) { notify('학번 5자리를 정확히 입력하세요 (예: 10528)','err'); return; }
+  if (!/^\d{4,5}$/.test(snum)) { notify('학번을 정확히 입력하세요 (예: 10528 또는 1528)','err'); return; }
   if (hasBadWord(sname)) { notify('이름에 쓸 수 없는 말이 있어요. 본인 이름을 입력해요','err'); return; }
   try {
     const cred = await signInAnonymously(auth);
