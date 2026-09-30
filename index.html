@@ -175,7 +175,7 @@
     .rec-sep{font-size:10px;color:var(--gray3)}
 
     /* === FORM === */
-    .mback{display:none;position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:100;align-items:center;justify-content:center;padding:20px}
+    .mback{display:none;position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:9500;align-items:center;justify-content:center;padding:20px}
     .mback.on{display:flex}
     .modal{background:white;border-radius:22px;padding:32px;max-width:420px;width:100%;box-shadow:var(--sh3);animation:popin .28s ease}
     @keyframes popin{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
@@ -541,7 +541,7 @@
           <div class="tsc gd"><b>+5</b>🎴 손패 다 쓰기<br><small>(수치 ±10 안, 라운드당 1번)</small></div>
           <div class="tsc bd"><b>−3</b>❌ 0이 아닐 때<br>탄소제로 누르기</div>
           <div class="tsc bd"><b>−2</b>⏰ 시간 안에<br>카드 안 내기</div>
-          <div class="tsc bd"><b>−5</b>🔥 수치를 ±25<br>넘게 만들기</div>
+          <div class="tsc bd"><b>−5</b>🔥 수치를 ±25<br>넘게 만들기 <small>(최대 ±30)</small></div>
         </div>
         <div class="tcdesc" style="margin-top:12px">
           👉 내 차례엔 카드 <b>1장</b> 클릭! 낼 카드가 없으면 <b>카드 더미</b>를 눌러 1장 뽑아요.<br>
@@ -989,14 +989,14 @@ async function setAdminPw(pw) {
 function startAdminSessionWatcher(token) {
   // 토큰이 null이면 감시 불필요 (DB에 sessionToken 미설정 상태)
   if (!token) return;
-  if (adminPwListener) { off(ref(db,'adminConfig/sessionToken'), 'value', adminPwListener); adminPwListener = null; }
+  if (adminPwListener) { adminPwListener(); adminPwListener = null; }
   let firstCall = true; // 첫 onValue 콜백은 현재 값 확인용이므로 스킵
   adminPwListener = onValue(ref(db,'adminConfig/sessionToken'), s => {
     if (firstCall) { firstCall = false; return; } // 구독 직후 첫 콜백 무시
     const current = s.val();
     // 이후 변경 감지: 토큰이 바뀌면 세션 만료
     if (current && current !== token) {
-      if (adminPwListener) { off(ref(db,'adminConfig/sessionToken'), 'value', adminPwListener); adminPwListener = null; }
+      if (adminPwListener) { adminPwListener(); adminPwListener = null; }
       isAdmin = false; myAdminToken = null;
       notify('🔒 비밀번호가 변경되어 관리자 세션이 종료됩니다.', 'wrn');
       setTimeout(() => { show('ls'); }, 1800);
@@ -2613,6 +2613,7 @@ function applyPause(p) {
 
 // 관리자 전체 퇴장 명령 처리
 async function handleAdminKickAll() {
+  stopRoomListener();
   const isInGame = document.getElementById('gs')?.classList.contains('on');
   const isInWaiting = document.getElementById('ws')?.classList.contains('on');
   if ((isInGame || isInWaiting) && roomId && user) {
@@ -2688,7 +2689,7 @@ onAuthStateChanged(auth, async u => {
 // 게임 중 나가기 — 자동패 처리
 window.confirmLeaveGame = async function() {
   if (!await showConfirm('게임 도중 나가면\n자동패(꼴등) 처리됩니다.\n정말 나가겠어요?', '나가기')) return;
-  stopTimer();
+  stopTimer(); stopRoomListener();
   // 자동패 = 꼴등 (방 내 최저점수 - 1점) + playerOrder에서 제거 + 필요시 턴 넘기기
   if (roomId && user) {
     try {
@@ -2831,7 +2832,7 @@ window.filterR = function(f,btn) {
 };
 window._roomsCache={};
 window.loadRooms=function(){
-  if(roomsListener){off(ref(db,'rooms'),'value',roomsListener);roomsListener=null;}
+  if(roomsListener){roomsListener();roomsListener=null;}
   window._roomsCache={};
   // onValue 단순 등록 - 전체 rooms 구독
   roomsListener=onValue(ref(db,'rooms'),s=>{
@@ -2924,11 +2925,12 @@ async function doJoin(rid) {
 // ============================================================
 // WAITING ROOM
 // ============================================================
+// onValue()가 돌려주는 값은 '감시 해제 함수' → 호출해야 꺼짐 (off()에 넘기면 안 꺼져서 감시가 계속 쌓였음)
 function stopRoomListener() {
-  if(roomListener&&roomRef){off(roomRef,'value',roomListener);roomListener=null;roomRef=null;}
+  if(roomListener&&roomRef){roomListener();roomListener=null;roomRef=null;}
 }
 function stopChatListener() {
-  if(chatListener&&chatRef){off(chatRef,'value',chatListener);chatListener=null;chatRef=null;chatStarted=false;}
+  if(chatListener&&chatRef){chatListener();chatListener=null;chatRef=null;chatStarted=false;}
 }
 function enterWaiting(rid) {
   stopRoomListener(); stopTimer();
@@ -2954,6 +2956,14 @@ function enterWaiting(rid) {
       stopRoomListener(); stopChatListener(); stopTimer();
       roomId=null; roomData=null; isPlayingCard=false;
       setTimeout(()=>gotoLobby(), 1500);
+      return;
+    }
+    // 관리자/방장이 나를 빼서 내 자리가 없어졌으면 로비로 (화면에 남아 있다 유령 참가자가 되는 것 방지)
+    if(!roomData.players?.[user.uid]){
+      roomId=null; roomData=null; isPlayingCard=false;
+      stopRoomListener(); stopChatListener(); stopTimer();
+      const rp=document.getElementById('result-popup'); if(rp) rp.style.display='none';
+      notify('🚪 방에서 나가게 됐어요 (강퇴)','wrn'); setTimeout(()=>gotoLobby(),800);
       return;
     }
     // 방장이 나갔거나 연결이 끊겼으면 남은 사람 중 순서상 첫 번째가 방장 승계 (게임이 멈추지 않게)
@@ -3103,6 +3113,7 @@ window.startGame = async function() {
 
 window.leaveRoom = async function() {
   if(!roomId||!user)return;
+  stopRoomListener(); // 스스로 나가는 중 — '강퇴' 안내가 뜨지 않게 감시 먼저 끔
   try{
     const s=await get(ref(db,'rooms/'+roomId));
     if(!s.exists()){stopRoomListener();stopChatListener();stopTimer();roomId=null;roomData=null;gotoLobby();return;}
@@ -3390,6 +3401,9 @@ async function playCard(cid, r) {
     }
   }
 
+  // 탄소 한계선 ±30: 기후 위기(×2) 등으로 폭주해도 몇 턴 안에 0으로 돌아올 수 있게
+  newCarbon = Math.max(-30, Math.min(30, newCarbon));
+
   // 라운드 기록
   const rr = [...(roomData.roundResults || []), {
     round: roomData.currentRound,
@@ -3512,19 +3526,20 @@ window.drawCardFromDeck = async function() {
 // ============================================================
 window.callZero = async function() {
   if (!roomData || !user || !roomId) return;
+  const roomData0 = roomData, roomId0 = roomId; // 누른 순간의 방 정보 (처리 중에 방을 나가도 오류 없게)
 
   // ★ 1. 즉시 버튼 비활성화 (UI 선점)
   const zeroBtn = document.getElementById('zerobtn');
   if (zeroBtn) { zeroBtn.disabled = true; zeroBtn.style.opacity = '0.5'; }
 
   const uid = user.uid;
-  const cc = roomData.centerCarbon || 0;
+  const cc = roomData0.centerCarbon || 0;
 
   // ★ 2. Firebase에서 zeroClaimed 잠금 확인 (트랜잭션으로 선착순 1명만)
   const { runTransaction } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
-  const claimRef = ref(db, `rooms/${roomId}/zeroClaimed`);
+  const claimRef = ref(db, `rooms/${roomId0}/zeroClaimed`);
 
-  if (roomData.zeroReady) {
+  if (roomData0.zeroReady) {
     // 탄소제로 정답 시도 — 트랜잭션으로 선착순 1명만 성공
     let claimed = false;
     try {
@@ -3540,28 +3555,28 @@ window.callZero = async function() {
     if (claimed) {
       // ✅ 선착순 성공!
       snd('ok');
-      const newRound = (roomData.currentRound || 1) + 1;
+      const newRound = (roomData0.currentRound || 1) + 1;
       const _sArr=[['탄소제로 달성! 🌍','선착순 성공! +10점 획득!'],['완벽한 타이밍! ⚡','가장 먼저 외쳤어요! +10점!'],['탄소중립 영웅! 🏆','멋진 판단력이에요! +10점!']];
       const _sm=_sArr[Math.floor(Math.random()*3)];
       showAOV(true, _sm[0], _sm[1]);
       notify('🌿 탄소제로! +10점!', '');
-      push(ref(db, `rooms/${roomId}/chatMessages`), {
+      push(ref(db, `rooms/${roomId0}/chatMessages`), {
         sender: '시스템',
-        msg: `🌿 ${esc(roomData.players?.[uid]?.name || '?')}님이 탄소제로! +10점!`,
+        msg: `🌿 ${esc(roomData0.players?.[uid]?.name || '?')}님이 탄소제로! +10점!`,
         isSystem: true, ts: serverTimestamp()
       });
-      await update(ref(db, `rooms/${roomId}/players/${uid}`), { score: increment(10) });
+      await update(ref(db, `rooms/${roomId0}/players/${uid}`), { score: increment(10) });
 
-      if (newRound > (roomData.totalRounds || 10)) {
-        await update(ref(db, `rooms/${roomId}`), { status: 'finished' });
+      if (newRound > (roomData0.totalRounds || 10)) {
+        await update(ref(db, `rooms/${roomId0}`), { status: 'finished' });
       } else {
-        const ord = roomData.playerOrder || Object.keys(roomData.players || {});
-        const ni = ((roomData.currentPlayerIndex || 0) + 1) % ord.length;
+        const ord = roomData0.playerOrder || Object.keys(roomData0.players || {});
+        const ni = ((roomData0.currentPlayerIndex || 0) + 1) % ord.length;
         // 새 라운드: zeroClaimed 초기화 + 카드 재배분
         let deck2 = buildDeck();
         const hands2 = {};
         ord.forEach(u => { const [h, rest] = dealHand(deck2, 7); hands2[u] = h; deck2 = rest; });
-        await update(ref(db, `rooms/${roomId}`), {
+        await update(ref(db, `rooms/${roomId0}`), {
           currentRound: newRound,
           centerCarbon: 0,
           lastCard: null,
@@ -3585,12 +3600,12 @@ window.callZero = async function() {
   } else {
     // 탄소 수치가 0이 아닌데 누름 — 오답 -3점
     snd('ng');
-    await update(ref(db, `rooms/${roomId}/players/${uid}`), { score: increment(-3) });
+    await update(ref(db, `rooms/${roomId0}/players/${uid}`), { score: increment(-3) });
     showAOV(false, cc === 0 ? '타이밍을 놓쳤어요! 😬' : '아직 탄소가 남았어요! 😬', cc === 0 ? '카드를 내서 0이 된 바로 그때만 외칠 수 있어요! -3점' : `수치가 ${cc > 0 ? '+' : ''}${cc}이에요! -3점`);
     notify('😅 수치가 0이 아니에요! -3점 감점', 'err');
-    push(ref(db, `rooms/${roomId}/chatMessages`), {
+    push(ref(db, `rooms/${roomId0}/chatMessages`), {
       sender: '시스템',
-      msg: `❌ ${esc(roomData.players?.[uid]?.name || '?')}님이 탄소제로를 잘못 외쳤어요! -3점`,
+      msg: `❌ ${esc(roomData0.players?.[uid]?.name || '?')}님이 탄소제로를 잘못 외쳤어요! -3점`,
       isSystem: true, ts: serverTimestamp()
     });
     // 2초 후 버튼 다시 활성화
@@ -3609,7 +3624,7 @@ function startTimer(r) {
   const tel=document.getElementById('gtimer');
   const max=r.timerSeconds||30;
   const left=()=>max-Math.floor((Date.now()-(r.timerStart||Date.now()))/1000);
-  const paint=()=>{ timerSec=left(); tel.textContent=timerSec>max?'⏸':Math.max(0,timerSec); }; // 공지 중엔 ⏸
+  const paint=()=>{ timerSec=left(); tel.textContent=(pauseState.on||timerSec>max)?'⏸':Math.max(0,timerSec); }; // 공지 중엔 ⏸
   paint(); tel.classList.remove('urg');
   timerInt=setInterval(async()=>{
     if(pauseState.on){ tel.textContent='⏸'; return; } // 전체 일시정지 중엔 시간 안 감
@@ -4000,6 +4015,8 @@ window.kickP = async function(rid,uid,nm,force=false) {
   }
   await update(ref(db,`rooms/${rid}/players/${uid}`),{isHost:false});
   await remove(ref(db,`rooms/${rid}/players/${uid}`));
+  const newHost = isHost ? r.players?.[Object.keys(r.players||{}).find(k=>k!==uid)]?.name : null;
+  push(ref(db,`rooms/${rid}/chatMessages`),{sender:'시스템',msg:`🚪 선생님이 ${esc(nm)}님을 방에서 내보냈어요${newHost?` · 새 방장: ${esc(newHost)}`:''}`,isSystem:true,ts:serverTimestamp()});
   notify(`${nm}님을 강퇴했어요`,'wrn'); refreshAdm();
 };
 window.changeHost = async function(rid,uid,nm) {
