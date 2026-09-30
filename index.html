@@ -460,8 +460,8 @@
     <h1 class="ltitle">탄소중립 제로<br>🌿 카드 게임</h1>
     <p class="lsub">탄소흡수카드와 탄소배출카드로<br>탄소중립을 직접 체험해봐요!</p>
     <div class="fg" style="margin-bottom:12px;text-align:left">
-      <label class="fl">학번 (예: 10528 → 1학년 5반 28번)</label>
-      <input class="fi" id="inp_snum" placeholder="학번 4~5자리 입력" maxlength="5" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <label class="fl" id="snumLabel">학번 (예: 10528 → 1학년 5반 28번)</label>
+      <input class="fi" id="inp_snum" placeholder="학번 5자리 입력" maxlength="5" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')doLogin()"/>
     </div>
     <div class="fg" style="margin-bottom:20px;text-align:left">
       <label class="fl">이름</label>
@@ -821,6 +821,15 @@
         <div class="slbl" style="margin-bottom:10px">🔒 게임 잠금</div>
         <div style="font-size:12px;color:var(--gray5);margin-bottom:10px">잠그면 학생이 새로 접속하거나 방을 만들 수 없어요 (쉬는 시간·방과후용)</div>
         <button class="btn" id="lockbtn" onclick="toggleLock()" style="margin-bottom:26px">🔓 열려 있음 — 눌러서 잠그기</button>
+        <div class="slbl" style="margin-bottom:10px">🎓 학번 형식</div>
+        <div style="font-size:12px;color:var(--gray5);margin-bottom:10px">학교마다 학번 자릿수가 달라요. 학생 로그인 화면 안내도 함께 바뀌어요.</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+          학년 <select class="fsel" id="idf_g" style="width:auto" onchange="previewIdFormat()"><option>1</option><option>2</option></select>자리
+          반 <select class="fsel" id="idf_c" style="width:auto" onchange="previewIdFormat()"><option>1</option><option selected>2</option></select>자리
+          번호 <select class="fsel" id="idf_n" style="width:auto" onchange="previewIdFormat()"><option>1</option><option selected>2</option><option>3</option></select>자리
+        </div>
+        <div id="idf_prev" style="font-size:13px;color:var(--g2);font-weight:700;margin-bottom:10px"></div>
+        <button class="btn btp" onclick="saveIdFormat()" style="margin-bottom:26px">학번 형식 저장</button>
         <div class="slbl" style="margin-bottom:16px">🔑 관리자 비밀번호 변경</div>
         <div class="fg"><label class="fl">현재 비밀번호</label><input class="fi" id="cfg_oldpw" type="password" placeholder="현재 비밀번호"/></div>
         <div class="fg"><label class="fl">새 비밀번호</label><input class="fi" id="cfg_newpw" type="password" placeholder="새 비밀번호"/></div>
@@ -929,6 +938,8 @@ window.addEventListener('unhandledrejection', e => {
   notify(/PERMISSION_DENIED/.test(m) ? (isAdmin ? '⚠️ 관리자 인증이 풀렸어요. 새로고침 후 다시 관리자로 접속해 주세요.' : '⚠️ 권한이 없어 처리하지 못했어요. 새로고침해 주세요.') : '⚠️ 처리 중 오류: ' + m, 'err', 6000);
 });
 const db = getDatabase(app);
+// 학번 형식은 로그인 전에도 필요 → config는 누구나 읽기 가능
+get(ref(db,'config/idFormat')).then(s => { if (s.val()) { idFmt = s.val(); applyIdFormatUI(); } }).catch(() => {});
 // ============================================================
 // ============================================================
 // 커스텀 CONFIRM (iframe에서 window.confirm이 차단되므로 대체)
@@ -2054,20 +2065,23 @@ function hasBadWord(t) {
   const x = String(t || '').toLowerCase().replace(/[\s\d_.,!?~\-*·ㆍ]/g, '');
   return BAD_WORDS.some(w => x.includes(w));
 }
+// 학번 형식 (관리자 설정 → config/idFormat). 기본: 학년1·반2·번호2 = 5자리 (예: 10528 → 1학년 5반 28번)
+let idFmt = { g:1, c:2, n:2 };
+const idLen = () => idFmt.g + idFmt.c + idFmt.n;
+function idExample(f = idFmt) { // 1학년 5반 8번을 형식대로 적은 예시
+  return '1'.padStart(f.g,'0') + '5'.padStart(f.c,'0') + '8'.padStart(f.n,'0');
+}
+function applyIdFormatUI() {
+  const ex = idExample();
+  document.getElementById('snumLabel').textContent = `학번 ${idLen()}자리 (예: ${ex} → 1학년 5반 8번)`;
+  const inp = document.getElementById('inp_snum');
+  inp.placeholder = `학번 ${idLen()}자리 입력`; inp.maxLength = idLen();
+}
 function parseInfo(snum, sname) {
-  // 학번 형식: 앞 2자리(연도) + 뒤 5자리(실제 학번)
-  // 예) 2610528 → 뒤 5자리 10528 → 1학년 5반 28번
-  // 입력이 5자리면 그대로 사용, 7자리면 뒤 5자리만 사용
-  const real = snum.replace(/\D/g, ''); // 5자리만 입력받음
-  const m = real.match(/^(\d{1})(\d{1,2})(\d{2})$/)  // 1+1+2 = 1학년 5반 28번
-         || real.match(/^(\d{1})(\d{2})(\d{2})$/)    // 1+2+2 = 1학년 10반 28번
-         || null;
-  let grade='?', cls='?', num='?';
-  if (m) {
-    grade = String(parseInt(m[1]));
-    cls   = String(parseInt(m[2]));
-    num   = String(parseInt(m[3]));
-  }
+  const d = snum.replace(/\D/g, '');
+  const grade = String(parseInt(d.slice(0, idFmt.g)) || 0);
+  const cls   = String(parseInt(d.slice(idFmt.g, idFmt.g + idFmt.c)) || 0);
+  const num   = String(parseInt(d.slice(idFmt.g + idFmt.c)) || 0);
   return { grade, class: cls, num, name: sname || '학생', email: snum+'@student' };
 }
 
@@ -2532,7 +2546,7 @@ window.doLogin = async function() {
   const sname = document.getElementById('inp_sname').value.trim();
   if (!snum) { notify('학번을 입력하세요','err'); return; }
   if (!sname) { notify('이름을 입력하세요','err'); return; }
-  if (!/^\d{4,5}$/.test(snum)) { notify('학번을 정확히 입력하세요 (예: 10528 또는 1528)','err'); return; }
+  if (!/^\d+$/.test(snum) || snum.length !== idLen()) { notify(`학번 ${idLen()}자리를 정확히 입력하세요 (예: ${idExample()})`,'err'); return; }
   if (hasBadWord(sname)) { notify('이름에 쓸 수 없는 말이 있어요. 본인 이름을 입력해요','err'); return; }
   try {
     const cred = await signInAnonymously(auth);
@@ -3889,6 +3903,7 @@ window.refreshAdm=async function(){
     }catch(e){}
   };
   await doFetch(); paintAdminToggles();
+  idf_g.value = idFmt.g; idf_c.value = idFmt.c; idf_n.value = idFmt.n; previewIdFormat();
   window._aPoll=setInterval(async()=>{
     if(!document.getElementById('adm')?.classList.contains('on')){clearInterval(window._aPoll);window._aPoll=null;return;}
     await doFetch();
@@ -4040,6 +4055,16 @@ window.closeRoom = async function(rid, rname) {
   await set(ref(db,`rooms/${rid}/closed`), true);
   notify(`「${rname}」 방을 폐쇄했어요`,'wrn');
   setTimeout(async()=>{ await remove(ref(db,`rooms/${rid}`)); refreshAdm(); }, 2000);
+};
+window.previewIdFormat = function() {
+  const f = { g:+idf_g.value, c:+idf_c.value, n:+idf_n.value };
+  document.getElementById('idf_prev').textContent = `→ ${f.g+f.c+f.n}자리, 예: ${idExample(f)} = 1학년 5반 8번`;
+};
+window.saveIdFormat = async function() {
+  const f = { g:+idf_g.value, c:+idf_c.value, n:+idf_n.value };
+  await set(ref(db,'config/idFormat'), f);
+  idFmt = f; applyIdFormatUI();
+  notify(`🎓 학번 형식 저장: ${f.g+f.c+f.n}자리 (예: ${idExample(f)})`, 'ok');
 };
 window.bcPreset = function(btn) { document.getElementById('bcmsg').value = btn.textContent.trim(); };
 
