@@ -2506,7 +2506,7 @@ window.doLogin = async function() {
       onValue(ref(db,'broadcast'),(s)=>{
         if(bcFirst){bcFirst=false;return;}
         const d=s.val();
-        if(d?.msg){ notify('📢 공지: '+d.msg,'inf',10000); snd('ready'); }
+        if(d?.msg) showBcast(d.msg);
       });
       onValue(ref(db,'adminCmd'),(s)=>{
         if(cmdFirst){cmdFirst=false;return;}
@@ -2518,6 +2518,28 @@ window.doLogin = async function() {
     if(tutorialSeen){gotoLobby();}else{tutorialSeen=true;tutStep=0;initTutProg();updateTNav();show('ts');}
   } catch(e) { notify('접속 실패: '+e.message,'err'); }
 };
+
+// 선생님 공지: 화면 중앙에 10초. X 없음 → 모든 학생이 같은 순간에 게임 재개
+const BCAST_SEC = 10;
+let bcastTimer = null;
+function showBcast(msg) {
+  const ov = document.getElementById('bcov');
+  document.getElementById('bcov-msg').textContent = msg;
+  ov.style.display = 'flex'; snd('ready');
+  // 게임 중인 방은 방장이 턴 시간을 10초 뒤로 → 모두의 타이머가 멈췄다가 남은 시간 그대로 이어감
+  if (roomId && roomData?.status === 'playing' && roomData.hostUid === user?.uid) {
+    update(ref(db, `rooms/${roomId}`), { timerStart: (roomData.timerStart || Date.now()) + BCAST_SEC * 1000 });
+  }
+  const end = Date.now() + BCAST_SEC * 1000;
+  clearInterval(bcastTimer);
+  const tick = () => {
+    const left = Math.ceil((end - Date.now()) / 1000);
+    document.getElementById('bcov-sec').textContent = Math.max(0, left);
+    document.getElementById('bcov-bar').style.width = Math.max(0, left / BCAST_SEC * 100) + '%';
+    if (left <= 0) { clearInterval(bcastTimer); ov.style.display = 'none'; }
+  };
+  tick(); bcastTimer = setInterval(tick, 250);
+}
 
 // 관리자 전체 퇴장 명령 처리
 async function handleAdminKickAll() {
@@ -3511,12 +3533,11 @@ function startTimer(r) {
   stopTimer();
   const tel=document.getElementById('gtimer');
   const max=r.timerSeconds||30;
-  const elapsed=r.timerStart?Math.floor((Date.now()-r.timerStart)/1000):0;
-  timerSec=Math.max(0,max-elapsed);
-  tel.textContent=timerSec; tel.classList.remove('urg');
+  const left=()=>max-Math.floor((Date.now()-(r.timerStart||Date.now()))/1000);
+  const paint=()=>{ timerSec=left(); tel.textContent=timerSec>max?'⏸':Math.max(0,timerSec); }; // 공지 중엔 ⏸
+  paint(); tel.classList.remove('urg');
   timerInt=setInterval(async()=>{
-    timerSec--;
-    tel.textContent=Math.max(0,timerSec);
+    paint();
     if(timerSec<=10){tel.classList.add('urg');snd(timerSec<=5?'urgentTick':'tick');}
     if(timerSec<=0){
       stopTimer();
@@ -3958,6 +3979,16 @@ window.sendBcast = async function() {
 
 <!-- pplx-inline-edit 제거 (GitHub Pages용) -->
 <!-- ======= 게임 종료 결과 팝업 ======= -->
+<!-- ======= 선생님 공지 (화면 중앙, 10초) ======= -->
+<div id="bcov" style="display:none;position:fixed;inset:0;background:rgba(15,76,39,.75);z-index:10000;align-items:center;justify-content:center;padding:16px">
+  <div style="background:white;border-radius:20px;padding:28px 32px;max-width:560px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.35);border-top:6px solid var(--g3)">
+    <div style="font-size:40px;line-height:1.2">📢</div>
+    <div style="font-size:15px;font-weight:800;color:var(--g2);margin:6px 0 14px">선생님 공지</div>
+    <div id="bcov-msg" style="font-size:26px;font-weight:800;color:var(--gray9);line-height:1.45;word-break:keep-all;white-space:pre-wrap"></div>
+    <div style="height:8px;background:var(--gray2);border-radius:4px;overflow:hidden;margin-top:22px"><div id="bcov-bar" style="height:100%;background:var(--g3);width:100%;transition:width .25s linear"></div></div>
+    <div style="font-size:13px;color:var(--gray5);margin-top:8px">⏸ 게임 잠시 멈춤 · <b id="bcov-sec">10</b>초 뒤 다 같이 이어서 해요</div>
+  </div>
+</div>
 <div id="result-popup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;">
   <div style="background:white;border-radius:20px;padding:28px 24px;max-width:400px;width:92%;max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3);position:relative;border-top:5px solid var(--g3)">
     <button onclick="closeResultPopup()" style="position:absolute;top:12px;right:14px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray5)">✕</button>
