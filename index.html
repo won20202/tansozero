@@ -460,12 +460,15 @@
     <h1 class="ltitle">탄소중립 제로<br>🌿 카드 게임</h1>
     <p class="lsub">탄소흡수카드와 탄소배출카드로<br>탄소중립을 직접 체험해봐요!</p>
     <div class="fg" style="margin-bottom:12px;text-align:left">
-      <label class="fl" id="snumLabel">학번 (예: 10528 → 1학년 5반 28번)</label>
-      <input class="fi" id="inp_snum" placeholder="학번 5자리 입력" maxlength="5" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <label class="fl">🔑 수업 입장 코드 <span style="font-weight:400;color:var(--gray5)">(선생님이 알려 줘요)</span></label>
+      <input class="fi" id="inp_ccode" placeholder="입장 코드" maxlength="10" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()"/>
     </div>
     <div class="fg" style="margin-bottom:20px;text-align:left">
-      <label class="fl">이름</label>
-      <input class="fi" id="inp_sname" placeholder="이름 입력 (예: 홍길동)" maxlength="10" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <label class="fl">🐾 내 별명 <span style="font-weight:400;color:var(--gray5)">(실명 말고 별명!)</span></label>
+      <div style="display:flex;gap:6px">
+        <input class="fi" id="inp_sname" maxlength="10" onkeydown="if(event.key==='Enter')doLogin()" style="flex:1"/>
+        <button class="btn bts" type="button" onclick="rollNick()" title="다른 별명 뽑기" style="padding:0 14px;font-size:18px">🎲</button>
+      </div>
     </div>
     <button class="btn btp" style="width:100%;padding:13px;font-size:15px" onclick="doLogin()">게임 시작 🌿</button>
     <div style="margin-top:16px;text-align:center">
@@ -821,15 +824,13 @@
         <div class="slbl" style="margin-bottom:10px">🔒 게임 잠금</div>
         <div style="font-size:12px;color:var(--gray5);margin-bottom:10px">잠그면 학생이 새로 접속하거나 방을 만들 수 없어요 (쉬는 시간·방과후용)</div>
         <button class="btn" id="lockbtn" onclick="toggleLock()" style="margin-bottom:26px">🔓 열려 있음 — 눌러서 잠그기</button>
-        <div class="slbl" style="margin-bottom:10px">🎓 학번 형식</div>
-        <div style="font-size:12px;color:var(--gray5);margin-bottom:10px">학교마다 학번 자릿수가 달라요. 학생 로그인 화면 안내도 함께 바뀌어요.</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-          학년 <select class="fsel" id="idf_g" style="width:auto" onchange="previewIdFormat()"><option>1</option><option>2</option></select>자리
-          반 <select class="fsel" id="idf_c" style="width:auto" onchange="previewIdFormat()"><option>1</option><option selected>2</option></select>자리
-          번호 <select class="fsel" id="idf_n" style="width:auto" onchange="previewIdFormat()"><option>1</option><option selected>2</option><option>3</option></select>자리
+        <div class="slbl" style="margin-bottom:10px">🔑 수업 입장 코드</div>
+        <div style="font-size:12px;color:var(--gray5);margin-bottom:10px">코드를 아는 학생만 들어올 수 있어요. <b>수업이 끝나면 코드를 바꿔 두세요</b> — 바꾸는 순간 예전 코드로 들어온 사람은 모두 막혀요.</div>
+        <div id="ccode_now" style="font-size:13px;font-weight:700;color:var(--g2);margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px;margin-bottom:26px">
+          <input class="fi" id="ccode_new" placeholder="새 입장 코드 (예: 3015)" maxlength="10" style="flex:1"/>
+          <button class="btn btp" onclick="saveClassCode()">저장</button>
         </div>
-        <div id="idf_prev" style="font-size:13px;color:var(--g2);font-weight:700;margin-bottom:10px"></div>
-        <button class="btn btp" onclick="saveIdFormat()" style="margin-bottom:26px">학번 형식 저장</button>
         <div class="slbl" style="margin-bottom:16px">🔑 관리자 비밀번호 변경</div>
         <div class="fg"><label class="fl">현재 비밀번호</label><input class="fi" id="cfg_oldpw" type="password" placeholder="현재 비밀번호"/></div>
         <div class="fg"><label class="fl">새 비밀번호</label><input class="fi" id="cfg_newpw" type="password" placeholder="새 비밀번호"/></div>
@@ -938,8 +939,6 @@ window.addEventListener('unhandledrejection', e => {
   notify(/PERMISSION_DENIED/.test(m) ? (isAdmin ? '⚠️ 관리자 인증이 풀렸어요. 새로고침 후 다시 관리자로 접속해 주세요.' : '⚠️ 권한이 없어 처리하지 못했어요. 새로고침해 주세요.') : '⚠️ 처리 중 오류: ' + m, 'err', 6000);
 });
 const db = getDatabase(app);
-// 학번 형식은 로그인 전에도 필요 → config는 누구나 읽기 가능
-get(ref(db,'config/idFormat')).then(s => { if (s.val()) { idFmt = s.val(); applyIdFormatUI(); } }).catch(() => {});
 // ============================================================
 // ============================================================
 // 커스텀 CONFIRM (iframe에서 window.confirm이 차단되므로 대체)
@@ -2065,25 +2064,13 @@ function hasBadWord(t) {
   const x = String(t || '').toLowerCase().replace(/[\s\d_.,!?~\-*·ㆍ]/g, '');
   return BAD_WORDS.some(w => x.includes(w));
 }
-// 학번 형식 (관리자 설정 → config/idFormat). 기본: 학년1·반2·번호2 = 5자리 (예: 10528 → 1학년 5반 28번)
-let idFmt = { g:1, c:2, n:2 };
-const idLen = () => idFmt.g + idFmt.c + idFmt.n;
-function idExample(f = idFmt) { // 1학년 5반 8번을 형식대로 적은 예시
-  return '1'.padStart(f.g,'0') + '5'.padStart(f.c,'0') + '8'.padStart(f.n,'0');
-}
-function applyIdFormatUI() {
-  const ex = idExample();
-  document.getElementById('snumLabel').textContent = `학번 ${idLen()}자리 (예: ${ex} → 1학년 5반 8번)`;
-  const inp = document.getElementById('inp_snum');
-  inp.placeholder = `학번 ${idLen()}자리 입력`; inp.maxLength = idLen();
-}
-function parseInfo(snum, sname) {
-  const d = snum.replace(/\D/g, '');
-  const grade = String(parseInt(d.slice(0, idFmt.g)) || 0);
-  const cls   = String(parseInt(d.slice(idFmt.g, idFmt.g + idFmt.c)) || 0);
-  const num   = String(parseInt(d.slice(idFmt.g + idFmt.c)) || 0);
-  return { grade, class: cls, num, name: sname || '학생', email: snum+'@student' };
-}
+// 별명: 개인정보 없이 입장 (자동으로 뽑아 주고 🎲로 다시 뽑기, 직접 써도 됨)
+const NICK_A = ['용감한','신나는','똑똑한','빠른','행복한','씩씩한','반짝이는','멋진','친절한','튼튼한','상냥한','재빠른'];
+const NICK_B = ['북극곰','펭귄','돌고래','거북이','판다','수달','고래','부엉이','다람쥐','여우','나무늘보','해달'];
+window.rollNick = function() {
+  const r = a => a[Math.floor(Math.random() * a.length)];
+  document.getElementById('inp_sname').value = r(NICK_A) + ' ' + r(NICK_B);
+};
 
 // dealHand(n=6) 구버전 제거 — 신버전 dealHand(deck, n=7) 사용
 // genEmissions 구버전 제거 — 신 UNO 에서 미사용
@@ -2515,7 +2502,7 @@ window.doAdminLogin = async function() {
     const cred = await signInAnonymously(auth);
     user = cred.user;
   }
-  pinfo = { grade:'0', class:'0', num:'0', name:'관리자', email:'admin' };
+  pinfo = { name:'관리자' };
   isAdmin = true;
   // 세션 토큰 수령 및 감시 시작
   const ts = await get(ref(db,'adminConfig/sessionToken'));
@@ -2542,19 +2529,24 @@ window.changeAdminPw = async function() {
   document.getElementById('cfg_newpw2').value='';
 };
 window.doLogin = async function() {
-  const snum = document.getElementById('inp_snum').value.trim();
+  const ccode = document.getElementById('inp_ccode').value.trim();
   const sname = document.getElementById('inp_sname').value.trim();
-  if (!snum) { notify('학번을 입력하세요','err'); return; }
-  if (!sname) { notify('이름을 입력하세요','err'); return; }
-  if (!/^\d+$/.test(snum) || snum.length !== idLen()) { notify(`학번 ${idLen()}자리를 정확히 입력하세요 (예: ${idExample()})`,'err'); return; }
-  if (hasBadWord(sname)) { notify('이름에 쓸 수 없는 말이 있어요. 본인 이름을 입력해요','err'); return; }
+  if (!sname) { notify('별명을 입력하거나 🎲를 눌러요','err'); return; }
+  if (hasBadWord(sname)) { notify('별명에 쓸 수 없는 말이 있어요','err'); return; }
   try {
     const cred = await signInAnonymously(auth);
+    // 수업 입장 코드: 규칙이 저장된 코드와 같을 때만 쓰기를 허용 (코드는 학생이 읽을 수 없음)
+    if (ccode) {
+      try { await set(ref(db,`classAuth/${cred.user.uid}`), ccode); }
+      catch(e) { notify('🔑 입장 코드가 틀렸어요. 선생님께 다시 확인해요','err'); return; }
+    }
+    try { await get(ref(db,'lock')); }
+    catch(e) { notify('🔑 수업 입장 코드를 입력해요','err'); return; }
     if ((await get(ref(db,'lock'))).val() === true) { notify('🔒 지금은 게임 시간이 아니에요. 선생님 안내를 기다려요','wrn',5000); return; }
     user = cred.user;
-    pinfo = parseInfo(snum, sname);
+    pinfo = { name: sname };
     isAdmin = false;
-    await set(ref(db,`presence/${user.uid}`),{uid:user.uid,email:pinfo.email,name:pinfo.name,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,online:true,ts:serverTimestamp()});
+    await set(ref(db,`presence/${user.uid}`),{uid:user.uid,name:pinfo.name,online:true,ts:serverTimestamp()});
     // 공지·전체퇴장: 첫 값(접속 전 것)은 건너뛰고 이후 바뀔 때만 반응 → 기기 시계가 틀려도 동작
     if(!window._globalListeners){
       window._globalListeners=true;
@@ -2679,6 +2671,7 @@ function refreshPlayerPresence() {
   onDisconnect(playerPresenceRef).remove();
 }
 
+rollNick();
 onAuthStateChanged(auth, async u => {
   if (!u) { user=null; pinfo=null; isAdmin=false; show('ls'); }
 });
@@ -2820,8 +2813,8 @@ window.gotoLobby = function() {
     return;
   }
   const p=pinfo;
-  document.getElementById('topname').textContent=`${p.grade}학년 ${p.class}반 ${p.num}번 ${p.name}`;
-  document.getElementById('topid').textContent=user.email;
+  document.getElementById('topname').textContent=p.name;
+  document.getElementById('topid').textContent='탄소중립 플레이어';
   document.getElementById('topavt').textContent=p.name.charAt(0);
   renderRecord();
   document.getElementById('adminlnk').style.display='none';
@@ -2887,7 +2880,7 @@ window.createRoom = async function() {
   if(snap.exists()&&Object.values(snap.val()).filter(r=>r.players&&Object.keys(r.players).length).length>=MAX_ROOMS){notify('방을 더 만들 수 없어요 (최대 10개)','err');return;}
   const rref=push(ref(db,'rooms'));
   const uid=user.uid;
-  await set(rref,{name,code,maxPlayers:maxP,rounds,timerSeconds:timer,status:'waiting',hostUid:uid,hostName:pinfo.name,currentRound:0,players:{[uid]:{uid,name:pinfo.name,email:user.email,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:true,color:COLORS[0]}},createdAt:serverTimestamp()});
+  await set(rref,{name,code,maxPlayers:maxP,rounds,timerSeconds:timer,status:'waiting',hostUid:uid,hostName:pinfo.name,currentRound:0,players:{[uid]:{uid,name:pinfo.name,score:0,ready:false,isHost:true,color:COLORS[0]}},createdAt:serverTimestamp()});
   closeM('crm'); roomId=rref.key; refreshPlayerPresence(); enterWaiting(rref.key);
 };
 window.joinByCode = async function() {
@@ -2915,7 +2908,7 @@ async function doJoin(rid) {
   const r=s.val(), pl=r.players||{}, cnt=Object.keys(pl).length;
   if(cnt>=r.maxPlayers){notify('방이 꽉 찼어요!','err');return;}
   if(r.status!=='waiting'){notify('이미 게임 중인 방이에요. 끝나면 다시 시도해요!','wrn');return;}
-  await set(ref(db,`rooms/${rid}/players/${uid}`),{uid,name:pinfo.name,email:user.email,grade:pinfo.grade,class:pinfo.class,num:pinfo.num,score:0,ready:false,isHost:false,color:COLORS[cnt%COLORS.length]});
+  await set(ref(db,`rooms/${rid}/players/${uid}`),{uid,name:pinfo.name,score:0,ready:false,isHost:false,color:COLORS[cnt%COLORS.length]});
   // 연결 끊기면 자동으로 players에서 제거
   onDisconnect(ref(db,`rooms/${rid}/players/${uid}`)).remove();
   snd('join');
@@ -3800,8 +3793,7 @@ function showResult(r) {
     if(!ps[i])return;
     const p=ps[i], row=document.createElement('div'), isMe3=p.uid===uid;
     row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;margin-bottom:6px;background:var(--gray1)';
-    row.innerHTML='<div style="font-size:18px">'+md+'</div><div style="flex:1"><div style="font-weight:800'+(isMe3?';color:var(--g1)':'')+'">'+( isMe3?'⭐ ':'')+esc(p.name)+'</div>'
-      +'<div style="font-size:10px;color:var(--gray5)">'+esc(p.grade)+'학년 '+esc(p.class)+'반 '+esc(p.num)+'번</div></div>'
+    row.innerHTML='<div style="font-size:18px">'+md+'</div><div style="flex:1"><div style="font-weight:800'+(isMe3?';color:var(--g1)':'')+'">'+( isMe3?'⭐ ':'')+esc(p.name)+'</div></div>'
       +'<div style="font-weight:900;color:'+(i===0?'#e67e22':i===1?'#7f8c8d':'#cd6133')+'">'+(p.score>=0?'+':'')+p.score+'점</div>';
     sb.appendChild(row);
   });
@@ -3819,7 +3811,7 @@ function showResult(r) {
   if(popup) popup.style.display='flex';
   // 오늘의 결과 기록: 방장 기기가 한 번만 저장 (관리자 '오늘 결과'에서 봄)
   if(r.hostUid===uid){
-    push(ref(db,'results'),{room:r.name||'',ts:serverTimestamp(),players:ps.map((p,i)=>({name:p.name,grade:p.grade,class:p.class,num:p.num,score:p.score||0,rank:i+1}))}).catch(()=>{});
+    push(ref(db,'results'),{room:r.name||'',ts:serverTimestamp(),players:ps.map((p,i)=>({name:p.name,score:p.score||0,rank:i+1}))}).catch(()=>{});
   }
 }
 
@@ -3912,13 +3904,13 @@ window.refreshAdm=async function(){
       const inRoom = new Set(); rooms.forEach(r => Object.keys(r.players||{}).forEach(u => inRoom.add(u)));
       const lobby = studs.filter(s => s.name && !inRoom.has(s.uid));
       document.getElementById('admLobby').innerHTML = lobby.length
-        ? `🙋 <b>방에 안 들어간 학생 ${lobby.length}명</b> — ` + lobby.map(s => `${esc(s.grade)}-${esc(s.class)}-${esc(s.num)} ${esc(s.name)}`).join(', ')
+        ? `🙋 <b>방에 안 들어간 학생 ${lobby.length}명</b> — ` + lobby.map(s => esc(s.name)).join(', ')
         : (studs.some(s => s.name) || inRoom.size) ? '✅ 접속한 학생이 모두 방에 들어가 있어요' : '💤 지금 접속한 학생이 없어요';
       
     }catch(e){}
   };
   await doFetch(); paintAdminToggles();
-  idf_g.value = idFmt.g; idf_c.value = idFmt.c; idf_n.value = idFmt.n; previewIdFormat();
+  get(ref(db,'classConfig/code')).then(c => { document.getElementById('ccode_now').textContent = c.val() ? `지금 코드: ${c.val()}` : '⚠️ 아직 코드가 없어요 — 누구나 들어올 수 있어요'; });
   window._aPoll=setInterval(async()=>{
     if(!document.getElementById('adm')?.classList.contains('on')){clearInterval(window._aPoll);window._aPoll=null;return;}
     await doFetch();
@@ -3943,7 +3935,7 @@ function renderAdmRooms(rooms) {
           ?`<button class="akbtn" disabled style="background:#856404;color:#fff;border-color:#856404;opacity:1;cursor:default">👑방장</button>`
           :`<button class="akbtn adm-chhost" data-rid="${r.id}" data-uid="${p.uid}" data-nm="${esc(p.name)}" style="background:#bbb;color:#fff;border-color:#bbb">멤버</button>`;
         const kBtn=`<button class="akbtn adm-kick" data-rid="${r.id}" data-uid="${p.uid}" data-nm="${esc(p.name)}" style="background:#c0392b;color:#fff;border-color:#c0392b">강퇴</button>`;
-        plh+=`<div class="aplrow"><div class="pavt" style="background:${p.color||'#2d9c55'};width:22px;height:22px;font-size:10px">${esc((p.name||'?').charAt(0))}</div><div class="apln">${esc(p.grade)}학년${esc(p.class)}반${esc(p.num)}번 ${esc(p.name)}</div><div class="apsc">${p.score}점</div><div style="display:flex;gap:4px">${roleBtn}${kBtn}</div></div>`;
+        plh+=`<div class="aplrow"><div class="pavt" style="background:${p.color||'#2d9c55'};width:22px;height:22px;font-size:10px">${esc((p.name||'?').charAt(0))}</div><div class="apln">${esc(p.name)}</div><div class="apsc">${p.score}점</div><div style="display:flex;gap:4px">${roleBtn}${kBtn}</div></div>`;
       });
       html+=`<div class="arcrd">
         <div class="arhd"><div class="arname">${esc(r.name)}</div><span class="sbdg ${stcls}">${st}</span></div>
@@ -3978,21 +3970,6 @@ document.addEventListener('click', async function(e) {
   }
 });
 
-function renderStudsTable(studs,rooms){
-  document.getElementById('stcnt').textContent=`총 ${studs.length}명`;
-  const tbody=document.getElementById('sttbody'); tbody.innerHTML='';
-  studs.forEach(s=>{
-    let rn='-',sc=0;
-    rooms.forEach(r=>{if(r.players?.[s.uid]){rn=r.name;sc=r.players[s.uid].score;}});
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${esc(s.email||'-')}</td><td>${esc(s.name)}</td><td>${esc(s.grade)}학년 ${esc(s.class)}반 ${esc(s.num)}번</td><td>${esc(rn)}</td><td><strong>${sc}점</strong></td><td><button class="akbtn" onclick="kickAll('${s.uid}','${esc(s.name)}')">강퇴</button></td>`;
-    tbody.appendChild(tr);
-  });
-}
-window.filterSt = function() {
-  const q=document.getElementById('stsch').value.toLowerCase();
-  document.querySelectorAll('#sttbody tr').forEach(tr=>tr.style.display=tr.textContent.toLowerCase().includes(q)?'':'none');
-};
 window.kickP = async function(rid,uid,nm,force=false) {
   if(!await showConfirm(`${nm}님을 강퇴할까요?`, '강퇴', '#c0392b'))return;
   const rs = await get(ref(db,`rooms/${rid}`));
@@ -4073,15 +4050,14 @@ window.closeRoom = async function(rid, rname) {
   notify(`「${rname}」 방을 폐쇄했어요`,'wrn');
   setTimeout(async()=>{ await remove(ref(db,`rooms/${rid}`)); refreshAdm(); }, 2000);
 };
-window.previewIdFormat = function() {
-  const f = { g:+idf_g.value, c:+idf_c.value, n:+idf_n.value };
-  document.getElementById('idf_prev').textContent = `→ ${f.g+f.c+f.n}자리, 예: ${idExample(f)} = 1학년 5반 8번`;
-};
-window.saveIdFormat = async function() {
-  const f = { g:+idf_g.value, c:+idf_c.value, n:+idf_n.value };
-  await set(ref(db,'config/idFormat'), f);
-  idFmt = f; applyIdFormatUI();
-  notify(`🎓 학번 형식 저장: ${f.g+f.c+f.n}자리 (예: ${idExample(f)})`, 'ok');
+window.saveClassCode = async function() {
+  const c = document.getElementById('ccode_new').value.trim();
+  if (!c) { notify('새 입장 코드를 입력해요','wrn'); return; }
+  if (!await showConfirm(`입장 코드를 「${c}」로 바꿀까요?\n예전 코드로 들어와 있던 학생은 다시 입장해야 해요.`, '바꾸기', '#2d9c55')) return;
+  await set(ref(db,'classConfig/code'), c);
+  document.getElementById('ccode_new').value = '';
+  document.getElementById('ccode_now').textContent = `지금 코드: ${c}`;
+  notify(`🔑 입장 코드를 「${c}」로 바꿨어요`, 'ok');
 };
 window.bcPreset = function(btn) { document.getElementById('bcmsg').value = btn.textContent.trim(); };
 
@@ -4120,22 +4096,22 @@ window.openResults = async function() {
   const games = Object.values(s.val() || {}).filter(g => g.ts >= start.getTime());
   const byStu = {};
   games.forEach(g => (g.players || []).forEach(p => {
-    const k = `${p.grade}-${p.class}-${p.num}-${p.name}`;
-    const o = byStu[k] || (byStu[k] = { grade:p.grade, class:p.class, num:p.num, name:p.name, games:0, wins:0, total:0 });
+    const k = p.name;
+    const o = byStu[k] || (byStu[k] = { name:p.name, games:0, wins:0, total:0 });
     o.games++; o.total += p.score || 0; if (p.rank === 1) o.wins++;
   }));
   todayRows = Object.values(byStu).sort((a,b) => b.total - a.total || b.wins - a.wins);
   document.getElementById('resbody').innerHTML = !todayRows.length ? '<div style="padding:20px;color:var(--gray5);text-align:center">오늘 끝난 게임이 아직 없어요</div>' :
     `<div style="margin-bottom:8px;color:var(--gray5)">오늘 끝난 게임 ${games.length}판 · 학생 ${todayRows.length}명</div>
-     <table style="width:100%;border-collapse:collapse"><tr style="background:var(--gray1)"><th style="padding:6px">순위</th><th>학번</th><th>이름</th><th>판</th><th>1등</th><th>총점</th></tr>` +
-    todayRows.map((r,i) => `<tr style="border-bottom:1px solid var(--gray2);text-align:center"><td style="padding:6px">${i<3?['🥇','🥈','🥉'][i]:i+1}</td><td>${esc(r.grade)}-${esc(r.class)}-${esc(r.num)}</td><td style="font-weight:700">${esc(r.name)}</td><td>${r.games}</td><td>${r.wins}</td><td style="font-weight:800;color:${r.total>=0?'var(--g2)':'var(--red)'}">${r.total}</td></tr>`).join('') + '</table>';
+     <table style="width:100%;border-collapse:collapse"><tr style="background:var(--gray1)"><th style="padding:6px">순위</th><th>별명</th><th>판</th><th>1등</th><th>총점</th></tr>` +
+    todayRows.map((r,i) => `<tr style="border-bottom:1px solid var(--gray2);text-align:center"><td style="padding:6px">${i<3?['🥇','🥈','🥉'][i]:i+1}</td><td style="font-weight:700">${esc(r.name)}</td><td>${r.games}</td><td>${r.wins}</td><td style="font-weight:800;color:${r.total>=0?'var(--g2)':'var(--red)'}">${r.total}</td></tr>`).join('') + '</table>';
   openM('resm');
 };
 window.downloadResults = function() {
   if (!todayRows.length) { notify('다운로드할 결과가 없어요','wrn'); return; }
   const q = v => `"${String(v).replace(/"/g,'""')}"`;
-  const csv = '\ufeff' + [['순위','학년','반','번호','이름','판 수','1등','총점'].map(q).join(',')]
-    .concat(todayRows.map((r,i) => [i+1,r.grade,r.class,r.num,r.name,r.games,r.wins,r.total].map(q).join(','))).join('\r\n');
+  const csv = '\ufeff' + [['순위','별명','판 수','1등','총점'].map(q).join(',')]
+    .concat(todayRows.map((r,i) => [i+1,r.name,r.games,r.wins,r.total].map(q).join(','))).join('\r\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
   a.download = `탄소중립게임_결과_${new Date().toISOString().slice(0,10)}.csv`;
